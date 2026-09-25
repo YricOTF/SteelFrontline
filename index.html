@@ -1,0 +1,3301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>钢铁前线 · STEEL FRONTLINE V12</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#05080c;
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:#cfd9e6;user-select:none;-webkit-user-select:none;overscroll-behavior:none;}
+#game{display:block;width:100%;height:100%;touch-action:none;}
+.hidden{display:none!important;}
+.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 30%,#121a26 0%,#070a0f 75%);z-index:200;padding:16px;
+  overflow-y:auto;}
+.btn{background:linear-gradient(180deg,#243244,#18222e);border:1px solid #3a4d63;color:#c9d8e8;
+  padding:10px 20px;border-radius:5px;font-size:14px;cursor:pointer;transition:.14s;
+  font-family:inherit;font-weight:600;touch-action:manipulation;}
+.btn:hover{background:linear-gradient(180deg,#2e4058,#1e2b3a);border-color:#5d7d9e;color:#fff;}
+.btn:active{transform:scale(.97);}
+.btn.primary{background:linear-gradient(180deg,#8a3520,#5c2113);border-color:#c25a34;color:#ffd9c8;}
+.btn.ghost{background:transparent;border-color:#2c3a4a;color:#8799ab;}
+.btn.small{padding:7px 12px;font-size:12px;}
+h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
+  background:linear-gradient(180deg,#f2f7ff,#7f9ec0);-webkit-background-clip:text;background-clip:text;
+  color:transparent;margin-bottom:4px;text-align:center;}
+.subtitle{color:#61758c;font-size:11px;letter-spacing:.35em;margin-bottom:32px;text-align:center;}
+.menu-col{display:flex;flex-direction:column;gap:10px;width:min(300px,86vw);}
+.menu-col .btn{width:100%;padding:13px;text-align:center;font-size:15px;}
+.panel{background:rgba(14,20,28,.96);border:1px solid #26333f;border-radius:10px;padding:16px;
+  width:min(560px,94vw);max-height:88vh;overflow-y:auto;}
+.panel h2{font-size:16px;letter-spacing:.14em;color:#9fc0e0;margin-bottom:12px;
+  border-bottom:1px solid #223040;padding-bottom:8px;}
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px;}
+.opt{background:#141d28;border:1px solid #26333f;border-radius:7px;padding:10px;cursor:pointer;transition:.13s;}
+.opt:hover{border-color:#4a6a8c;}
+.opt.active{border-color:#d05a30;background:#2a1a14;box-shadow:0 0 0 1px #d05a30 inset;}
+.opt .on{font-size:13.5px;font-weight:700;color:#d8e6f4;margin-bottom:3px;}
+.opt .od{font-size:11px;color:#6b7f94;line-height:1.45;}
+.opt.active .on{color:#ffb492;}
+.rowlabel{font-size:12px;color:#6b7f94;letter-spacing:.14em;margin:11px 0 6px;}
+.save-item{display:flex;align-items:center;gap:10px;background:#131b24;border:1px solid #223040;
+  border-radius:7px;padding:11px;margin-bottom:8px;}
+.save-item .si-main{flex:1;min-width:0;}
+.save-item .si-t{font-size:13.5px;font-weight:700;color:#cfe0f0;}
+.save-item .si-s{font-size:11px;color:#6b7f94;margin-top:3px;}
+.save-item .btn{padding:6px 12px;font-size:12px;}
+.empty-tip{text-align:center;color:#4d5c6b;padding:30px 0;font-size:13px;}
+.help p{font-size:12.5px;line-height:1.85;color:#8fa3b8;margin-bottom:8px;}
+.help b{color:#cfe2f5;}
+.help .tag{display:inline-block;background:#22303f;border-radius:3px;padding:1px 6px;font-size:11px;
+  color:#9fd8ff;margin:0 2px;}
+
+#hud{position:fixed;inset:0;pointer-events:none;z-index:20;}
+#topBar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:6px;
+  padding:6px 8px;padding-top:calc(6px + env(safe-area-inset-top));
+  background:linear-gradient(180deg,rgba(8,12,18,.94),rgba(8,12,18,.5) 80%,transparent);
+  pointer-events:auto;z-index:21;}
+.stat{display:flex;flex-direction:column;background:rgba(20,30,42,.85);border:1px solid #24313e;
+  border-radius:6px;padding:3px 9px;min-width:52px;flex:0 0 auto;}
+.stat .lbl{font-size:8.5px;color:#5c7085;letter-spacing:.08em;}
+.stat .val{font-size:14px;font-weight:800;color:#cfe2f5;font-variant-numeric:tabular-nums;line-height:1.15;}
+.stat.cp .val{color:#ffce6b;}
+.stat.warn .val{color:#ff7a5c;}
+.tb-spacer{flex:1;}
+.tbtn{pointer-events:auto;width:36px;height:36px;border-radius:6px;background:rgba(20,30,42,.9);
+  border:1px solid #2b3a4a;color:#a8bdd0;font-size:14px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;flex:0 0 auto;touch-action:manipulation;transition:.15s;}
+.tbtn:hover{background:#2e4058;border-color:#5d7d9e;color:#e6f4ff;}
+.tbtn.active{background:#3a5a7a;border-color:#7fc0ff;color:#9fd8ff;}
+
+#leftPanel{position:absolute;left:6px;top:60px;display:flex;flex-direction:column;gap:4px;
+  pointer-events:auto;z-index:21;max-height:50vh;overflow-y:auto;}
+.sqbtn{width:36px;height:32px;border-radius:5px;background:rgba(20,30,42,.85);border:1px solid #2b3a4a;
+  color:#a8bdd0;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;position:relative;touch-action:manipulation;transition:.15s;}
+.sqbtn:hover{background:#2e4058;border-color:#5d7d9e;color:#e6f4ff;}
+.sqbtn.has{background:rgba(60,90,120,.9);border-color:#7fc0ff;color:#c9e8ff;}
+.sqbtn.has:hover{background:#3a5a7a;}
+.sqbtn.hot{background:#3a5a7a;border-color:#9fd8ff;color:#fff;box-shadow:0 0 8px rgba(127,192,255,.5);}
+.sqbtn .cnt{position:absolute;bottom:1px;right:2px;font-size:8px;color:#7fc0ff;font-weight:800;}
+
+#rightPanel{position:absolute;right:6px;top:60px;display:flex;flex-direction:column;gap:5px;
+  pointer-events:auto;z-index:21;}
+.rtbtn{width:46px;height:42px;border-radius:7px;background:rgba(20,30,42,.88);border:1px solid #2b3a4a;
+  color:#a8bdd0;font-size:10px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;line-height:1.05;touch-action:manipulation;padding:2px;transition:.15s;}
+.rtbtn .ic{font-size:14px;line-height:1;}
+.rtbtn:hover{background:#2e4058;border-color:#5d7d9e;color:#e6f4ff;}
+.rtbtn:disabled,.rtbtn.dis{opacity:.35;cursor:not-allowed;}
+.rtbtn.active{background:#3a5a7a;border-color:#9fd8ff;color:#e6f4ff;}
+
+#planPanel{position:absolute;right:58px;top:60px;display:flex;flex-direction:column;gap:4px;
+  pointer-events:auto;z-index:22;background:rgba(10,15,22,.94);border:1px solid #2b3a4a;
+  border-radius:8px;padding:6px;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+#planPanel .plbtn{padding:8px 14px;border-radius:5px;background:#1b2735;border:1px solid #2b3a4a;
+  color:#c8dcee;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;min-width:80px;text-align:center;transition:.15s;}
+#planPanel .plbtn:hover{background:#2e4a68;border-color:#7fc0ff;}
+#planPanel .plbtn.active{background:#8a4a20;border-color:#ffce6b;color:#ffe4b8;}
+
+#bottomBar{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,rgba(8,12,18,.96),rgba(8,12,18,.6) 80%,transparent);
+  padding:6px 8px calc(8px + env(safe-area-inset-bottom));pointer-events:auto;display:flex;flex-direction:column;gap:5px;z-index:21;}
+.unit-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+.unit-row::-webkit-scrollbar{display:none;}
+.ucard{flex:0 0 auto;background:linear-gradient(180deg,#1b2735,#131c26);border:1px solid #2a3a4b;
+  border-radius:7px;padding:6px 10px;min-width:76px;cursor:pointer;transition:.15s;position:relative;touch-action:manipulation;text-align:center;}
+.ucard:hover{border-color:#4d7194;background:linear-gradient(180deg,#22303f,#17222e);}
+.ucard:active{transform:scale(.96);}
+.ucard.dis{opacity:.34;cursor:not-allowed;}
+.ucard.dis:hover{border-color:#2a3a4b;background:linear-gradient(180deg,#1b2735,#131c26);}
+.ucard .un{font-size:12px;font-weight:700;color:#d5e5f5;white-space:nowrap;}
+.ucard .uc{font-size:10.5px;color:#ffce6b;margin-top:3px;font-weight:700;}
+.ucard.skill .un{color:#9fd8ff;}
+.ucard.skill .uc{color:#7fd0ff;}
+.ucard.skill.cooling{opacity:.4;}
+
+/* 模式指示器：顶部中央 */
+#modeTip{position:absolute;left:50%;transform:translateX(-50%);
+  top:calc(56px + env(safe-area-inset-top));
+  background:rgba(200,80,40,.96);color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;
+  font-weight:700;z-index:25;pointer-events:none;box-shadow:0 4px 20px rgba(200,80,40,.4);
+  white-space:nowrap;letter-spacing:.04em;
+  animation:modeTipPulse 1.8s ease-in-out infinite;}
+@keyframes modeTipPulse{0%,100%{box-shadow:0 4px 20px rgba(200,80,40,.4);}50%{box-shadow:0 4px 28px rgba(200,80,40,.7);}}
+
+/* 悬停提示 */
+#hoverTip{position:fixed;z-index:100;background:rgba(10,16,24,.96);
+  border:1px solid #2c3f52;border-radius:7px;padding:9px 13px;
+  font-size:11px;color:#c8dcee;pointer-events:none;max-width:230px;
+  line-height:1.55;box-shadow:0 6px 24px rgba(0,0,0,.75);
+  transform:translate(14px,14px);transition:opacity .1s;}
+#hoverTip .ht-name{font-size:12.5px;font-weight:700;color:#9fd8ff;margin-bottom:4px;
+  padding-bottom:3px;border-bottom:1px solid #1e2937;}
+#hoverTip .ht-name.def{color:#8ec4ff;}
+#hoverTip .ht-name.turret{color:#5fa8ff;}
+#hoverTip .ht-name.bunker{color:#8ad0ff;}
+#hoverTip .ht-name.enemy{color:#ff9b7d;}
+#hoverTip .ht-row{display:flex;justify-content:space-between;gap:14px;margin-top:2px;}
+#hoverTip .ht-label{color:#6b7f94;}
+#hoverTip .ht-val{color:#c8dcee;font-weight:600;}
+
+#selInfo{position:absolute;left:6px;bottom:calc(150px + env(safe-area-inset-bottom));
+  background:rgba(10,16,24,.94);border:1px solid #253444;border-radius:7px;padding:7px 11px;
+  font-size:11px;line-height:1.55;z-index:22;pointer-events:none;max-width:52vw;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);}
+#selInfo .sn{color:#9fd8ff;font-weight:700;font-size:12px;}
+#selInfo .sr{color:#7d8fa2;}
+
+#toast{position:absolute;left:50%;top:98px;transform:translateX(-50%);z-index:30;pointer-events:none;
+  display:flex;flex-direction:column;gap:5px;align-items:center;max-width:90vw;}
+.toastmsg{background:rgba(12,20,30,.96);border-left:3px solid #4d9de0;padding:7px 14px;border-radius:4px;
+  font-size:12px;color:#c8dcee;animation:tin .25s;box-shadow:0 4px 14px rgba(0,0,0,.5);white-space:nowrap;}
+.toastmsg.bad{border-left-color:#e05a3c;color:#ffbfae;}
+.toastmsg.good{border-left-color:#4dd08a;color:#aef0cb;}
+@keyframes tin{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+
+#radial{position:fixed;z-index:150;pointer-events:none;}
+#radial .ring{position:absolute;width:170px;height:170px;border-radius:50%;
+  background:radial-gradient(circle,rgba(20,30,42,.85),rgba(10,15,22,.94));
+  border:1px solid #3a5a7a;box-shadow:0 8px 32px rgba(0,0,0,.75);pointer-events:auto;
+  transform:translate(-50%,-50%);}
+#radial .rbtn{position:absolute;width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(180deg,#22303f,#131c26);border:1px solid #3a5a7a;color:#c8dcee;
+  font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transform:translate(-50%,-50%);pointer-events:auto;touch-action:manipulation;transition:.15s;}
+#radial .rbtn:hover{background:#2e4a68;border-color:#7fc0ff;color:#fff;}
+#radial .rbtn .ic{font-size:16px;line-height:1;}
+
+#result .rt{font-size:clamp(28px,8vw,50px);font-weight:900;letter-spacing:.16em;margin-bottom:8px;}
+#result.win .rt{color:#66e09a;text-shadow:0 0 40px rgba(80,220,140,.4);}
+#result.lose .rt{color:#e05a3c;text-shadow:0 0 40px rgba(220,80,60,.4);}
+#result .rs{color:#7d90a4;font-size:13px;margin-bottom:24px;text-align:center;line-height:1.7;}
+
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;
+  border-bottom:1px solid #1e2937;}
+.settings-row .lbl{font-size:13px;color:#c8dcee;}
+.settings-row .grp{display:flex;gap:5px;flex-wrap:wrap;}
+.chip{padding:6px 12px;border-radius:5px;background:#141d28;border:1px solid #26333f;color:#8799ab;
+  font-size:12px;cursor:pointer;transition:.12s;font-weight:600;touch-action:manipulation;}
+.chip:hover{border-color:#4a6a8c;}
+.chip.active{background:#2a3a4c;border-color:#7fc0ff;color:#9fd8ff;}
+
+#tutorial .tstep{background:#131b24;border:1px solid #223040;border-radius:8px;padding:12px;margin-bottom:9px;}
+#tutorial .tstep h3{font-size:13.5px;color:#9fd8ff;margin-bottom:6px;}
+#tutorial .tstep p{font-size:12px;color:#8fa3b8;line-height:1.6;}
+#tutorial .nav{display:flex;gap:8px;margin-top:12px;}
+
+.room-code{font-family:monospace;font-size:32px;letter-spacing:.3em;color:#ffce6b;
+  text-align:center;padding:16px;background:#0d141c;border:1px solid #26333f;border-radius:8px;
+  margin:10px 0;font-weight:900;}
+.room-input{width:100%;padding:12px;background:#0d141c;border:1px solid #26333f;border-radius:6px;
+  color:#cfe2f5;font-size:18px;font-family:monospace;letter-spacing:.2em;text-align:center;
+  text-transform:uppercase;outline:none;}
+.room-input:focus{border-color:#7fc0ff;}
+.player-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;
+  font-size:11px;font-weight:700;}
+.player-badge.atk{background:rgba(232,83,63,.2);color:#ff9b7d;border:1px solid rgba(232,83,63,.4);}
+.player-badge.def{background:rgba(63,143,232,.2);color:#8ec4ff;border:1px solid rgba(63,143,232,.4);}
+
+/* 屏幕中央的操作提示（首次使用） */
+#hintBubble{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:rgba(15,25,38,.96);border:1px solid #3a5a7a;border-radius:12px;
+  padding:16px 22px;color:#c8dcee;font-size:13px;line-height:1.7;text-align:center;
+  z-index:35;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.7);
+  animation:hintIn .3s ease-out;}
+#hintBubble .hb-key{display:inline-block;background:#22303f;border:1px solid #3a5a7a;
+  border-radius:4px;padding:1px 7px;margin:0 3px;font-size:12px;color:#9fd8ff;font-weight:700;}
+@keyframes hintIn{from{opacity:0;transform:translate(-50%,-50%) scale(.9);}to{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+
+@media(max-width:480px){
+  .rtbtn{width:42px;height:38px;font-size:9.5px;}
+  .rtbtn .ic{font-size:12px;}
+  .sqbtn{width:32px;height:28px;font-size:11px;}
+  .ucard{min-width:64px;padding:5px 8px;}
+  .ucard .un{font-size:11px;}
+  .room-code{font-size:26px;}
+}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="menu" class="overlay">
+  <h1 class="title">钢铁前线</h1>
+  <div class="subtitle">STEEL FRONTLINE · V12</div>
+  <div class="menu-col">
+    <button class="btn primary" id="mNew">开 始 战 役</button>
+    <button class="btn" id="mMulti">多 人 对 战</button>
+    <button class="btn" id="mTut">教 程</button>
+    <button class="btn" id="mLoad">存 档 列 表</button>
+    <button class="btn ghost" id="mSet">设 置</button>
+    <button class="btn ghost" id="mHelp">操 作 说 明</button>
+  </div>
+</div>
+
+<div id="setup" class="overlay hidden">
+  <div class="panel">
+    <h2>战 役 设 置</h2>
+    <div class="rowlabel">选择战场</div>
+    <div class="opt-grid" id="mapOpts"></div>
+    <div class="rowlabel">选择阵营</div>
+    <div class="opt-grid" id="sideOpts"></div>
+    <div class="rowlabel">AI 难度</div>
+    <div class="opt-grid" id="diffOpts"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn ghost" id="sBack" style="flex:0 0 auto;">返回</button>
+      <button class="btn primary" id="sGo" style="flex:1;">出 击</button>
+    </div>
+  </div>
+</div>
+
+<div id="multi" class="overlay hidden">
+  <div class="panel">
+    <h2>多 人 对 战 · P2P</h2>
+    <div id="multiHome">
+      <div style="font-size:12px;color:#8fa3b8;line-height:1.7;margin-bottom:14px;">
+        使用免费 PeerJS 云服务器进行点对点连接。房主创建房间后会得到 6 位房间码。
+      </div>
+      <button class="btn primary" id="mmHost" style="width:100%;">创 建 房 间</button>
+      <button class="btn" id="mmJoin" style="width:100%;margin-top:8px;">加 入 房 间</button>
+      <button class="btn ghost" id="mmBack" style="width:100%;margin-top:12px;">返回</button>
+    </div>
+    <div id="multiHost" class="hidden">
+      <div class="rowlabel">房间码 · 分享给朋友</div>
+      <div class="room-code" id="hostRoomCode">------</div>
+      <button class="btn small" id="copyRoomCode" style="width:100%;">复 制 房 间 码</button>
+      <div class="rowlabel" style="margin-top:16px;">已连接玩家</div>
+      <div id="hostPlayers" style="min-height:40px;">
+        <div style="color:#4d5c6b;font-size:12px;">等待玩家加入…</div>
+      </div>
+      <button class="btn primary" id="hostStart" style="width:100%;margin-top:14px;">开 始 战 斗</button>
+      <button class="btn ghost" id="hostBack" style="width:100%;margin-top:8px;">返回</button>
+    </div>
+    <div id="multiJoin" class="hidden">
+      <div class="rowlabel">输入房间码</div>
+      <input class="room-input" id="joinRoomCode" maxlength="6" placeholder="------" autocomplete="off">
+      <button class="btn primary" id="doJoin" style="width:100%;margin-top:12px;">加 入 房 间</button>
+      <div id="joinStatus" style="font-size:12px;color:#8fa3b8;margin-top:12px;text-align:center;min-height:20px;"></div>
+      <button class="btn ghost" id="joinBack" style="width:100%;margin-top:12px;">返回</button>
+    </div>
+  </div>
+</div>
+
+<div id="saves" class="overlay hidden">
+  <div class="panel">
+    <h2>存 档 列 表</h2>
+    <div id="saveList"></div>
+    <button class="btn ghost" id="svBack" style="width:100%;margin-top:12px;">返回</button>
+  </div>
+</div>
+
+<div id="tutorial" class="overlay hidden">
+  <div class="panel">
+    <h2>新 兵 训 练</h2>
+    <div id="tutContent"></div>
+    <div class="nav">
+      <button class="btn ghost" id="tPrev">上一章</button>
+      <button class="btn primary" id="tNext" style="flex:1;">下一章</button>
+    </div>
+    <button class="btn ghost" id="tBack" style="width:100%;margin-top:9px;">返回主菜单</button>
+  </div>
+</div>
+
+<div id="settings" class="overlay hidden">
+  <div class="panel">
+    <h2>设 置</h2>
+    <div class="settings-row">
+      <span class="lbl">画质</span>
+      <div class="grp" id="qgrp">
+        <div class="chip" data-q="low">低</div>
+        <div class="chip" data-q="mid">中</div>
+        <div class="chip" data-q="high">高</div>
+      </div>
+    </div>
+    <div class="settings-row">
+      <span class="lbl">帧率上限</span>
+      <div class="grp" id="fgrp">
+        <div class="chip" data-f="30">30</div>
+        <div class="chip" data-f="45">45</div>
+        <div class="chip" data-f="60">60</div>
+      </div>
+    </div>
+    <div class="settings-row">
+      <span class="lbl">战斗特效</span>
+      <div class="grp" id="fxgrp">
+        <div class="chip" data-fx="1">开</div>
+        <div class="chip" data-fx="0">关</div>
+      </div>
+    </div>
+    <button class="btn primary" id="setBack" style="width:100%;margin-top:16px;">完 成</button>
+  </div>
+</div>
+
+<div id="help" class="overlay hidden">
+  <div class="panel help">
+    <h2>操 作 说 明</h2>
+    <p><b>视角</b> — 单指拖动平移；双指捏合缩放。PC 端滚轮缩放、WASD 平移。</p>
+    <p><b>选择</b> — 单击己方单位选中；单击空地命令移动；<b>长按空地拖动</b>框选部队。<b>Shift+点击</b>可多选。</p>
+    <p><b>长按单位</b> — 弹出战术轮盘（移动 / 攻击 / 驻守 / 停止）。</p>
+    <p><b>编队</b> — 选中部队后<b>长按</b>数字按钮编入；<b>短按</b>数字按钮调用。快捷键 1–9（Shift+数字 = 编入）。</p>
+    <p><b>计划模式</b> — 右侧"计划"按钮：前线 / 防区 / 进攻 / 清除。绘制后选中的部队会自动执行。</p>
+    <p><b>指挥值</b> — 攻方基础随时间逐步提升，守方起步略高且恒定；据点丢失会降低守方恢复。击杀单位得造价 64%，占领支部 +24，指挥部 +48。</p>
+    <p><b>部署时间</b> — 攻方 2 秒，守方 4 秒。</p>
+    <p><b>炮击</b> — 需在己方单位或据点 420 范围内才能呼叫。范围适中、频率较高、持续较长，伤害为<b>中立伤害</b>。</p>
+    <p><b>游戏时长</b> — 25 分钟。守方坚守到时间结束即胜。</p>
+    <button class="btn ghost" id="hBack" style="width:100%;margin-top:14px;">返回</button>
+  </div>
+</div>
+
+<div id="pause" class="overlay hidden">
+  <div class="panel" style="width:min(300px,86vw);">
+    <h2>暂 停</h2>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn primary" id="pResume">继续战斗</button>
+      <button class="btn" id="pSet">设置</button>
+      <button class="btn" id="pSave">保存进度</button>
+      <button class="btn ghost" id="pQuit">放弃战役</button>
+    </div>
+  </div>
+</div>
+
+<div id="result" class="overlay hidden">
+  <div class="rt" id="rTitle">胜 利</div>
+  <div class="rs" id="rSub"></div>
+  <div class="menu-col" style="width:min(300px,86vw);">
+    <button class="btn primary" id="rAgain">再 战 一 局</button>
+    <button class="btn" id="rMenu">返 回 主 菜 单</button>
+  </div>
+</div>
+
+<div id="hud" class="hidden">
+  <div id="topBar">
+    <div class="stat cp"><span class="lbl">指挥值</span><span class="val" id="cpVal">0</span></div>
+    <div class="stat" id="timeStat"><span class="lbl">剩余</span><span class="val" id="timeVal">25:00</span></div>
+    <div class="stat"><span class="lbl">支部</span><span class="val" id="postVal">0/4</span></div>
+    <div class="stat"><span class="lbl">部队</span><span class="val" id="unitVal">0</span></div>
+    <div class="tb-spacer"></div>
+    <button class="tbtn" id="btnPause">❚❚</button>
+  </div>
+  <div id="leftPanel"></div>
+  <div id="rightPanel">
+    <button class="rtbtn" id="rtPlan"><span class="ic">⌘</span>计划</button>
+    <button class="rtbtn" id="rtMove"><span class="ic">➤</span>移动</button>
+    <button class="rtbtn" id="rtAttack"><span class="ic">✶</span>攻击</button>
+    <button class="rtbtn" id="rtStop"><span class="ic">■</span>停止</button>
+  </div>
+  <div id="planPanel" class="hidden">
+    <div class="plbtn" data-plan="front">前线</div>
+    <div class="plbtn" data-plan="defend">防区</div>
+    <div class="plbtn" data-plan="attack">进攻</div>
+    <div class="plbtn" data-plan="clear">清除</div>
+    <div class="plbtn" data-plan="cancel">取消</div>
+  </div>
+  <div id="bottomBar">
+    <div class="unit-row" id="deployRow"></div>
+    <div class="unit-row" id="skillRow"></div>
+  </div>
+  <div id="selInfo" class="hidden"></div>
+  <div id="modeTip" class="hidden"></div>
+  <div id="toast"></div>
+</div>
+<div id="hoverTip" class="hidden"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+"use strict";
+
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const dist2=(x1,y1,x2,y2)=>{const dx=x1-x2,dy=y1-y2;return dx*dx+dy*dy;};
+const dist=(x1,y1,x2,y2)=>Math.sqrt(dist2(x1,y1,x2,y2));
+let _uid=1;const uid=()=>_uid++;
+function hash2(x,y,s){
+  let h=Math.imul(x|0,374761393)^Math.imul(y|0,668265263)^Math.imul(s|0,1274126177);
+  h=Math.imul(h^(h>>>13),1274126177);
+  return ((h^(h>>>16))>>>0)/4294967296;
+}
+function vnoise(x,y,s){
+  const xi=Math.floor(x),yi=Math.floor(y);
+  const xf=x-xi,yf=y-yi;
+  const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const a=hash2(xi,yi,s),b=hash2(xi+1,yi,s),c=hash2(xi,yi+1,s),d=hash2(xi+1,yi+1,s);
+  return a*(1-u)*(1-v)+b*u*(1-v)+c*(1-u)*v+d*u*v;
+}
+function fbm(x,y,s,oct){
+  let v=0,amp=.5,f=1;
+  for(let i=0;i<oct;i++){v+=vnoise(x*f,y*f,s+i*37)*amp;amp*=.5;f*=2;}
+  return v;
+}
+
+/* ============ 常量 ============ */
+let MAP_W=64, MAP_H=44;
+const CELL=32;
+const TICK=1/30;
+const GAME_LEN=1500;
+
+const T_PLAIN=0,T_FOREST=1,T_MOUNT=2,T_WATER=3,T_ROAD=4,T_SAND=5,T_BUILDING=6,T_BRIDGE=7;
+const TERRAIN=[
+  {n:'平原', pass:1,spd:1.00,cover:0.00,c1:'#4a7a3d',c2:'#548842'},
+  {n:'森林', pass:1,spd:0.60,cover:0.30,c1:'#1e3f1e',c2:'#264d24'},
+  {n:'山地', pass:0,spd:0,   cover:0.00,c1:'#6b6355',c2:'#7a7263'},
+  {n:'水域', pass:0,spd:0,   cover:0.00,c1:'#18445f',c2:'#1f5573'},
+  {n:'道路', pass:1,spd:1.38,cover:0.00,c1:'#8a7d5a',c2:'#9a8c66'},
+  {n:'滩涂', pass:1,spd:0.80,cover:0.05,c1:'#b8a878',c2:'#c8b888'},
+  {n:'建筑', pass:0,spd:0,   cover:0.00,c1:'#3a3a42',c2:'#48484f'},
+  {n:'桥梁', pass:1,spd:1.20,cover:0.00,c1:'#6b5a4a',c2:'#7a6a58'},
+];
+
+const UNITS={
+  inf:  {n:'步兵班',cost:8, hp:110,spd:16.5,dmg:10,range:78, cd:0.85,vis:142,r:6, cap:1.0},
+  scout:{n:'侦察班',cost:6, hp:70, spd:28.5,dmg:5, range:60, cd:1.0, vis:250,r:5, cap:0.6},
+  eng:  {n:'工兵班',cost:10,hp:100,spd:15.0,dmg:4, range:46, cd:1.4, vis:132,r:6, cap:1.0,trench:1},
+  arm:  {n:'装甲连',cost:24,hp:300,spd:25.5,dmg:28,range:118,cd:1.55,vis:162,r:9, cap:1.0},
+  art:  {n:'炮兵连',cost:32,hp:130,spd:10.5,dmg:46,range:252,cd:10, vis:122,r:8, splash:26,aim:2.4,cap:0.5},
+};
+
+const TURRETS={
+  mg:    {n:'机枪堡',  hp:700, dmg:15,range:180,cd:0.45,r:10,vis:172},
+  at:    {n:'反坦克炮',hp:980, dmg:60,range:240,cd:2.4, r:11,vis:192},
+  fort:  {n:'要塞炮',  hp:1400,dmg:91,range:340,cd:3.6,r:14,vis:232},
+  bunker:{n:'碉堡',    hp:850, dmg:12,range:150,cd:0.6, r:11,vis:170},
+};
+
+const SKILLS={
+  recon:    {n:'侦察机',  cost:12,cd:30, radius:200,dur:12, maxRange:420},
+  barrage:  {n:'炮火覆盖',cost:30,cd:125,radius:46, dur:12,dps:27,neutral:true,maxRange:420},
+  airstrike:{n:'空中打击',cost:45,cd:158,radius:60, dur:8, dps:52,neutral:true,maxRange:520},
+};
+
+const DIFFS={
+  easy:  {n:'新兵',interval:4.4,cpMul:0.76,skill:0.12,maxUnits:24},
+  normal:{n:'老兵',interval:2.9,cpMul:1.00,skill:0.42,maxUnits:34},
+  hard:  {n:'王牌',interval:2.0,cpMul:1.26,skill:0.78,maxUnits:44},
+};
+
+/* ---------- 地图辅助 ---------- */
+function isLand(t,x,y){const v=t[y*MAP_W+x];return v!==T_WATER&&v!==T_MOUNT&&v!==T_BUILDING;}
+function placeOnLand(t,x,y){
+  x=clamp(Math.round(x),1,MAP_W-2);y=clamp(Math.round(y),1,MAP_H-2);
+  if(isLand(t,x,y))return{x,y};
+  for(let r=1;r<24;r++){
+    for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+      if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
+      const nx=x+dx,ny=y+dy;
+      if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;
+      if(isLand(t,nx,ny))return{x:nx,y:ny};
+    }
+  }
+  return{x,y};
+}
+function flatten(t,x,y,r){
+  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+    const nx=x+dx,ny=y+dy;
+    if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;
+    if(dx*dx+dy*dy>r*r)continue;
+    const v=t[ny*MAP_W+nx];
+    if(v===T_MOUNT||v===T_WATER||v===T_BUILDING)t[ny*MAP_W+nx]=T_PLAIN;
+  }
+}
+function carveRoad(t,x1,y1,x2,y2,w){
+  w=w||0;
+  const steps=Math.ceil(dist(x1,y1,x2,y2)*2);
+  for(let i=0;i<=steps;i++){
+    const p=i/steps;
+    const cx=Math.round(lerp(x1,x2,p)),cy=Math.round(lerp(y1,y2,p));
+    for(let dy=-w;dy<=w;dy++)for(let dx=-w;dx<=w;dx++){
+      const nx=cx+dx,ny=cy+dy;
+      if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;
+      const v=t[ny*MAP_W+nx];
+      if(v===T_MOUNT||v===T_WATER||v===T_PLAIN||v===T_SAND||v===T_FOREST)
+        t[ny*MAP_W+nx]=T_ROAD;
+    }
+  }
+}
+
+/* ---------- 地图生成器 ---------- */
+function genIsland(){
+  const t=new Uint8Array(MAP_W*MAP_H);
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const dx=(x-MAP_W*.5)/(MAP_W*.355);
+    const dy=(y-MAP_H*.47)/(MAP_H*.375);
+    let d=Math.sqrt(dx*dx+dy*dy)+(fbm(x*.08,y*.08,7,4)-.5)*.92;
+    let v;
+    if(d<.70)v=T_PLAIN;else if(d<.90)v=T_SAND;else v=T_WATER;
+    if(v===T_PLAIN){
+      const m=fbm(x*.10+13,y*.10+13,23,4);
+      const f=fbm(x*.145+77,y*.145+77,41,3);
+      if(m>.665)v=T_MOUNT;else if(f>.575)v=T_FOREST;
+    }
+    t[y*MAP_W+x]=v;
+  }
+  const posts=[
+    {x:32,y:12,type:'hq',name:'守军大本营'},
+    {x:15,y:21,type:'branch',name:'西港支部'},
+    {x:49,y:21,type:'branch',name:'东岭支部'},
+    {x:21,y:32,type:'branch',name:'南滩支部'},
+    {x:43,y:32,type:'branch',name:'椰林支部'},
+  ];
+  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
+  const spawn=placeOnLand(t,32,37);flatten(t,spawn.x,spawn.y,2);
+  for(let i=1;i<posts.length;i++)carveRoad(t,posts[0].x,posts[0].y,posts[i].x,posts[i].y,0);
+  carveRoad(t,posts[0].x,posts[0].y,spawn.x,spawn.y,0);
+  const turrets=[
+    {x:32,y:8,type:'fort'},{x:28,y:14,type:'mg'},{x:36,y:14,type:'mg'},
+    {x:15,y:17,type:'at'},{x:49,y:17,type:'at'},
+    {x:21,y:28,type:'mg'},{x:43,y:28,type:'mg'},
+    {x:26,y:22,type:'bunker'},{x:38,y:22,type:'bunker'},
+  ];
+  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
+  return {terrain:t,posts,spawn,turrets};
+}
+function genValley(){
+  const t=new Uint8Array(MAP_W*MAP_H);
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const cx=MAP_W*.5;
+    const halfW=13+Math.sin(y*.16)*3.2+(fbm(x*.07,y*.07,5,3)-.5)*7;
+    const dd=Math.abs(x-cx);
+    let v;
+    if(dd<halfW-3.5)v=T_PLAIN;else if(dd<halfW)v=T_SAND;else v=T_MOUNT;
+    if(v===T_PLAIN){const f=fbm(x*.13+31,y*.13+31,61,3);if(f>.615)v=T_FOREST;}
+    t[y*MAP_W+x]=v;
+  }
+  const posts=[
+    {x:32,y:9,type:'hq',name:'守军大本营'},
+    {x:23,y:18,type:'branch',name:'西谷口支部'},
+    {x:41,y:18,type:'branch',name:'东谷口支部'},
+    {x:24,y:30,type:'branch',name:'碎石坡支部'},
+    {x:40,y:30,type:'branch',name:'枯木林支部'},
+  ];
+  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
+  const spawn=placeOnLand(t,32,39);flatten(t,spawn.x,spawn.y,2);
+  carveRoad(t,posts[0].x,posts[0].y,posts[1].x,posts[1].y,1);
+  carveRoad(t,posts[0].x,posts[0].y,posts[2].x,posts[2].y,1);
+  carveRoad(t,posts[1].x,posts[1].y,posts[3].x,posts[3].y,1);
+  carveRoad(t,posts[2].x,posts[2].y,posts[4].x,posts[4].y,1);
+  carveRoad(t,32,9,spawn.x,spawn.y,1);
+  const turrets=[
+    {x:32,y:6,type:'fort'},{x:28,y:12,type:'mg'},{x:36,y:12,type:'mg'},
+    {x:23,y:14,type:'at'},{x:41,y:14,type:'at'},
+    {x:24,y:26,type:'mg'},{x:40,y:26,type:'mg'},
+    {x:28,y:20,type:'bunker'},{x:36,y:20,type:'bunker'},
+  ];
+  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
+  return {terrain:t,posts,spawn,turrets};
+}
+function genPlain(){
+  const t=new Uint8Array(MAP_W*MAP_H);
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    let v=T_PLAIN;
+    const f=fbm(x*.11+5,y*.11+5,91,4);
+    const m=fbm(x*.09+55,y*.09+55,17,3);
+    if(m>.755)v=T_MOUNT;else if(f>.545)v=T_FOREST;
+    t[y*MAP_W+x]=v;
+  }
+  const posts=[
+    {x:32,y:11,type:'hq',name:'守军大本营'},
+    {x:13,y:20,type:'branch',name:'林场支部'},
+    {x:51,y:20,type:'branch',name:'铁路支部'},
+    {x:19,y:33,type:'branch',name:'南村支部'},
+    {x:45,y:33,type:'branch',name:'石桥支部'},
+  ];
+  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
+  const spawn=placeOnLand(t,32,40);flatten(t,spawn.x,spawn.y,2);
+  for(let i=1;i<posts.length;i++)carveRoad(t,posts[0].x,posts[0].y,posts[i].x,posts[i].y,0);
+  carveRoad(t,posts[0].x,posts[0].y,spawn.x,spawn.y,0);
+  carveRoad(t,posts[1].x,posts[1].y,posts[3].x,posts[3].y,0);
+  carveRoad(t,posts[2].x,posts[2].y,posts[4].x,posts[4].y,0);
+  const turrets=[
+    {x:32,y:7,type:'fort'},{x:28,y:13,type:'mg'},{x:36,y:13,type:'mg'},
+    {x:13,y:16,type:'at'},{x:51,y:16,type:'at'},
+    {x:19,y:29,type:'mg'},{x:45,y:29,type:'mg'},
+    {x:24,y:18,type:'bunker'},{x:40,y:18,type:'bunker'},
+  ];
+  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
+  return {terrain:t,posts,spawn,turrets};
+}
+function genCity(){
+  const t=new Uint8Array(MAP_W*MAP_H).fill(T_PLAIN);
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    if(x<2||y<2||x>MAP_W-3||y>MAP_H-3)t[y*MAP_W+x]=T_MOUNT;
+  }
+  const bx=[8,20,32,44,56],by=[6,16,26,36];
+  for(let i=0;i<bx.length-1;i++)for(let j=0;j<by.length-1;j++){
+    const x0=bx[i],y0=by[j],x1=bx[i+1],y1=by[j+1];
+    if(i===1&&j===0)continue;
+    for(let y=y0+1;y<y1-1;y++)for(let x=x0+1;x<x1-1;x++)
+      if(Math.random()<0.82)t[y*MAP_W+x]=T_BUILDING;
+  }
+  [10,22,34,46,58].forEach(cx=>{
+    for(let y=3;y<MAP_H-3;y++)for(let d=0;d<=1;d++){
+      const nx=cx+d;
+      if(nx>=0&&nx<MAP_W){
+        const v=t[y*MAP_W+nx];
+        if(v===T_BUILDING||v===T_PLAIN||v===T_MOUNT)t[y*MAP_W+nx]=T_ROAD;
+      }
+    }
+  });
+  [8,18,28,38].forEach(cy=>{
+    for(let x=3;x<MAP_W-3;x++)for(let d=0;d<=1;d++){
+      const ny=cy+d;
+      if(ny>=0&&ny<MAP_H){
+        const v=t[ny*MAP_W+x];
+        if(v===T_BUILDING||v===T_PLAIN||v===T_MOUNT)t[ny*MAP_W+x]=T_ROAD;
+      }
+    }
+  });
+  const posts=[
+    {x:32,y:10,type:'hq',name:'市政厅'},
+    {x:14,y:16,type:'branch',name:'西区支部'},
+    {x:50,y:16,type:'branch',name:'东区支部'},
+    {x:16,y:34,type:'branch',name:'南站支部'},
+    {x:48,y:34,type:'branch',name:'码头支部'},
+  ];
+  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
+  const spawn=placeOnLand(t,32,41);flatten(t,spawn.x,spawn.y,2);
+  const turrets=[
+    {x:32,y:6,type:'fort'},{x:24,y:12,type:'mg'},{x:40,y:12,type:'mg'},
+    {x:14,y:12,type:'at'},{x:50,y:12,type:'at'},
+    {x:16,y:30,type:'mg'},{x:48,y:30,type:'mg'},
+    {x:30,y:22,type:'bunker'},{x:34,y:22,type:'bunker'},
+  ];
+  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
+  return {terrain:t,posts,spawn,turrets};
+}
+function genRiver(){
+  const t=new Uint8Array(MAP_W*MAP_H);
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    let v=T_PLAIN;
+    const f=fbm(x*.12+5,y*.12+5,141,3);
+    if(f>.61)v=T_FOREST;
+    const m=fbm(x*.085+99,y*.085+99,73,3);
+    if(m>.77)v=T_MOUNT;
+    t[y*MAP_W+x]=v;
+  }
+  const riverY=[];
+  for(let x=0;x<MAP_W;x++){
+    const ry=Math.round(20+Math.sin(x*0.16)*2.6+Math.sin(x*0.42)*1.1);
+    riverY.push(ry);
+    for(let d=-2;d<=2;d++){
+      const ny=ry+d;
+      if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_WATER;
+    }
+  }
+  const bridges=[12,32,52];
+  bridges.forEach(bx=>{
+    for(let x=bx-1;x<=bx+1;x++)for(let d=-3;d<=3;d++){
+      const ny=riverY[clamp(x,0,MAP_W-1)]+d;
+      if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_BRIDGE;
+    }
+  });
+  for(let x=0;x<MAP_W;x++){
+    const ry=riverY[x];
+    [ry-3,ry+3].forEach(ny=>{
+      if(ny>=0&&ny<MAP_H){
+        const v=t[ny*MAP_W+x];
+        if(v===T_PLAIN||v===T_FOREST)t[ny*MAP_W+x]=T_SAND;
+      }
+    });
+  }
+  const posts=[
+    {x:32,y:9,type:'hq',name:'守军大本营'},
+    {x:14,y:18,type:'branch',name:'西桥头支部'},
+    {x:50,y:18,type:'branch',name:'东桥头支部'},
+    {x:20,y:32,type:'branch',name:'南岸支部'},
+    {x:44,y:32,type:'branch',name:'河口支部'},
+  ];
+  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
+  const spawn=placeOnLand(t,32,39);flatten(t,spawn.x,spawn.y,2);
+  bridges.forEach(bx=>carveRoad(t,bx,3,bx,MAP_H-4,0));
+  const turrets=[
+    {x:32,y:5,type:'fort'},{x:22,y:12,type:'mg'},{x:42,y:12,type:'mg'},
+    {x:14,y:14,type:'at'},{x:50,y:14,type:'at'},
+    {x:20,y:28,type:'mg'},{x:44,y:28,type:'mg'},
+    {x:26,y:16,type:'bunker'},{x:38,y:16,type:'bunker'},
+  ];
+  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
+  return {terrain:t,posts,spawn,turrets};
+}
+function genTutorial(){
+  const t=new Uint8Array(MAP_W*MAP_H);
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    let v=T_PLAIN;
+    if(x<20 && y<14 && fbm(x*.14,y*.14,3,3)>.55) v=T_FOREST;
+    if(x>50 && y>8 && y<30 && fbm(x*.12+11,y*.12+11,9,3)>.63) v=T_MOUNT;
+    t[y*MAP_W+x]=v;
+  }
+  const posts=[
+    {x:12,y:30,type:'hq',name:'我方指挥部'},
+    {x:32,y:22,type:'branch',name:'中立支部'},
+    {x:52,y:22,type:'branch',name:'敌方支部'},
+    {x:52,y:10,type:'hq',name:'敌方指挥部'},
+  ];
+  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
+  const spawn=placeOnLand(t,12,30);
+  carveRoad(t,posts[0].x,posts[0].y,posts[1].x,posts[1].y,0);
+  carveRoad(t,posts[1].x,posts[1].y,posts[3].x,posts[3].y,0);
+  return {terrain:t,posts,spawn,turrets:[]};
+}
+function genGrand(){
+  MAP_W=96; MAP_H=64;
+  const t=new Uint8Array(MAP_W*MAP_H);
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    let v=T_PLAIN;
+    const f=fbm(x*.075+7,y*.075+7,201,4);
+    const m=fbm(x*.06+63,y*.06+63,101,4);
+    if(m>.72)v=T_MOUNT;
+    else if(f>.58)v=T_FOREST;
+    const riverY=Math.round(32 + Math.sin(x*.09)*4 + Math.sin(x*.21)*1.6);
+    if(Math.abs(y-riverY)<2)v=T_WATER;
+    if(Math.abs(y-riverY)===2 && v===T_PLAIN)v=T_SAND;
+    t[y*MAP_W+x]=v;
+  }
+  [16,32,48,64,80].forEach(bx=>{
+    for(let x=bx-1;x<=bx+1;x++){
+      if(x<0||x>=MAP_W) continue;
+      const ry=Math.round(32 + Math.sin(x*.09)*4 + Math.sin(x*.21)*1.6);
+      for(let d=-3;d<=3;d++){
+        const ny=ry+d;
+        if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_BRIDGE;
+      }
+    }
+  });
+  const posts=[
+    {x:48,y:12,type:'hq',name:'北军指挥部'},
+    {x:24,y:16,type:'branch',name:'西北支部'},
+    {x:72,y:16,type:'branch',name:'东北支部'},
+    {x:16,y:32,type:'branch',name:'西岸支部'},
+    {x:80,y:32,type:'branch',name:'东岸支部'},
+    {x:24,y:48,type:'branch',name:'西南支部'},
+    {x:72,y:48,type:'branch',name:'东南支部'},
+    {x:48,y:52,type:'hq',name:'南军指挥部'},
+    {x:16,y:52,type:'branch',name:'西南渡口'},
+    {x:80,y:52,type:'branch',name:'东南渡口'},
+  ];
+  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
+  const spawns=[{x:8,y:8},{x:88,y:8},{x:8,y:56},{x:88,y:56}]
+    .map(s=>{const q=placeOnLand(t,s.x,s.y);flatten(t,q.x,q.y,2);return q;});
+  carveRoad(t,spawns[0].x,spawns[0].y,posts[0].x,posts[0].y,1);
+  carveRoad(t,spawns[1].x,spawns[1].y,posts[0].x,posts[0].y,1);
+  carveRoad(t,spawns[2].x,spawns[2].y,posts[7].x,posts[7].y,1);
+  carveRoad(t,spawns[3].x,spawns[3].y,posts[7].x,posts[7].y,1);
+  carveRoad(t,posts[0].x,posts[0].y,posts[3].x,posts[3].y,0);
+  carveRoad(t,posts[0].x,posts[0].y,posts[4].x,posts[4].y,0);
+  carveRoad(t,posts[7].x,posts[7].y,posts[3].x,posts[3].y,0);
+  carveRoad(t,posts[7].x,posts[7].y,posts[4].x,posts[4].y,0);
+  const turrets=[
+    {x:48,y:6,type:'fort'},{x:38,y:12,type:'mg'},{x:58,y:12,type:'mg'},
+    {x:16,y:26,type:'at'},{x:80,y:26,type:'at'},
+    {x:24,y:44,type:'mg'},{x:72,y:44,type:'mg'},
+    {x:48,y:58,type:'fort'},{x:38,y:52,type:'mg'},{x:58,y:52,type:'mg'},
+    {x:32,y:20,type:'bunker'},{x:64,y:20,type:'bunker'},
+    {x:32,y:44,type:'bunker'},{x:64,y:44,type:'bunker'},
+  ];
+  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
+  return {terrain:t,posts,spawn:spawns[0],spawns,turrets,mapW:MAP_W,mapH:MAP_H};
+}
+
+const MAPS=[
+  {id:'island',n:'翡翠群岛',desc:'四面环海的孤岛，守军踞守中央高地。',gen:genIsland,tag:'海岛'},
+  {id:'valley',n:'赤石山谷',desc:'两侧绝壁夹出的狭长走廊，正面强攻代价高昂。',gen:genValley,tag:'山谷'},
+  {id:'plain', n:'黑森林平原',desc:'开阔平原散布茂密林地，适合装甲穿插。',gen:genPlain,tag:'平原+森林'},
+  {id:'city',  n:'断壁残城',desc:'密集街区与笔直街道，近距离巷战。',gen:genCity,tag:'城市'},
+  {id:'river', n:'怒涛渡口',desc:'横贯东西的大河，三座桥梁成为必争之地。',gen:genRiver,tag:'河流'},
+  {id:'grand', n:'大陆战场',desc:'开阔的大陆，四条渡口桥是必争之地。适合 2–4 人联机。',gen:genGrand,tag:'大战场'},
+  {id:'tutorial',n:'新兵训练',desc:'教学关卡，一步步掌握指挥技巧。',gen:genTutorial,tag:'教程',tutorial:true},
+];
+
+const cv=document.getElementById('game');
+const ctx=cv.getContext('2d',{alpha:false});
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth;H=cv.clientHeight;
+  cv.width=Math.floor(W*DPR);cv.height=Math.floor(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize);
+window.addEventListener('orientationchange',()=>setTimeout(resize,180));
+
+const CFG={
+  quality: localStorage.v12q||'mid',
+  fps: parseInt(localStorage.v12f||'60',10),
+  fx: localStorage.v12fx!=='0',
+};
+function saveCfg(){
+  localStorage.v12q=CFG.quality;
+  localStorage.v12f=CFG.fps;
+  localStorage.v12fx=CFG.fx?'1':'0';
+}
+
+let G=null;
+
+function makeGame(cfg){
+  const mapDef=MAPS.find(m=>m.id===cfg.mapId)||MAPS[0];
+  const gen=mapDef.gen();
+  if(gen.mapW){ MAP_W=gen.mapW; MAP_H=gen.mapH; }
+  else if(mapDef.id==='grand'){ MAP_W=96; MAP_H=64; }
+  else { MAP_W=64; MAP_H=44; }
+
+  const g={
+    cfg,mapDef,terrain:gen.terrain,terrainCanvas:null,
+    units:[],turrets:[],posts:[],trenches:[],
+    effects:[],projectiles:[],strikes:[],deploying:[],
+    plans:[],
+    time:0,tick:0,
+    cp:{atk:0,def:0},cpFrac:{atk:0,def:0},
+    playerSide:cfg.side,aiSide:cfg.side==='atk'?'def':'atk',
+    selection:[],cam:{x:gen.spawn.x*CELL,y:(gen.spawn.y+8)*CELL,zoom:.85},
+    vis:{atk:null,def:null},
+    recon:[],
+    cd:{atk:{},def:{}},
+    state:'playing',result:null,
+    ai:{timer:1.2,wave:0},
+    spawnPoint:{x:gen.spawn.x*CELL,y:gen.spawn.y*CELL},
+    spawns:(gen.spawns||[gen.spawn]).map(s=>({x:s.x*CELL+CELL/2,y:s.y*CELL+CELL/2})),
+    mode:null,pendingDeploy:null,pendingSkill:null,
+    shake:0,
+    squads:{},
+    hotSquad:0,
+    radialTargets:null,
+    planMode:null,
+    planPts:[],
+    mp:null,
+    tutorial:null,
+  };
+  gen.posts.forEach((p,i)=>{
+    g.posts.push({
+      id:i,x:p.x*CELL+CELL/2,y:p.y*CELL+CELL/2,type:p.type,
+      owner:'def',cap:100,integrate:1,name:p.name,
+    });
+  });
+  gen.turrets.forEach(p=>{
+    const d=TURRETS[p.type];
+    g.turrets.push({
+      id:uid(),side:'def',type:p.type,
+      x:p.x*CELL+CELL/2,y:p.y*CELL+CELL/2,
+      hp:d.hp,maxHp:d.hp,cd:rnd(0,1),r:d.r,
+    });
+  });
+  g.posts.forEach(p=>{
+    if(p.type==='hq'){
+      const u1=spawnUnit(g,'def','inf',p.x+rnd(-40,40),p.y+rnd(40,70));u1.holdPost=1;
+      const u2=spawnUnit(g,'def','inf',p.x+rnd(-40,40),p.y+rnd(40,70));u2.holdPost=1;
+      const u3=spawnUnit(g,'def','eng',p.x+rnd(-40,40),p.y+rnd(60,90));u3.holdPost=1;
+    }else{
+      const u=spawnUnit(g,'def','inf',p.x+rnd(-30,30),p.y+rnd(-30,30));u.holdPost=1;
+      if(Math.random()<.6){const s=spawnUnit(g,'def','scout',p.x+rnd(-50,50),p.y+rnd(-50,50));s.holdPost=1;}
+    }
+  });
+  for(let i=0;i<4;i++)spawnUnit(g,'atk','inf',g.spawnPoint.x+rnd(-70,70),g.spawnPoint.y+rnd(-50,50));
+  spawnUnit(g,'atk','scout',g.spawnPoint.x+rnd(-60,60),g.spawnPoint.y+rnd(-40,40));
+  spawnUnit(g,'atk','arm',g.spawnPoint.x+rnd(-50,50),g.spawnPoint.y+rnd(-40,40));
+  spawnUnit(g,'atk','eng',g.spawnPoint.x+rnd(-60,60),g.spawnPoint.y+rnd(-40,40));
+
+  g.cp.atk=30;g.cp.def=38;
+
+  buildTerrainCanvas(g);
+  recomputeVis(g,'atk');recomputeVis(g,'def');
+  return g;
+}
+
+function buildTerrainCanvas(g){
+  const c=document.createElement('canvas');
+  c.width=MAP_W*CELL;c.height=MAP_H*CELL;
+  const gg=c.getContext('2d');
+  const t=g.terrain;
+  const hi=CFG.quality==='high',lo=CFG.quality==='low';
+  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
+    const v=t[y*MAP_W+x],info=TERRAIN[v];
+    const n=hash2(x,y,v*13+7);
+    gg.fillStyle=n>.5?info.c2:info.c1;
+    gg.fillRect(x*CELL,y*CELL,CELL,CELL);
+    if(lo)continue;
+    if(v===T_FOREST){
+      gg.fillStyle='rgba(8,26,8,.6)';
+      const nTrees=hi?4:2;
+      for(let k=0;k<nTrees;k++){
+        const hx=x*CELL+hash2(x,y,k+1)*CELL;
+        const hy=y*CELL+hash2(x,y,k+9)*CELL;
+        gg.beginPath();gg.arc(hx,hy,4.5+hash2(x,y,k+21)*3.5,0,6.284);gg.fill();
+      }
+    }else if(v===T_MOUNT){
+      gg.fillStyle='rgba(255,255,255,.06)';
+      gg.beginPath();
+      gg.moveTo(x*CELL+4,y*CELL+CELL);
+      gg.lineTo(x*CELL+CELL*.5,y*CELL+3);
+      gg.lineTo(x*CELL+CELL-4,y*CELL+CELL);
+      gg.closePath();gg.fill();
+    }else if(v===T_WATER){
+      gg.strokeStyle='rgba(120,190,255,.10)';gg.lineWidth=1.5;
+      const wy=y*CELL+CELL*.5+Math.sin(x*.7+y*.3)*4;
+      gg.beginPath();gg.moveTo(x*CELL+4,wy);gg.lineTo(x*CELL+CELL-4,wy);gg.stroke();
+    }else if(v===T_BUILDING){
+      gg.fillStyle='rgba(0,0,0,.28)';
+      gg.fillRect(x*CELL+2,y*CELL+2,CELL-4,CELL-4);
+      gg.fillStyle='rgba(255,255,255,.05)';
+      gg.fillRect(x*CELL+5,y*CELL+5,CELL-14,CELL-14);
+    }else if(v===T_BRIDGE){
+      gg.strokeStyle='rgba(0,0,0,.28)';gg.lineWidth=1;
+      for(let k=0;k<3;k++){
+        const ly=y*CELL+6+k*8;
+        gg.beginPath();gg.moveTo(x*CELL+2,ly);gg.lineTo(x*CELL+CELL-2,ly);gg.stroke();
+      }
+    }
+    if(!lo){
+      const right=(x+1<MAP_W)?t[y*MAP_W+x+1]:-1;
+      const down=(y+1<MAP_H)?t[(y+1)*MAP_W+x]:-1;
+      if(right>=0&&right!==v){
+        gg.strokeStyle='rgba(0,0,0,.22)';gg.lineWidth=1.2;
+        gg.beginPath();gg.moveTo((x+1)*CELL,y*CELL);gg.lineTo((x+1)*CELL,(y+1)*CELL);gg.stroke();
+      }
+      if(down>=0&&down!==v){
+        gg.strokeStyle='rgba(0,0,0,.22)';gg.lineWidth=1.2;
+        gg.beginPath();gg.moveTo(x*CELL,(y+1)*CELL);gg.lineTo((x+1)*CELL,(y+1)*CELL);gg.stroke();
+      }
+    }
+  }
+  g.terrainCanvas=c;
+}
+
+function spawnUnit(g,side,type,x,y){
+  const d=UNITS[type];
+  const u={
+    id:uid(),side,type,x,y,
+    hp:d.hp,maxHp:d.hp,cd:0,
+    order:null,tid:0,stuck:0,lastX:x,lastY:y,
+    facing:side==='atk'?-Math.PI/2:Math.PI/2,
+    trenchTimer:0,alive:true,
+    path:null,pathI:0,
+    aimTimer:0,aimTarget:null,
+    holdPost:0,
+  };
+  g.units.push(u);
+  return u;
+}
+
+function terrainAt(g,wx,wy){
+  const cx=Math.floor(wx/CELL),cy=Math.floor(wy/CELL);
+  if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)return T_MOUNT;
+  return g.terrain[cy*MAP_W+cx];
+}
+function canWalk(g,wx,wy){return !!TERRAIN[terrainAt(g,wx,wy)].pass;}
+function speedAt(g,wx,wy){return TERRAIN[terrainAt(g,wx,wy)].spd;}
+function coverAt(g,wx,wy){return TERRAIN[terrainAt(g,wx,wy)].cover;}
+
+function findPath(g,sx,sy,tx,ty){
+  const scx=clamp(Math.floor(sx/CELL),0,MAP_W-1),scy=clamp(Math.floor(sy/CELL),0,MAP_H-1);
+  let tcx=clamp(Math.floor(tx/CELL),0,MAP_W-1),tcy=clamp(Math.floor(ty/CELL),0,MAP_H-1);
+  if(!TERRAIN[g.terrain[tcy*MAP_W+tcx]].pass){
+    let found=null,bd=Infinity;
+    for(let r=1;r<8&&!found;r++){
+      for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+        if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
+        const nx=tcx+dx,ny=tcy+dy;
+        if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;
+        if(TERRAIN[g.terrain[ny*MAP_W+nx]].pass){
+          const d=dx*dx+dy*dy;
+          if(d<bd){bd=d;found={x:nx,y:ny};}
+        }
+      }
+    }
+    if(!found)return null;
+    tcx=found.x;tcy=found.y;
+  }
+  const si=scy*MAP_W+scx,ei=tcy*MAP_W+tcx;
+  if(si===ei)return [{x:tx,y:ty}];
+  const gScore=new Float32Array(MAP_W*MAP_H).fill(Infinity);
+  const parent=new Int32Array(MAP_W*MAP_H).fill(-1);
+  const closed=new Uint8Array(MAP_W*MAP_H);
+  gScore[si]=0;
+  const open=[{i:si,f:0}];
+  let nodes=0;const maxNodes=700;
+  while(open.length&&nodes<maxNodes){
+    nodes++;
+    let bi=0;
+    for(let i=1;i<open.length;i++)if(open[i].f<open[bi].f)bi=i;
+    const cur=open.splice(bi,1)[0];
+    const ci=cur.i;
+    if(ci===ei){
+      const path=[];
+      let p=ei;
+      while(p!==si&&p>=0){path.push(p);p=parent[p];}
+      path.reverse();
+      const pts=path.map(idx=>({x:(idx%MAP_W)*CELL+CELL/2,y:Math.floor(idx/MAP_W)*CELL+CELL/2}));
+      pts.push({x:tx,y:ty});
+      return pts;
+    }
+    if(closed[ci])continue;
+    closed[ci]=1;
+    const cx=ci%MAP_W,cy=(ci/MAP_W)|0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      if(!dx&&!dy)continue;
+      const nx=cx+dx,ny=cy+dy;
+      if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;
+      const ni=ny*MAP_W+nx;
+      if(closed[ni])continue;
+      const tv=g.terrain[ni];
+      if(!TERRAIN[tv].pass)continue;
+      if(dx&&dy){
+        if(!TERRAIN[g.terrain[cy*MAP_W+nx]].pass)continue;
+        if(!TERRAIN[g.terrain[ny*MAP_W+cx]].pass)continue;
+      }
+      const mc=TERRAIN[tv].spd>0?1/TERRAIN[tv].spd:1;
+      const sc=mc*((dx&&dy)?1.414:1);
+      const nt=gScore[ci]+sc;
+      if(nt<gScore[ni]){
+        gScore[ni]=nt;
+        parent[ni]=ci;
+        const h=Math.abs(nx-tcx)+Math.abs(ny-tcy);
+        open.push({i:ni,f:nt+h});
+      }
+    }
+  }
+  return null;
+}
+function hasLOS(g,x1,y1,x2,y2){
+  const steps=Math.ceil(dist(x1,y1,x2,y2)/10);
+  for(let i=1;i<steps;i++){
+    const t=i/steps;
+    if(!canWalk(g,lerp(x1,x2,t),lerp(y1,y2,t)))return false;
+  }
+  return true;
+}
+function smoothPath(g,path,sx,sy){
+  if(!path||path.length<2)return path;
+  const out=[];
+  let curX=sx,curY=sy;
+  let i=0;
+  while(i<path.length){
+    let j=path.length-1;
+    for(;j>i;j--)if(hasLOS(g,curX,curY,path[j].x,path[j].y))break;
+    if(j<i)j=i;
+    out.push(path[j]);
+    curX=path[j].x;curY=path[j].y;
+    i=j+1;
+  }
+  return out;
+}
+
+function recomputeVis(g,side){
+  const v=new Uint8Array(MAP_W*MAP_H);
+  const mark=(px,py,r)=>{
+    const cx=Math.floor(px/CELL),cy=Math.floor(py/CELL);
+    const rr=Math.ceil(r/CELL),r2=r*r;
+    for(let y=cy-rr;y<=cy+rr;y++){
+      if(y<0||y>=MAP_H)continue;
+      for(let x=cx-rr;x<=cx+rr;x++){
+        if(x<0||x>=MAP_W)continue;
+        const gx=(x+.5)*CELL,gy=(y+.5)*CELL;
+        if(dist2(gx,gy,px,py)<=r2)v[y*MAP_W+x]=1;
+      }
+    }
+  };
+  for(const u of g.units){
+    if(u.side!==side||!u.alive)continue;
+    mark(u.x,u.y,UNITS[u.type].vis);
+  }
+  for(const t of g.turrets){
+    if(t.side!==side)continue;
+    mark(t.x,t.y,TURRETS[t.type].vis);
+  }
+  for(const p of g.posts){
+    if(p.owner!==side)continue;
+    mark(p.x,p.y,p.type==='hq'?260:190);
+  }
+  for(const r of g.recon){
+    if(r.side!==side)continue;
+    mark(r.x,r.y,r.r);
+  }
+  g.vis[side]=v;
+}
+function visible(g,side,wx,wy){
+  const arr=g.vis[side];
+  if(!arr)return true;
+  const cx=Math.floor(wx/CELL),cy=Math.floor(wy/CELL);
+  if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)return false;
+  return arr[cy*MAP_W+cx]===1;
+}
+
+function step(dt){
+  const g=G;
+  if(g.state!=='playing')return;
+  g.tick++;
+  g.time+=dt;
+  updateCP(g,dt);
+  updateDeploy(g,dt);
+  for(const u of g.units){if(u.alive)updateUnit(g,u,dt);}
+  for(const t of g.turrets)updateTurret(g,t,dt);
+  updateProjectiles(g,dt);
+  updatePosts(g,dt);
+  updateStrikes(g,dt);
+  for(let i=g.recon.length-1;i>=0;i--)if(g.recon[i].until<g.time)g.recon.splice(i,1);
+  for(let i=g.effects.length-1;i>=0;i--){
+    g.effects[i].life-=dt;
+    if(g.effects[i].life<=0)g.effects.splice(i,1);
+  }
+  for(let i=g.units.length-1;i>=0;i--)if(!g.units[i].alive)g.units.splice(i,1);
+  for(let i=g.turrets.length-1;i>=0;i--){
+    if(g.turrets[i].hp<=0){
+      const t=g.turrets[i];
+      addEffect(g,{type:'boom',x:t.x,y:t.y,r:60,life:.7,max:.7});
+      g.turrets.splice(i,1);
+    }
+  }
+  if(Math.floor(g.time*30)%6===0){recomputeVis(g,'atk');recomputeVis(g,'def');}
+  if(g.tutorial) tutStep(dt);
+  updateAI(g,dt);
+  checkVictory(g);
+  if(g.shake>0)g.shake=Math.max(0,g.shake-dt*3.5);
+  if(Net.role==='host' && g.tick%3===0) netBroadcastState();
+}
+
+function updateCP(g,dt){
+  const add=(side)=>{
+    let r;
+    if(side==='atk'){
+      r = 0.55 + g.time * 0.0012;
+      for(const p of g.posts){
+        if(p.owner!=='atk')continue;
+        if(p.type==='hq') r += 0.22;
+        else r += 0.12;
+      }
+    } else {
+      r = 0.85;
+      for(const p of g.posts){
+        if(p.owner==='def')continue;
+        if(p.type==='hq') r -= 0.25;
+        else r -= 0.10;
+      }
+    }
+    r = Math.max(0.15, r);
+    if(g.aiSide===side) r *= DIFFS[g.cfg.diff].cpMul;
+    g.cpFrac[side]+=r*dt;
+    if(g.cpFrac[side]>=1){
+      const inc=Math.floor(g.cpFrac[side]);
+      g.cpFrac[side]-=inc;
+      g.cp[side]=Math.min(999,g.cp[side]+inc);
+    }
+  };
+  add('atk');add('def');
+}
+function awardCP(g,attackerSide,victimType){
+  if(!attackerSide||!UNITS[victimType])return;
+  const cost=UNITS[victimType].cost;
+  const amount=Math.max(3,Math.round(cost*0.64));
+  g.cp[attackerSide]=Math.min(999,g.cp[attackerSide]+amount);
+  if(attackerSide===g.playerSide){
+    const victim=g.units.find(u=>!u.alive);
+    if(victim)addEffect(g,{type:'cpreward',x:victim.x,y:victim.y,life:1.2,max:1.2,text:'+'+amount+' CP'});
+  }
+}
+function awardCaptureCP(g,side,postType){
+  const amount=postType==='hq'?48:24;
+  g.cp[side]=Math.min(999,g.cp[side]+amount);
+  if(side===g.playerSide)toast(g,'占领奖励 +'+amount+' CP','good');
+}
+
+function updateUnit(g,u,dt){
+  const d=UNITS[u.type];
+  if(u.cd>0)u.cd-=dt;
+  if(u.aimTimer>0)u.aimTimer-=dt;
+
+  if(u.order&&u.order.type==='move'){
+    const tx=u.order.x,ty=u.order.y;
+    const dd=dist(u.x,u.y,tx,ty);
+    if(dd<10){u.order=null;u.path=null;}
+    else{
+      let target=null;
+      if(u.path&&u.pathI<u.path.length){
+        target=u.path[u.pathI];
+        if(dist(u.x,u.y,target.x,target.y)<14)u.pathI++;
+      }
+      if(!target||u.pathI>=u.path.length){
+        const raw=findPath(g,u.x,u.y,tx,ty);
+        if(raw){
+          u.path=smoothPath(g,raw,u.x,u.y);
+          u.pathI=0;
+          target=u.path[0]||{x:tx,y:ty};
+        }else target={x:tx,y:ty};
+      }
+      const base=d.spd*speedAt(g,u.x,u.y);
+      let ang=Math.atan2(target.y-u.y,target.x-u.x);
+      const stepLen=base*dt;
+      let nx=u.x+Math.cos(ang)*stepLen,ny=u.y+Math.sin(ang)*stepLen;
+      if(!canWalk(g,nx,ny)){
+        let ok=false;
+        for(const off of [.5,-.5,1.0,-1.0,1.5,-1.5,2.2,-2.2]){
+          const a2=ang+off;
+          const px=u.x+Math.cos(a2)*stepLen,py=u.y+Math.sin(a2)*stepLen;
+          if(canWalk(g,px,py)){ang=a2;nx=px;ny=py;ok=true;break;}
+        }
+        if(!ok){
+          u.stuck+=dt;
+          if(u.stuck>1){u.path=null;u.pathI=0;u.stuck=0;if(dist(u.x,u.y,tx,ty)<40)u.order=null;}
+        }else u.stuck=0;
+      }else u.stuck=0;
+      if(u.order){u.x=nx;u.y=ny;u.facing=ang;}
+    }
+  }
+
+  let target=null;
+  if(u.tid){
+    const t=findUnitById(g,u.tid);
+    if(t&&t.alive&&dist(u.x,u.y,t.x,t.y)<=d.range*1.15)target=t;
+    else u.tid=0;
+  }
+  if(!target){
+    let best=null,bd=Infinity;
+    const R=d.range*1.05;
+    for(const e of g.units){
+      if(e.side===u.side||!e.alive)continue;
+      const dd=dist2(u.x,u.y,e.x,e.y);
+      if(dd<R*R&&dd<bd){bd=dd;best=e;}
+    }
+    if(u.side==='atk'){
+      for(const t of g.turrets){
+        const dd=dist2(u.x,u.y,t.x,t.y);
+        if(dd<R*R&&dd<bd&&visible(g,u.side,t.x,t.y)){bd=dd;best=t;}
+      }
+    }
+    target=best;
+  }
+
+  if(target&&u.cd<=0){
+    const dd=dist(u.x,u.y,target.x,target.y);
+    if(dd<=d.range){
+      if(d.aim&&d.aim>0){
+        if(u.aimTarget!==target.id){u.aimTarget=target.id;u.aimTimer=d.aim;}
+        else if(u.aimTimer<=0){
+          u.cd=d.cd;u.aimTarget=0;
+          u.facing=Math.atan2(target.y-u.y,target.x-u.x);
+          fire(g,u,target);
+        }
+      }else{
+        u.cd=d.cd;
+        u.facing=Math.atan2(target.y-u.y,target.x-u.x);
+        fire(g,u,target);
+      }
+    }
+  }else{u.aimTarget=0;u.aimTimer=0;}
+
+  if(d.trench&&u.order&&u.order.type==='trench'){
+    u.trenchTimer+=dt;
+    if(u.trenchTimer>=3.2){
+      u.trenchTimer=0;
+      g.trenches.push({x:u.x,y:u.y,r:34,side:u.side});
+      addEffect(g,{type:'ring',x:u.x,y:u.y,r:36,life:.5,max:.5,col:'#8ad0ff'});
+      u.order=null;
+    }
+  }
+}
+function findUnitById(g,id){for(const u of g.units)if(u.id===id)return u;return null;}
+
+function fire(g,u,target){
+  const d=UNITS[u.type];
+  if(u.type==='art'){
+    g.projectiles.push({
+      x:u.x,y:u.y,tx:target.x+rnd(-12,12),ty:target.y+rnd(-12,12),t:0,
+      flight:Math.max(.7,dist(u.x,u.y,target.x,target.y)/330),
+      dmg:d.dmg,splash:d.splash,side:u.side,neutral:false,
+    });
+  }else{
+    const dmg=calcDamage(g,u,target,d.dmg);
+    applyDamage(g,target,dmg,u.side);
+    addEffect(g,{type:'tracer',x1:u.x,y1:u.y,x2:target.x,y2:target.y,life:.09,max:.09,
+      col:u.side==='atk'?'#ffb08a':'#9fd0ff'});
+  }
+}
+function calcDamage(g,attacker,target,base){
+  let red=coverAt(g,target.x,target.y);
+  for(const tr of g.trenches){
+    if(tr.side===target.side&&dist2(tr.x,tr.y,target.x,target.y)<tr.r*tr.r){
+      red=Math.max(red,.38);break;
+    }
+  }
+  return base*(1-red);
+}
+function applyDamage(g,target,dmg,attackerSide){
+  if(target.alive === false) return;
+  if(target.hp <= 0) return;
+  target.hp -= dmg;
+  if(target.hp <= 0){
+    target.hp = 0;
+    if(target.alive !== undefined) target.alive = false;
+    addEffect(g,{type:'boom',x:target.x,y:target.y,r:22,life:.4,max:.4});
+    if(attackerSide && UNITS[target.type] && attackerSide!==target.side){
+      awardCP(g,attackerSide,target.type);
+    }
+  }
+}
+
+function updateTurret(g,t,dt){
+  const d=TURRETS[t.type];
+  if(t.cd>0)t.cd-=dt;
+  if(t.cd>0)return;
+  let best=null,bd=Infinity;
+  const R=d.range;
+  for(const u of g.units){
+    if(u.side!=='atk'||!u.alive)continue;
+    const dd=dist2(t.x,t.y,u.x,u.y);
+    if(dd<R*R&&dd<bd){bd=dd;best=u;}
+  }
+  if(best){
+    t.cd=d.cd;
+    const dmg=calcDamage(g,t,best,d.dmg);
+    applyDamage(g,best,dmg,'def');
+    addEffect(g,{type:'tracer',x1:t.x,y1:t.y,x2:best.x,y2:best.y,life:.1,max:.1,col:'#ffd07a'});
+  }
+}
+function updateProjectiles(g,dt){
+  for(let i=g.projectiles.length-1;i>=0;i--){
+    const p=g.projectiles[i];
+    p.t+=dt;
+    if(p.t>=p.flight){
+      addEffect(g,{type:'boom',x:p.tx,y:p.ty,r:p.splash||26,life:.42,max:.42});
+      g.shake=Math.min(1,g.shake+.22);
+      const targets=[];
+      for(const u of g.units){
+        if(!u.alive)continue;
+        if(!p.neutral && u.side===p.side) continue;
+        const dd=dist(u.x,u.y,p.tx,p.ty);
+        if(dd<=(p.splash||26)+UNITS[u.type].r)targets.push({u,dd});
+      }
+      for(const t of g.turrets){
+        if(!p.neutral && t.side===p.side) continue;
+        const dd=dist(t.x,t.y,p.tx,p.ty);
+        if(dd<=(p.splash||26)+t.r)targets.push({u:t,dd});
+      }
+      for(const it of targets){
+        const f=1-clamp(it.dd/((p.splash||26)+10),0,1);
+        const dmg=p.dmg*(.45+.55*f)*(1-coverAt(g,it.u.x,it.u.y)*.5);
+        applyDamage(g,it.u,dmg,p.neutral?null:p.side);
+      }
+      g.projectiles.splice(i,1);
+    }
+  }
+}
+
+function updatePosts(g,dt){
+  for(const p of g.posts){
+    const R=p.type==='hq'?150:110;
+    let atkP=0,defP=0;
+    for(const u of g.units){
+      if(!u.alive)continue;
+      if(dist(u.x,u.y,p.x,p.y)>R)continue;
+      const w=UNITS[u.type].cap;
+      if(u.side==='atk')atkP+=w;else defP+=w;
+    }
+    const rate=26;
+    if(atkP>0&&defP===0){
+      p.cap=Math.min(100,p.cap+rate*Math.min(atkP,4)*dt);
+      if(p.cap>=100&&p.owner!=='atk'){
+        p.owner='atk';p.integrate=0;p.cap=100;
+        toast(g,'攻方占领了 '+p.name,g.playerSide==='atk'?'good':'bad');
+        addEffect(g,{type:'ring',x:p.x,y:p.y,r:80,life:.8,max:.8,col:'#ff7a4c'});
+        awardCaptureCP(g,'atk',p.type);
+      }
+    }else if(defP>0&&atkP===0){
+      p.cap=Math.max(0,p.cap-rate*Math.min(defP,4)*dt);
+      if(p.cap<=0&&p.owner!=='def'){
+        p.owner='def';p.integrate=1;p.cap=0;
+        toast(g,'守方夺回了 '+p.name,g.playerSide==='def'?'good':'bad');
+        addEffect(g,{type:'ring',x:p.x,y:p.y,r:80,life:.8,max:.8,col:'#4c9cff'});
+        awardCaptureCP(g,'def',p.type);
+      }
+    }
+    if(p.owner==='atk'&&p.integrate<1){
+      p.integrate=Math.min(1,p.integrate+dt/12);
+      if(p.integrate>=1)toast(g,p.name+' 整合完成，可部署部队',g.playerSide==='atk'?'good':'bad');
+    }
+    if(p.owner==='def')p.integrate=1;
+  }
+}
+
+function updateStrikes(g,dt){
+  for(let i=g.strikes.length-1;i>=0;i--){
+    const s=g.strikes[i];
+    s.t+=dt;
+    if(s.t<s.delay)continue;
+    s.tick-=dt;
+    if(s.tick<=0){
+      s.tick=0.6;
+      const n=s.key==='airstrike'?2:1;
+      for(let k=0;k<n;k++){
+        const a=Math.random()*6.283,rr=Math.random()*s.radius;
+        const x=s.x+Math.cos(a)*rr,y=s.y+Math.sin(a)*rr;
+        g.projectiles.push({
+          x:x+rnd(-160,160),y:y-220,tx:x,ty:y,t:0,flight:.55,
+          dmg:s.dps*.32,splash:s.key==='airstrike'?40:28,side:s.side,
+          neutral:!!s.neutral,
+        });
+      }
+    }
+    if(s.t>s.delay+s.dur)g.strikes.splice(i,1);
+  }
+}
+function addEffect(g,e){g.effects.push(e);}
+
+function orderMove(g,units,x,y){
+  const n=units.length;
+  if(n===0)return;
+  if(n===1){
+    units[0].order={type:'move',x,y};
+    units[0].path=null;units[0].pathI=0;
+    return;
+  }
+  const cols=Math.ceil(Math.sqrt(n));
+  const spacing=42;
+  let i=0;
+  for(const u of units){
+    const cx=(i%cols)-(cols-1)/2;
+    const cy=Math.floor(i/cols)-((Math.ceil(n/cols))-1)/2;
+    u.order={type:'move',
+      x:clamp(x+cx*spacing,16,(MAP_W-1)*CELL),
+      y:clamp(y+cy*spacing,16,(MAP_H-1)*CELL)};
+    u.path=null;u.pathI=0;
+    i++;
+  }
+}
+
+function startDeploy(g,side,type,px,py){
+  const d=UNITS[type];
+  if(g.cp[side]<d.cost)return null;
+  const cnt=g.units.filter(u=>u.side===side&&u.alive).length+
+            g.deploying.filter(x=>x.side===side).length;
+  const maxU=(g.aiSide===side)?DIFFS[g.cfg.diff].maxUnits:52;
+  if(cnt>=maxU){toast(g,'部队已达上限',side===g.playerSide?'bad':'');return null;}
+  g.cp[side]-=d.cost;
+  const baseTime=(side==='atk')?2.0:4.0;
+  const dep={ x:px,y:py,type,side, timeLeft:baseTime,total:baseTime, order:null };
+  g.deploying.push(dep);
+  return dep;
+}
+function updateDeploy(g,dt){
+  for(let i=g.deploying.length-1;i>=0;i--){
+    const dep=g.deploying[i];
+    dep.timeLeft-=dt;
+    if(dep.timeLeft<=0){
+      let x=dep.x,y=dep.y,tries=0;
+      while(!canWalk(g,x,y)&&tries<40){
+        const a=Math.random()*6.283,r=20+Math.random()*60;
+        x=dep.x+Math.cos(a)*r;y=dep.y+Math.sin(a)*r;tries++;
+      }
+      const u=spawnUnit(g,dep.side,dep.type,x,y);
+      addEffect(g,{type:'ring',x,y,r:30,life:.4,max:.4,col:dep.side==='atk'?'#ff8a5c':'#6cb6ff'});
+      if(dep.order){u.order=dep.order;u.holdPost=1;}
+      g.deploying.splice(i,1);
+      if(dep.side===g.playerSide)toast(g,UNITS[dep.type].n+' 部署完成','good');
+    }
+  }
+}
+
+function applyPlan(g,plan,units){
+  if(!units||units.length===0)return;
+  let i=0;
+  for(const u of units){
+    if(u.side!==g.playerSide)continue;
+    let tx,ty;
+    if(plan.type==='front'){
+      const t=units.length>1?i/(units.length-1):0.5;
+      tx=lerp(plan.a.x,plan.b.x,t);
+      ty=lerp(plan.a.y,plan.b.y,t);
+    }else if(plan.type==='defend'){
+      const a=Math.random()*6.283;
+      const r=Math.random()*plan.r*0.75;
+      tx=plan.x+Math.cos(a)*r;
+      ty=plan.y+Math.sin(a)*r;
+    }else{
+      tx=plan.b.x+rnd(-30,30);
+      ty=plan.b.y+rnd(-30,30);
+    }
+    u.order={type:'move',x:tx,y:ty};
+    u.path=null;u.pathI=0;
+    u.holdPost=1;
+    i++;
+  }
+}
+function createPlan(g,type,data){
+  const plan={id:uid(),type,side:g.playerSide,...data,created:g.time};
+  g.plans.push(plan);
+  applyPlan(g,plan,g.selection.slice());
+  return plan;
+}
+
+function checkVictory(g){
+  if(g.tutorial) return;
+  const hq=g.posts.find(p=>p.type==='hq');
+  const branches=g.posts.filter(p=>p.type==='branch');
+  const atkB=branches.filter(p=>p.owner==='atk').length;
+  const need=Math.ceil(branches.length*.6);
+  if(hq.owner==='atk'&&atkB>=need){endGame(g,'atk');return;}
+  if(g.time>=GAME_LEN)endGame(g,'def');
+}
+function endGame(g,winner){
+  g.state='over';g.result=winner;
+  const playerWin=(winner===g.playerSide);
+  const rt=document.getElementById('rTitle');
+  const rs=document.getElementById('rSub');
+  const rl=document.getElementById('result');
+  rt.textContent=playerWin?'胜  利':'失  败';
+  rl.className='overlay '+(playerWin?'win':'lose');
+  rl.classList.remove('hidden');
+  const hq=g.posts.find(p=>p.type==='hq');
+  const branches=g.posts.filter(p=>p.type==='branch');
+  const atkB=branches.filter(p=>p.owner==='atk').length;
+  rs.innerHTML=
+    (winner==='atk'?'攻方成功夺取大本营与多数支部':'守方坚守阵地至最后一刻')+
+    '<br>用时 '+fmtTime(g.time)+' · 攻方控制支部 '+atkB+'/'+branches.length+
+    '<br>大本营状态：'+(hq.owner==='atk'?'<span style="color:#ff8a5c">失守</span>':'<span style="color:#6cb6ff">完好</span>');
+  show(document.getElementById('hud'),false);
+}
+function fmtTime(t){
+  const m=Math.floor(t/60),s=Math.floor(t%60);
+  return m+':'+(s<10?'0':'')+s;
+}
+
+function updateAI(g,dt){
+  if(g.mp) return;
+  const ai=g.aiSide;
+  const cfg=DIFFS[g.cfg.diff];
+  for(const k in g.cd[ai])if(g.cd[ai][k]>0)g.cd[ai][k]-=dt;
+  g.ai.wave-=dt;
+  if(g.ai.wave<=0){
+    g.ai.wave=7+Math.random()*7;
+    if(Math.random()<cfg.skill)aiTrySkill(g,ai);
+  }
+  g.ai.timer-=dt;
+  if(g.ai.timer>0)return;
+  g.ai.timer=cfg.interval;
+  const myUnits=g.units.filter(u=>u.side===ai&&u.alive);
+  const deployingCnt=g.deploying.filter(d=>d.side===ai).length;
+  if(myUnits.length+deployingCnt>=cfg.maxUnits)return;
+  const spawns=getSpawnPoints(g,ai);
+  if(spawns.length===0)return;
+  let type='inf';
+  const cp=g.cp[ai];
+  const r=Math.random();
+  if(cp>=32&&r<.20)type='art';
+  else if(cp>=24&&r<.52)type='arm';
+  else if(myUnits.filter(u=>u.type==='scout').length<2&&cp>=6)type='scout';
+  else if(ai==='def'&&myUnits.filter(u=>u.type==='eng').length<3&&cp>=10&&Math.random()<.4)type='eng';
+  else if(cp>=8)type='inf';
+  else return;
+  const sp=spawns[Math.floor(Math.random()*spawns.length)];
+  const dep=startDeploy(g,ai,type,sp.x+rnd(-40,40),sp.y+rnd(-40,40));
+  if(dep){
+    if(ai==='atk'){
+      const tgt=nearestEnemyPost(g,sp.x,sp.y);
+      if(tgt)dep.order={type:'move',x:tgt.x+rnd(-70,70),y:tgt.y+rnd(-70,70)};
+    } else {
+      const tgt=nearestOwnPost(g,sp.x,sp.y);
+      if(tgt)dep.order={type:'move',x:tgt.x+rnd(-60,60),y:tgt.y+rnd(-60,60)};
+    }
+  }
+}
+function aiTrySkill(g,ai){
+  const enemies=g.units.filter(u=>u.side!==ai&&u.alive);
+  if(enemies.length<3)return;
+  let best=null,bestN=0;
+  for(const e of enemies){
+    let n=0;
+    for(const o of enemies)if(dist2(e.x,e.y,o.x,o.y)<110*110)n++;
+    if(n>bestN){bestN=n;best=e;}
+  }
+  if(!best||bestN<3)return;
+  for(const k of ['barrage','airstrike']){
+    if(g.cp[ai]>=SKILLS[k].cost&&!(g.cd[ai][k]>0)){
+      if(Math.random()<.55){
+        if(useSkill(g,ai,k,best.x+rnd(-20,20),best.y+rnd(-20,20)))return;
+      }
+    }
+  }
+  if(g.cp[ai]>=SKILLS.recon.cost&&!(g.cd[ai].recon>0))
+    useSkill(g,ai,'recon',best.x,best.y);
+}
+function nearestEnemyPost(g,x,y){
+  let best=null,bd=Infinity;
+  for(const p of g.posts){
+    if(p.owner===g.aiSide)continue;
+    const d=dist2(x,y,p.x,p.y);
+    if(d<bd){bd=d;best=p;}
+  }
+  return best;
+}
+function nearestOwnPost(g,x,y){
+  let best=null,bd=Infinity;
+  for(const p of g.posts){
+    if(p.owner!==g.aiSide)continue;
+    const d=dist2(x,y,p.x,p.y);
+    if(d<bd){bd=d;best=p;}
+  }
+  return best;
+}
+function getSpawnPoints(g,side){
+  const out=[];
+  for(const p of g.posts){
+    if(p.owner!==side)continue;
+    if(side==='atk'&&p.integrate<1)continue;
+    out.push({x:p.x,y:p.y});
+  }
+  if(side==='atk')out.push({x:g.spawnPoint.x,y:g.spawnPoint.y});
+  return out;
+}
+
+function useSkill(g,side,key,x,y){
+  const s=SKILLS[key];
+  if(g.cp[side]<s.cost)return false;
+  if((g.cd[side][key]||0)>0)return false;
+  if(s.maxRange){
+    let inRange=false;
+    for(const u of g.units){
+      if(u.side!==side||!u.alive)continue;
+      if(dist(u.x,u.y,x,y)<=s.maxRange){inRange=true;break;}
+    }
+    if(!inRange){
+      for(const p of g.posts){
+        if(p.owner!==side)continue;
+        if(dist(p.x,p.y,x,y)<=s.maxRange){inRange=true;break;}
+      }
+    }
+    if(!inRange){
+      if(side===g.playerSide)toast(g,'超出射程 · 需己方单位或据点支援','bad');
+      return false;
+    }
+  }
+  g.cp[side]-=s.cost;
+  g.cd[side][key]=s.cd;
+  if(key==='recon'){
+    g.recon.push({side,x,y,r:s.radius,until:g.time+s.dur});
+    addEffect(g,{type:'recon',x,y,r:s.radius,life:s.dur,max:s.dur});
+    recomputeVis(g,side);
+  }else{
+    g.strikes.push({side,key,x,y,radius:s.radius,t:0,delay:1.6,dur:s.dur,dps:s.dps,tick:0,neutral:!!s.neutral});
+    addEffect(g,{type:'target',x,y,r:s.radius,life:1.6,max:1.6});
+  }
+  return true;
+}
+
+/* ============ 渲染 ============ */
+let lastT=performance.now(),acc=0,lastRender=0;
+function loop(t){
+  requestAnimationFrame(loop);
+  const dt=(t-lastT)/1000;lastT=t;
+  if(G&&G.state==='playing'){
+    acc+=Math.min(dt,.3);
+    let steps=0;
+    while(acc>=TICK&&steps<10){step(TICK);acc-=TICK;steps++;}
+    if(steps>=10)acc=0;
+  }
+  const minInterval=1000/CFG.fps-1;
+  if(t-lastRender>=minInterval){lastRender=t;render();}
+}
+
+function render(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle='#05080c';
+  ctx.fillRect(0,0,W,H);
+  if(!G)return;
+  const g=G,cam=g.cam;
+  const shx=g.shake>0?rnd(-1,1)*g.shake*7:0;
+  const shy=g.shake>0?rnd(-1,1)*g.shake*7:0;
+
+  if(Net.role==='client'){
+    const k=1-Math.pow(0.001,0.05);
+    for(const u of g.units){
+      if(u._netTarget){
+        u.x+=(u._netTarget.x-u.x)*k;
+        u.y+=(u._netTarget.y-u.y)*k;
+      }
+    }
+  }
+
+  ctx.save();
+  ctx.translate(W/2+shx,H/2+shy);
+  ctx.scale(cam.zoom,cam.zoom);
+  ctx.translate(-cam.x,-cam.y);
+
+  if(g.terrainCanvas)ctx.drawImage(g.terrainCanvas,0,0);
+
+  for(const plan of g.plans){
+    if(plan.side!==g.playerSide)continue;
+    if(plan.type==='front'){
+      ctx.beginPath();
+      ctx.moveTo(plan.a.x,plan.a.y);
+      ctx.lineTo(plan.b.x,plan.b.y);
+      ctx.strokeStyle='rgba(120,220,255,.55)';
+      ctx.lineWidth=4/cam.zoom;
+      ctx.setLineDash([14,8]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if(plan.type==='defend'){
+      ctx.beginPath();ctx.arc(plan.x,plan.y,plan.r,0,6.284);
+      ctx.fillStyle='rgba(80,160,255,.06)';ctx.fill();
+      ctx.strokeStyle='rgba(120,190,255,.6)';
+      ctx.lineWidth=3/cam.zoom;
+      ctx.setLineDash([12,8]);ctx.stroke();ctx.setLineDash([]);
+    } else if(plan.type==='attack'){
+      const dx=plan.b.x-plan.a.x,dy=plan.b.y-plan.a.y;
+      const len=Math.sqrt(dx*dx+dy*dy)||1;
+      const ux=dx/len,uy=dy/len;
+      const nx=-uy,ny=ux;
+      const w=24/cam.zoom;
+      ctx.beginPath();
+      ctx.moveTo(plan.a.x+nx*w,plan.a.y+ny*w);
+      ctx.lineTo(plan.b.x+nx*w*0.3,plan.b.y+ny*w*0.3);
+      ctx.lineTo(plan.b.x,plan.b.y);
+      ctx.lineTo(plan.b.x-nx*w*0.3,plan.b.y-ny*w*0.3);
+      ctx.lineTo(plan.a.x-nx*w,plan.a.y-ny*w);
+      ctx.closePath();
+      ctx.fillStyle='rgba(255,80,80,.18)';
+      ctx.fill();
+      ctx.strokeStyle='rgba(255,120,90,.8)';
+      ctx.lineWidth=2.5/cam.zoom;
+      ctx.stroke();
+    }
+  }
+
+  if(g.planMode&&g.planPts.length>0&&g.pointerWorld){
+    const p0=g.planPts[0];
+    if(g.planMode==='front'||g.planMode==='attack'){
+      ctx.beginPath();
+      ctx.moveTo(p0.x,p0.y);
+      ctx.lineTo(g.pointerWorld.x,g.pointerWorld.y);
+      ctx.strokeStyle=g.planMode==='attack'?'rgba(255,120,90,.9)':'rgba(120,220,255,.9)';
+      ctx.lineWidth=3/cam.zoom;
+      ctx.setLineDash([12,8]);ctx.stroke();ctx.setLineDash([]);
+    }else if(g.planMode==='defend'){
+      ctx.beginPath();ctx.arc(p0.x,p0.y,140,0,6.284);
+      ctx.fillStyle='rgba(80,160,255,.10)';ctx.fill();
+      ctx.strokeStyle='rgba(120,190,255,.8)';
+      ctx.lineWidth=2.5/cam.zoom;ctx.stroke();
+    }
+  }
+
+  for(const tr of g.trenches){
+    const known=(tr.side===g.playerSide)||visible(g,g.playerSide,tr.x,tr.y);
+    if(!known)continue;
+    ctx.beginPath();ctx.arc(tr.x,tr.y,tr.r,0,6.284);
+    ctx.fillStyle='rgba(90,60,30,.42)';ctx.fill();
+    ctx.strokeStyle=tr.side==='atk'?'rgba(255,140,90,.55)':'rgba(120,190,255,.55)';
+    ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([]);
+  }
+
+  for(const p of g.posts)drawPost(g,p);
+
+  for(const t of g.turrets){
+    if(g.playerSide!=='def'&&!visible(g,g.playerSide,t.x,t.y))continue;
+    drawTurret(g,t);
+  }
+
+  for(const dep of g.deploying){
+    if(dep.side!==g.playerSide&&!visible(g,g.playerSide,dep.x,dep.y))continue;
+    const prog=1-dep.timeLeft/dep.total;
+    const col=dep.side==='atk'?'#ff8a5c':'#6cb6ff';
+    ctx.beginPath();ctx.arc(dep.x,dep.y,26,0,6.284);
+    ctx.strokeStyle='rgba(0,0,0,.55)';ctx.lineWidth=4;ctx.stroke();
+    ctx.beginPath();ctx.arc(dep.x,dep.y,26,-Math.PI/2,-Math.PI/2+6.284*prog);
+    ctx.strokeStyle=col;ctx.lineWidth=4;ctx.stroke();
+    ctx.fillStyle=col;ctx.font='bold 11px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(UNITS[dep.type].n[0],dep.x,dep.y);
+  }
+
+  for(const u of g.units){
+    if(!u.alive)continue;
+    if(u.side!==g.playerSide&&!visible(g,g.playerSide,u.x,u.y))continue;
+    drawUnit(g,u);
+  }
+
+  for(const p of g.projectiles){
+    const pr=p.t/p.flight;
+    const x=lerp(p.x,p.tx,pr);
+    const y=lerp(p.y,p.ty,pr)-Math.sin(pr*Math.PI)*90;
+    ctx.beginPath();ctx.arc(x,y,3,0,6.284);
+    ctx.fillStyle=p.neutral?'#ffce6b':(p.side==='atk'?'#ffb27a':'#9fd0ff');ctx.fill();
+  }
+
+  if(CFG.fx)drawEffects(g);
+
+  // 框选
+  if(g.drag&&g.drag.active&&g.drag.box){
+    const b=g.drag.box;
+    ctx.strokeStyle='rgba(120,220,160,.95)';ctx.lineWidth=2/cam.zoom;
+    ctx.fillStyle='rgba(120,220,160,.14)';
+    ctx.fillRect(b.x,b.y,b.w,b.h);ctx.strokeRect(b.x,b.y,b.w,b.h);
+    // 四角
+    const s=6/cam.zoom;
+    ctx.fillStyle='#7dffb0';
+    ctx.fillRect(b.x-s/2,b.y-s/2,s,s);
+    ctx.fillRect(b.x+b.w-s/2,b.y-s/2,s,s);
+    ctx.fillRect(b.x-s/2,b.y+b.h-s/2,s,s);
+    ctx.fillRect(b.x+b.w-s/2,b.y+b.h-s/2,s,s);
+  }
+
+  // 选中的单位 —— 脉冲外圈
+  const pulse=0.5+0.5*Math.sin(performance.now()/240);
+  for(const u of g.selection){
+    if(!u.alive)continue;
+    const r=UNITS[u.type].r+7;
+    ctx.beginPath();ctx.arc(u.x,u.y,r,0,6.284);
+    ctx.strokeStyle='rgba(125,255,176,'+(0.6+pulse*0.4)+')';
+    ctx.lineWidth=2.2/cam.zoom;
+    ctx.stroke();
+    // 内侧高亮
+    ctx.beginPath();ctx.arc(u.x,u.y,r-3,0,6.284);
+    ctx.strokeStyle='rgba(125,255,176,0.3)';
+    ctx.lineWidth=1/cam.zoom;
+    ctx.stroke();
+  }
+
+  // 悬停高亮
+  if(g._hoverUnit&&!g.selection.includes(g._hoverUnit)){
+    const u=g._hoverUnit;
+    if(u.alive){
+      ctx.beginPath();ctx.arc(u.x,u.y,UNITS[u.type].r+9,0,6.284);
+      ctx.strokeStyle='rgba(255,255,255,0.4)';
+      ctx.lineWidth=1.5/cam.zoom;
+      ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+
+  if(g.radialTargets){
+    const pl=0.5+0.5*Math.sin(performance.now()/180);
+    for(const u of g.radialTargets){
+      if(!u.alive)continue;
+      const r=UNITS[u.type].r+12;
+      ctx.beginPath();ctx.arc(u.x,u.y,r,0,6.284);
+      ctx.strokeStyle='rgba(255,206,107,'+(0.5+pl*0.5)+')';
+      ctx.lineWidth=2.5/cam.zoom;
+      ctx.setLineDash([7,5]);
+      ctx.lineDashOffset=-performance.now()/90;
+      ctx.stroke();ctx.setLineDash([]);ctx.lineDashOffset=0;
+    }
+  }
+
+  // 技能/部署/计划模式预览
+  if(g.mode==='skill'&&g.pointerWorld){
+    const s=SKILLS[g.pendingSkill];
+    ctx.beginPath();ctx.arc(g.pointerWorld.x,g.pointerWorld.y,s.radius,0,6.284);
+    ctx.fillStyle=s.neutral?'rgba(255,206,107,.15)':'rgba(255,120,80,.13)';ctx.fill();
+    ctx.strokeStyle=s.neutral?'rgba(255,206,107,.85)':'rgba(255,140,90,.85)';
+    ctx.lineWidth=2/cam.zoom;ctx.stroke();
+    if(s.maxRange){
+      ctx.beginPath();ctx.arc(g.pointerWorld.x,g.pointerWorld.y,s.maxRange,0,6.284);
+      ctx.strokeStyle='rgba(255,140,90,.20)';
+      ctx.lineWidth=1/cam.zoom;
+      ctx.setLineDash([8,8]);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+  if(g.mode==='deploy'&&g.pointerWorld){
+    // 有效部署点高亮
+    const sp=getSpawnPoints(g,g.playerSide);
+    for(const s of sp){
+      ctx.beginPath();ctx.arc(s.x,s.y,180,0,6.284);
+      ctx.fillStyle='rgba(255,180,90,.06)';ctx.fill();
+      ctx.strokeStyle='rgba(255,180,90,.35)';
+      ctx.lineWidth=1.5/cam.zoom;
+      ctx.setLineDash([6,6]);ctx.stroke();ctx.setLineDash([]);
+    }
+    // 鼠标指示
+    ctx.beginPath();ctx.arc(g.pointerWorld.x,g.pointerWorld.y,20,0,6.284);
+    ctx.strokeStyle='rgba(255,180,90,.9)';
+    ctx.lineWidth=2/cam.zoom;ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawPost(g,p){
+  const col=p.owner==='atk'?'#ff6b42':(p.owner==='def'?'#4c9cff':'#8899aa');
+  const R=p.type==='hq'?50:36;
+  ctx.beginPath();ctx.arc(p.x,p.y,p.type==='hq'?150:110,0,6.284);
+  ctx.fillStyle=p.owner==='atk'?'rgba(255,90,50,.055)':(p.owner==='def'?'rgba(70,150,255,.055)':'rgba(140,150,160,.03)');
+  ctx.fill();
+  ctx.strokeStyle=p.owner==='atk'?'rgba(255,90,50,.22)':(p.owner==='def'?'rgba(70,150,255,.22)':'rgba(140,150,160,.14)');
+  ctx.lineWidth=1.5;ctx.setLineDash([8,8]);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(p.x,p.y,R,0,6.284);
+  ctx.fillStyle='rgba(8,14,22,.85)';ctx.fill();
+  ctx.lineWidth=3;ctx.strokeStyle=col;ctx.stroke();
+  ctx.beginPath();ctx.arc(p.x,p.y,R*.55,0,6.284);
+  ctx.fillStyle=col;ctx.globalAlpha=.75;ctx.fill();ctx.globalAlpha=1;
+  ctx.fillStyle='#eaf4ff';
+  ctx.font='bold '+(p.type==='hq'?18:14)+'px sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(p.type==='hq'?'★':'◆',p.x,p.y+1);
+  ctx.font='bold 11px sans-serif';
+  ctx.fillStyle='rgba(220,235,250,.9)';
+  ctx.fillText(p.name,p.x,p.y-R-13);
+  if(p.owner!=='def'||p.cap>0){
+    const w=R*2;
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.fillRect(p.x-w/2,p.y+R+6,w,5);
+    ctx.fillStyle=p.owner==='atk'?'#ff6b42':'#4c9cff';
+    ctx.fillRect(p.x-w/2,p.y+R+6,w*(p.cap/100),5);
+  }
+  if(p.owner==='atk'&&p.integrate<1){
+    const w=R*2;
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.fillRect(p.x-w/2,p.y+R+14,w,4);
+    ctx.fillStyle='#ffce6b';
+    ctx.fillRect(p.x-w/2,p.y+R+14,w*p.integrate,4);
+    ctx.font='9px sans-serif';
+    ctx.fillStyle='#ffce6b';
+    ctx.fillText('整合中',p.x,p.y+R+28);
+  }
+}
+function drawTurret(g,t){
+  const known=(g.playerSide==='def')||visible(g,g.playerSide,t.x,t.y);
+  if(!known)return;
+  const col=t.type==='bunker'?'#8ad0ff':'#5fa8ff';
+  ctx.save();ctx.translate(t.x,t.y);
+  ctx.beginPath();ctx.arc(0,0,t.r+4,0,6.284);
+  ctx.fillStyle='rgba(10,18,28,.9)';ctx.fill();
+  ctx.lineWidth=2.5;ctx.strokeStyle=col;ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,t.r*.62,0,6.284);
+  ctx.fillStyle=t.type==='bunker'?'#2e4a3a':'#2a4a6e';ctx.fill();
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+  if(t.type==='bunker'){
+    for(let i=0;i<4;i++){
+      const a=i*Math.PI/2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*(t.r*0.3),Math.sin(a)*(t.r*0.3));
+      ctx.lineTo(Math.cos(a)*(t.r+5),Math.sin(a)*(t.r+5));
+      ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.stroke();
+    }
+  }else{
+    ctx.beginPath();ctx.moveTo(0,0);
+    const a=(t.type==='fort')?-Math.PI/2:(-Math.PI/2+.5);
+    ctx.lineTo(Math.cos(a)*(t.r+9),Math.sin(a)*(t.r+9));
+    ctx.strokeStyle=col;ctx.lineWidth=3.5;ctx.lineCap='round';ctx.stroke();
+  }
+  ctx.restore();
+  const hw=26;
+  ctx.fillStyle='rgba(0,0,0,.65)';
+  ctx.fillRect(t.x-hw/2,t.y-t.r-11,hw,4);
+  ctx.fillStyle=col;
+  ctx.fillRect(t.x-hw/2,t.y-t.r-11,hw*(t.hp/t.maxHp),4);
+}
+function drawUnit(g,u){
+  const d=UNITS[u.type];
+  const isAtk=u.side==='atk';
+  const main=isAtk?'#e8533f':'#3f8fe8';
+  const light=isAtk?'#ff9b7d':'#8ec4ff';
+  ctx.save();ctx.translate(u.x,u.y);
+  if(u.type==='arm'){
+    ctx.rotate(u.facing);
+    ctx.fillStyle='rgba(0,0,0,.45)';
+    ctx.fillRect(-d.r-2,-d.r*.9+2,(d.r+2)*2,d.r*1.8);
+    ctx.fillStyle=main;
+    ctx.fillRect(-d.r,-d.r*.8,d.r*2,d.r*1.6);
+    ctx.strokeStyle=light;ctx.lineWidth=1.2;
+    ctx.strokeRect(-d.r,-d.r*.8,d.r*2,d.r*1.6);
+    ctx.beginPath();ctx.arc(0,0,d.r*.55,0,6.284);
+    ctx.fillStyle=light;ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.r+7,0);
+    ctx.strokeStyle=light;ctx.lineWidth=2.4;ctx.stroke();
+  }else if(u.type==='art'){
+    ctx.beginPath();ctx.arc(0,0,d.r,0,6.284);
+    ctx.fillStyle=main;ctx.fill();
+    ctx.strokeStyle=light;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.rotate(u.facing);
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(d.r+10,0);
+    ctx.strokeStyle=light;ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+  }else if(u.type==='scout'){
+    ctx.rotate(u.facing+Math.PI/2);
+    ctx.beginPath();
+    ctx.moveTo(0,-d.r-1);ctx.lineTo(d.r,-d.r);ctx.lineTo(0,d.r+1);ctx.lineTo(-d.r,-d.r);
+    ctx.closePath();
+    ctx.fillStyle=main;ctx.fill();
+    ctx.strokeStyle=light;ctx.lineWidth=1.2;ctx.stroke();
+  }else if(u.type==='eng'){
+    ctx.rotate(u.facing);
+    ctx.fillStyle=main;ctx.fillRect(-d.r,-d.r,d.r*2,d.r*2);
+    ctx.strokeStyle=light;ctx.lineWidth=1.4;
+    ctx.strokeRect(-d.r,-d.r,d.r*2,d.r*2);
+    ctx.fillStyle=light;ctx.fillRect(-2,-2,4,4);
+  }else{
+    ctx.beginPath();ctx.arc(0,0,d.r,0,6.284);
+    ctx.fillStyle=main;ctx.fill();
+    ctx.strokeStyle=light;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.beginPath();ctx.arc(0,0,d.r*.4,0,6.284);
+    ctx.fillStyle=light;ctx.fill();
+  }
+  ctx.restore();
+  if(u.hp<u.maxHp){
+    const hw=Math.max(14,d.r*2.4);
+    const yy=u.y-d.r-8;
+    ctx.fillStyle='rgba(0,0,0,.7)';
+    ctx.fillRect(u.x-hw/2,yy,hw,3.5);
+    const p=u.hp/u.maxHp;
+    ctx.fillStyle=p>.55?'#5fd88a':(p>.25?'#ffce6b':'#ff6b4a');
+    ctx.fillRect(u.x-hw/2,yy,hw*p,3.5);
+  }
+  if(u.holdPost){
+    ctx.beginPath();
+    ctx.arc(u.x,u.y-d.r-3,2.2,0,6.284);
+    ctx.fillStyle='#9fd8ff';ctx.fill();
+  }
+}
+function drawEffects(g){
+  for(const e of g.effects){
+    const a=e.life/e.max;
+    if(e.type==='tracer'){
+      ctx.strokeStyle=e.col;ctx.globalAlpha=a*.9;ctx.lineWidth=1.8;
+      ctx.beginPath();ctx.moveTo(e.x1,e.y1);ctx.lineTo(e.x2,e.y2);ctx.stroke();
+      ctx.globalAlpha=1;
+    }else if(e.type==='boom'){
+      const r=e.r*(1.15-a*.85);
+      const gr=ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,r);
+      gr.addColorStop(0,'rgba(255,240,180,'+(a*.9)+')');
+      gr.addColorStop(.4,'rgba(255,150,60,'+(a*.7)+')');
+      gr.addColorStop(1,'rgba(255,80,30,0)');
+      ctx.beginPath();ctx.arc(e.x,e.y,r,0,6.284);
+      ctx.fillStyle=gr;ctx.fill();
+    }else if(e.type==='ring'){
+      ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1.6-a*.6),0,6.284);
+      ctx.strokeStyle=e.col;ctx.globalAlpha=a;ctx.lineWidth=2.5;ctx.stroke();
+      ctx.globalAlpha=1;
+    }else if(e.type==='recon'){
+      ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,6.284);
+      ctx.strokeStyle='rgba(127,208,255,'+(a*.6)+')';
+      ctx.lineWidth=2;ctx.setLineDash([10,8]);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='rgba(127,208,255,'+(a*.05)+')';ctx.fill();
+    }else if(e.type==='target'){
+      const rr=e.r*(1.4-a*.4);
+      ctx.beginPath();ctx.arc(e.x,e.y,rr,0,6.284);
+      ctx.strokeStyle='rgba(255,107,74,'+(a*.9)+')';
+      ctx.lineWidth=2.5;ctx.setLineDash([12,7]);ctx.stroke();ctx.setLineDash([]);
+    }else if(e.type==='cpreward'){
+      ctx.font='bold 14px sans-serif';
+      ctx.textAlign='center';
+      ctx.fillStyle='rgba(255,206,107,'+a+')';
+      ctx.fillText(e.text,e.x,e.y-30*(1-a));
+    }
+  }
+}
+
+/* ============ 输入系统（重做） ============ */
+const pointers=new Map();
+let pinchStart=null;
+let longPressTimer=null;
+let pendingLongPress=null;
+let hoverTipEl=null;
+
+function screenToWorld(sx,sy){
+  const g=G;
+  return{x:(sx-W/2)/g.cam.zoom+g.cam.x,y:(sy-H/2)/g.cam.zoom+g.cam.y};
+}
+
+function cancelPendingLongPress(){
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+  pendingLongPress=null;
+}
+
+cv.addEventListener('pointerdown',e=>{
+  if(!G||G.state!=='playing')return;
+  cv.setPointerCapture(e.pointerId);
+  const rect=cv.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  
+  const p={id:e.pointerId,startX:mx,startY:my,x:mx,y:my,time:performance.now(),moved:false,dragged:false};
+  pointers.set(e.pointerId,p);
+  
+  // 双指：捏合/平移
+  if(pointers.size===2){
+    cancelPendingLongPress();
+    const ps=[...pointers.values()];
+    pinchStart={
+      d:dist(ps[0].x,ps[0].y,ps[1].x,ps[1].y),
+      zoom:G.cam.zoom,
+    };
+    G.drag=null;
+    return;
+  }
+  
+  // 单指
+  if(pointers.size===1){
+    const w=screenToWorld(mx,my);
+    let unitUnder=null;
+    for(const u of G.units){
+      if(u.side!==G.playerSide||!u.alive)continue;
+      if(dist(w.x,w.y,u.x,u.y)<UNITS[u.type].r+18){unitUnder=u;break;}
+    }
+    
+    pendingLongPress={mx,my,wx:w.x,wy:w.y,unitUnder};
+    
+    longPressTimer=setTimeout(()=>{
+      if(!pendingLongPress||!pointers.has(e.pointerId))return;
+      const pp=pointers.get(e.pointerId);
+      if(pp.moved)return;
+      
+      if(pendingLongPress.unitUnder){
+        // 长按单位 → 战术轮盘
+        openRadial(G,pendingLongPress.mx,pendingLongPress.my,pendingLongPress.unitUnder);
+        if(navigator.vibrate)navigator.vibrate(15);
+      } else {
+        // 长按空地 → 框选
+        G.drag={active:true,x0:pendingLongPress.wx,y0:pendingLongPress.wy,box:null};
+        if(navigator.vibrate)navigator.vibrate(10);
+      }
+      longPressTimer=null;
+      pendingLongPress=null;
+    },420);
+  }
+});
+
+cv.addEventListener('pointermove',e=>{
+  if(!G)return;
+  const p=pointers.get(e.pointerId);
+  const rect=cv.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  G.pointerScreen={x:mx,y:my};
+  G.pointerWorld=screenToWorld(mx,my);
+  
+  // 鼠标悬停检测
+  if(e.pointerType==='mouse'&&!p&&G.state==='playing'){
+    updateHover(mx,my);
+  }
+  
+  if(!p)return;
+  const dx=mx-p.x,dy=my-p.y;
+  p.x=mx;p.y=my;
+  
+  const totalDx=mx-p.startX,totalDy=my-p.startY;
+  const totalDist=Math.sqrt(totalDx*totalDx+totalDy*totalDy);
+  if(totalDist>8){
+    p.moved=true;
+    if(longPressTimer){cancelPendingLongPress();}
+  }
+  
+  if(pointers.size===2&&pinchStart){
+    const ps=[...pointers.values()];
+    const d=dist(ps[0].x,ps[0].y,ps[1].x,ps[1].y);
+    G.cam.zoom=clamp(pinchStart.zoom*(d/pinchStart.d),.42,2.2);
+    return;
+  }
+  
+  if(pointers.size===1){
+    if(G.drag&&G.drag.active){
+      const w=screenToWorld(mx,my);
+      G.drag.box={
+        x:Math.min(G.drag.x0,w.x),y:Math.min(G.drag.y0,w.y),
+        w:Math.abs(w.x-G.drag.x0),h:Math.abs(w.y-G.drag.y0),
+      };
+    } else if(p.moved){
+      p.dragged=true;
+      G.cam.x-=dx/G.cam.zoom;G.cam.y-=dy/G.cam.zoom;
+      clampCam(G);
+      if(G.tutorial) G.tutorial.lastEv={type:'cam'};
+    }
+  }
+});
+
+cv.addEventListener('pointerup',e=>{
+  const p=pointers.get(e.pointerId);
+  pointers.delete(e.pointerId);
+  if(pointers.size<2)pinchStart=null;
+  cancelPendingLongPress();
+  if(!p||!G)return;
+  
+  // 框选完成
+  if(G.drag&&G.drag.active){
+    const box=G.drag.box;
+    G.drag=null;
+    if(box&&box.w>8&&box.h>8){
+      const sel=[];
+      for(const u of G.units){
+        if(u.side!==G.playerSide||!u.alive)continue;
+        if(u.x>=box.x&&u.x<=box.x+box.w&&u.y>=box.y&&u.y<=box.y+box.h)sel.push(u);
+      }
+      if(e.shiftKey){
+        for(const u of sel)if(!G.selection.includes(u))G.selection.push(u);
+      } else {
+        G.selection=sel;
+      }
+      updateSelInfo(G);
+      if(G.selection.length>0)toast(G,'选中 '+G.selection.length+' 支部队','good');
+      else if(!e.shiftKey)toast(G,'未框选到部队','bad');
+    } else {
+      // 未拖动 → 当作单击取消选择
+      if(!e.shiftKey){G.selection=[];updateSelInfo(G);}
+    }
+    return;
+  }
+  
+  if(p.moved)return;
+  if(G.state!=='playing')return;
+  const rect=cv.getBoundingClientRect();
+  handleClick(e.clientX-rect.left,e.clientY-rect.top,e.shiftKey);
+});
+
+cv.addEventListener('pointercancel',e=>{
+  pointers.delete(e.pointerId);
+  pinchStart=null;
+  cancelPendingLongPress();
+  if(G)G.drag=null;
+});
+
+cv.addEventListener('wheel',e=>{
+  if(!G)return;
+  e.preventDefault();
+  const f=e.deltaY>0?.88:1.14;
+  G.cam.zoom=clamp(G.cam.zoom*f,.42,2.2);clampCam(G);
+},{passive:false});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+
+function clampCam(g){
+  const pad=100;
+  g.cam.x=clamp(g.cam.x,-pad,MAP_W*CELL+pad);
+  g.cam.y=clamp(g.cam.y,-pad,MAP_H*CELL+pad);
+}
+
+/* ============ 悬停提示 ============ */
+function updateHover(mx,my){
+  if(!G||G.state!=='playing'){hideHoverTip();return;}
+  const w=screenToWorld(mx,my);
+  let hovered=null;
+  for(const u of G.units){
+    if(!u.alive)continue;
+    const isEnemy=u.side!==G.playerSide;
+    if(isEnemy&&!visible(G,G.playerSide,u.x,u.y))continue;
+    if(dist(w.x,w.y,u.x,u.y)<UNITS[u.type].r+14){hovered={type:'unit',obj:u};break;}
+  }
+  if(!hovered&&G.playerSide==='def'){
+    for(const t of G.turrets){
+      if(dist(w.x,w.y,t.x,t.y)<t.r+14){hovered={type:'turret',obj:t};break;}
+    }
+  }
+  if(!hovered){
+    for(const p of G.posts){
+      if(dist(w.x,w.y,p.x,p.y)<(p.type==='hq'?50:36)){hovered={type:'post',obj:p};break;}
+    }
+  }
+  
+  if(!hovered){
+    G._hoverUnit=null;
+    hideHoverTip();
+    return;
+  }
+  
+  G._hoverUnit=hovered.type==='unit'?hovered.obj:null;
+  
+  if(!hoverTipEl)hoverTipEl=document.getElementById('hoverTip');
+  let html='';
+  if(hovered.type==='unit'){
+    const u=hovered.obj,d=UNITS[u.type];
+    const isEnemy=u.side!==G.playerSide;
+    const cls=isEnemy?'enemy':(u.side==='atk'?'':'def');
+    html='<div class="ht-name '+cls+'">'+d.n+(isEnemy?' [敌]':'')+'</div>'+
+      '<div class="ht-row"><span class="ht-label">生命</span><span class="ht-val">'+Math.ceil(u.hp)+'/'+u.maxHp+'</span></div>'+
+      '<div class="ht-row"><span class="ht-label">射程</span><span class="ht-val">'+d.range+'</span></div>'+
+      '<div class="ht-row"><span class="ht-label">速度</span><span class="ht-val">'+d.spd.toFixed(1)+'</span></div>'+
+      (u.holdPost?'<div class="ht-row" style="color:#9fd8ff">[驻守中]</div>':'');
+  }else if(hovered.type==='turret'){
+    const t=hovered.obj,d=TURRETS[t.type];
+    const cls=t.type==='bunker'?'bunker':'turret';
+    html='<div class="ht-name '+cls+'">'+d.n+'</div>'+
+      '<div class="ht-row"><span class="ht-label">生命</span><span class="ht-val">'+Math.ceil(t.hp)+'/'+t.maxHp+'</span></div>'+
+      '<div class="ht-row"><span class="ht-label">伤害</span><span class="ht-val">'+d.dmg+'</span></div>'+
+      '<div class="ht-row"><span class="ht-label">射程</span><span class="ht-val">'+d.range+'</span></div>';
+  }else if(hovered.type==='post'){
+    const p=hovered.obj;
+    const ownerTxt=p.owner==='atk'?'攻方':(p.owner==='def'?'守方':'中立');
+    html='<div class="ht-name">'+p.name+'</div>'+
+      '<div class="ht-row"><span class="ht-label">控制</span><span class="ht-val">'+ownerTxt+'</span></div>'+
+      '<div class="ht-row"><span class="ht-label">占领</span><span class="ht-val">'+Math.round(p.cap)+'%</span></div>'+
+      (p.owner==='atk'&&p.integrate<1?'<div class="ht-row" style="color:#ffce6b">整合中 '+Math.round(p.integrate*100)+'%</div>':'');
+  }
+  
+  hoverTipEl.innerHTML=html;
+  hoverTipEl.classList.remove('hidden');
+  // 位置：跟随鼠标，避开屏幕边缘
+  const tipW=230,tipH=110;
+  let tx=mx+14,ty=my+14;
+  if(tx+tipW>W)tx=mx-tipW-14;
+  if(ty+tipH>H)ty=my-tipH-14;
+  hoverTipEl.style.left=tx+'px';
+  hoverTipEl.style.top=ty+'px';
+}
+function hideHoverTip(){
+  if(hoverTipEl)hoverTipEl.classList.add('hidden');
+}
+cv.addEventListener('pointerleave',hideHoverTip);
+
+/* ============ 点击处理 ============ */
+function handleClick(mx,my,shiftKey){
+  const g=G;
+  const w=screenToWorld(mx,my);
+
+  // 计划模式
+  if(g.planMode){
+    if(g.planMode==='front'||g.planMode==='attack'){
+      if(g.planPts.length===0){
+        g.planPts.push({x:w.x,y:w.y});
+        updateModeTip(g);
+        return;
+      } else {
+        const a=g.planPts[0],b={x:w.x,y:w.y};
+        createPlan(g,g.planMode,{a,b});
+        if(g.planMode==='front')toast(g,'前线已建立 · 部队沿线驻守','good');
+        else toast(g,'进攻计划已下达','good');
+        g.planPts=[];g.planMode=null;
+        updateModeTip(g);
+        return;
+      }
+    } else if(g.planMode==='defend'){
+      createPlan(g,'defend',{x:w.x,y:w.y,r:140});
+      toast(g,'防御区域已建立','good');
+      g.planMode=null;
+      updateModeTip(g);
+      return;
+    }
+  }
+
+  // 客户端转发
+  if(Net.role==='client'){
+    if(g.mode==='deploy'&&g.pendingDeploy){
+      Net.sendToHost({type:'cmd',cmd:'deploy',unit:g.pendingDeploy,x:w.x,y:w.y});
+      g.mode=null;g.pendingDeploy=null;updateModeTip(g);return;
+    }
+    if(g.mode==='skill'&&g.pendingSkill){
+      Net.sendToHost({type:'cmd',cmd:'skill',key:g.pendingSkill,x:w.x,y:w.y});
+      g.mode=null;g.pendingSkill=null;updateModeTip(g);return;
+    }
+    if(g.selection.length>0){
+      Net.sendToHost({type:'cmd',cmd:'move',ids:g.selection.map(u=>u.id),x:w.x,y:w.y});
+      return;
+    }
+    return;
+  }
+
+  // 技能模式
+  if(g.mode==='skill'){
+    if(useSkill(g,g.playerSide,g.pendingSkill,w.x,w.y)){
+      g.mode=null;g.pendingSkill=null;
+      updateModeTip(g);refreshSkillRow(g);
+    }
+    return;
+  }
+  
+  // 部署模式
+  if(g.mode==='deploy'){
+    const sp=getSpawnPoints(g,g.playerSide);
+    let near=null,nd=Infinity;
+    for(const s of sp){
+      const d=dist(w.x,w.y,s.x,s.y);
+      if(d<nd){nd=d;near=s;}
+    }
+    if(near&&nd<200){
+      const dep=startDeploy(g,g.playerSide,g.pendingDeploy,near.x+rnd(-30,30),near.y+rnd(-30,30));
+      if(dep){
+        toast(g,UNITS[g.pendingDeploy].n+' 部署中…','good');
+        if(G.tutorial) G.tutorial.lastEv = {type:'deploy'};
+      }
+    }else toast(g,'请点击己方据点部署','bad');
+    g.mode=null;g.pendingDeploy=null;
+    updateModeTip(g);refreshDeployRow(g);
+    return;
+  }
+
+  // 单击选择/命令
+  let picked=null,pd=Infinity;
+  for(const u of g.units){
+    if(u.side!==g.playerSide||!u.alive)continue;
+    const d=dist(w.x,w.y,u.x,u.y);
+    const rr=UNITS[u.type].r+14;
+    if(d<rr&&d<pd){pd=d;picked=u;}
+  }
+  if(picked){
+    if(shiftKey){
+      // Shift 多选切换
+      const idx=g.selection.indexOf(picked);
+      if(idx>=0)g.selection.splice(idx,1);
+      else g.selection.push(picked);
+    } else {
+      g.selection=[picked];
+    }
+    updateSelInfo(G);
+    if(G.tutorial) G.tutorial.lastEv={type:'sel'};
+    return;
+  }
+  
+  // 点空地：命令移动 or 取消选择
+  if(g.selection.length>0){
+    orderMove(g,g.selection,w.x,w.y);
+    addEffect(g,{type:'ring',x:w.x,y:w.y,r:22,life:.4,max:.4,
+      col:g.playerSide==='atk'?'#ff8a5c':'#6cb6ff'});
+    return;
+  }
+  g.selection=[];updateSelInfo(g);
+}
+
+/* ============ 战术轮盘 ============ */
+let radialEl=null;
+function openRadial(g,sx,sy,unit){
+  closeRadial();
+  g.radialTargets=unit?[unit]:(g.selection.length?g.selection.slice():[]);
+  if(g.radialTargets.length===0){return;}
+  const el=document.createElement('div');
+  el.id='radial';
+  el.style.left=sx+'px';el.style.top=sy+'px';
+  el.innerHTML=
+    '<div class="ring"></div>'+
+    '<div class="rbtn" data-act="move" style="left:0px;top:-58px"><span class="ic">➤</span>移动</div>'+
+    '<div class="rbtn" data-act="attack" style="left:58px;top:0px"><span class="ic">✶</span>攻击</div>'+
+    '<div class="rbtn" data-act="defend" style="left:0px;top:58px"><span class="ic">◈</span>驻守</div>'+
+    '<div class="rbtn" data-act="stop" style="left:-58px;top:0px"><span class="ic">■</span>停止</div>';
+  document.body.appendChild(el);
+  radialEl=el;
+  el.querySelectorAll('.rbtn').forEach(b=>{
+    b.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      const act=b.dataset.act;
+      const sel=unit?[unit]:(g.selection.length?g.selection:[]);
+      if(sel.length===0){toast(g,'未选中部队','bad');closeRadial();return;}
+      if(act==='move'){
+        toast(g,'点击地图指定移动目标','good');
+      }else if(act==='attack'){
+        let cnt=0;
+        for(const u of sel){
+          let best=null,bd=Infinity;
+          for(const e of g.units){
+            if(e.side===u.side||!e.alive)continue;
+            if(!visible(g,u.side,e.x,e.y))continue;
+            const d=dist(u.x,u.y,e.x,e.y);
+            if(d<bd){bd=d;best=e;}
+          }
+          if(best){u.tid=best.id;u.holdPost=0;cnt++;}
+        }
+        toast(g,cnt>0?'攻击指令已下达':'未发现可见敌人',cnt>0?'good':'bad');
+      }else if(act==='defend'){
+        for(const u of sel){u.holdPost=1;u.order=null;u.path=null;}
+        toast(g,'部队进入驻守状态','good');
+      }else if(act==='stop'){
+        for(const u of sel){u.order=null;u.path=null;u.tid=0;u.holdPost=0;}
+        toast(g,'部队停止行动','good');
+      }
+      closeRadial();
+    });
+  });
+  setTimeout(()=>{
+    const close=()=>{closeRadial();document.removeEventListener('pointerdown',close);};
+    document.addEventListener('pointerdown',close);
+  },50);
+}
+function closeRadial(){
+  if(G) G.radialTargets=null;
+  if(radialEl){radialEl.remove();radialEl=null;}
+}
+
+/* ============ UI ============ */
+const el={
+  menu:document.getElementById('menu'),
+  setup:document.getElementById('setup'),
+  multi:document.getElementById('multi'),
+  saves:document.getElementById('saves'),
+  help:document.getElementById('help'),
+  tutorial:document.getElementById('tutorial'),
+  settings:document.getElementById('settings'),
+  hud:document.getElementById('hud'),
+  pause:document.getElementById('pause'),
+  result:document.getElementById('result'),
+  cpVal:document.getElementById('cpVal'),
+  timeVal:document.getElementById('timeVal'),
+  postVal:document.getElementById('postVal'),
+  unitVal:document.getElementById('unitVal'),
+  timeStat:document.getElementById('timeStat'),
+  deployRow:document.getElementById('deployRow'),
+  skillRow:document.getElementById('skillRow'),
+  leftPanel:document.getElementById('leftPanel'),
+  selInfo:document.getElementById('selInfo'),
+  modeTip:document.getElementById('modeTip'),
+  toast:document.getElementById('toast'),
+  saveList:document.getElementById('saveList'),
+  planPanel:document.getElementById('planPanel'),
+  hoverTip:document.getElementById('hoverTip'),
+};
+function show(el_,s){
+  if(s)el_.classList.remove('hidden');
+  else el_.classList.add('hidden');
+}
+function toast(g,text,kind){
+  const d=document.createElement('div');
+  d.className='toastmsg'+(kind?' '+kind:'');
+  d.textContent=text;
+  el.toast.appendChild(d);
+  setTimeout(()=>{d.style.transition='opacity .4s';d.style.opacity='0';},1700);
+  setTimeout(()=>{if(d.parentNode)d.parentNode.removeChild(d);},2200);
+}
+function updateModeTip(g){
+  let text='';
+  if(g.mode==='deploy')text='点击己方据点部署 · ESC 取消';
+  else if(g.mode==='skill')text=SKILLS[g.pendingSkill].n+' · 点击目标区域 · ESC 取消';
+  else if(g.planMode==='front')text=g.planPts.length===0?'计划：点击前线起点':'计划：点击前线终点';
+  else if(g.planMode==='defend')text='计划：点击防区中心';
+  else if(g.planMode==='attack')text=g.planPts.length===0?'计划：点击进攻起点':'计划：点击进攻目标';
+  if(text){
+    show(el.modeTip,true);
+    el.modeTip.textContent=text;
+  }else show(el.modeTip,false);
+}
+
+function refreshDeployRow(g){
+  el.deployRow.innerHTML='';
+  const sp=getSpawnPoints(g,g.playerSide);
+  const descs={
+    inf:'廉价主力',scout:'视野极佳',eng:'可挖壕沟',arm:'高火力',art:'远程压制'
+  };
+  for(const k in UNITS){
+    const d=UNITS[k];
+    const card=document.createElement('div');
+    card.className='ucard';
+    if(g.cp[g.playerSide]<d.cost||sp.length===0)card.classList.add('dis');
+    card.innerHTML='<div class="un">'+d.n+'</div>'+
+      '<div class="uc">'+d.cost+' CP</div>'+
+      '<div style="font-size:9px;color:#5f7285;margin-top:1px;">'+(descs[k]||'')+'</div>';
+    card.onclick=()=>{
+      if(g.state!=='playing')return;
+      if(g.cp[g.playerSide]<d.cost){toast(g,'指挥值不足','bad');return;}
+      if(getSpawnPoints(g,g.playerSide).length===0){toast(g,'没有可用的部署点','bad');return;}
+      g.mode='deploy';g.pendingDeploy=k;g.pendingSkill=null;
+      g.planMode=null;g.planPts=[];el.planPanel.classList.add('hidden');
+      updateModeTip(g);
+    };
+    el.deployRow.appendChild(card);
+  }
+  if(g.playerSide==='def'){
+    const card=document.createElement('div');
+    card.className='ucard';
+    if(g.cp.def<5)card.classList.add('dis');
+    card.innerHTML='<div class="un">挖掘壕沟</div><div class="uc">5 CP</div>'+
+      '<div style="font-size:9px;color:#5f7285;margin-top:1px;">需选中工兵</div>';
+    card.onclick=()=>{
+      const engs=g.selection.filter(u=>u.type==='eng'&&u.alive);
+      if(engs.length===0){toast(g,'请先选中工兵班','bad');return;}
+      if(g.cp.def<5){toast(g,'指挥值不足','bad');return;}
+      g.cp.def-=5;
+      for(const e of engs)e.order={type:'trench'};
+      toast(g,'工兵开始构筑壕沟','good');
+    };
+    el.deployRow.appendChild(card);
+  }
+}
+function refreshSkillRow(g){
+  el.skillRow.innerHTML='';
+  const descs={
+    recon:'揭示目标',barrage:'中立·需射程',airstrike:'中立·需射程'
+  };
+  for(const k in SKILLS){
+    const s=SKILLS[k];
+    const cd=g.cd[g.playerSide][k]||0;
+    const card=document.createElement('div');
+    card.className='ucard skill';
+    if(g.cp[g.playerSide]<s.cost||cd>0)card.classList.add('dis');
+    if(cd>0)card.classList.add('cooling');
+    card.innerHTML='<div class="un">'+s.n+'</div><div class="uc">'+
+      (cd>0?cd.toFixed(0)+'s':s.cost+' CP')+'</div>'+
+      '<div style="font-size:9px;color:#5f7285;margin-top:1px;">'+(descs[k]||'')+'</div>';
+    card.onclick=()=>{
+      if(g.state!=='playing')return;
+      if((g.cd[g.playerSide][k]||0)>0){toast(g,'技能冷却中','bad');return;}
+      if(g.cp[g.playerSide]<s.cost){toast(g,'指挥值不足','bad');return;}
+      g.mode='skill';g.pendingSkill=k;g.pendingDeploy=null;
+      g.planMode=null;g.planPts=[];el.planPanel.classList.add('hidden');
+      updateModeTip(g);
+    };
+    el.skillRow.appendChild(card);
+  }
+}
+function refreshLeftPanel(g){
+  if(el.leftPanel.children.length!==9){
+    el.leftPanel.innerHTML='';
+    for(let i=1;i<=9;i++){
+      const b=document.createElement('div');
+      b.className='sqbtn';b.dataset.k=i;
+      b.title='短按调用 · 长按编入';
+      b.innerHTML=i+'<span class="cnt"></span>';
+      let pressTimer=null,longFired=false;
+      const doAssign=()=>{
+        if(!G||G.state!=='playing')return;
+        if(G.selection.length===0){toast(G,'请先选中部队再编入','bad');return;}
+        G.squads[i]=G.selection.filter(u=>u.alive).map(u=>u.id);
+        toast(G,'编队 '+i+' 已编入 '+G.squads[i].length+' 支','good');
+      };
+      const doRecall=()=>{
+        if(!G||G.state!=='playing')return;
+        const sq=G.squads[i];
+        if(!sq||sq.length===0){toast(G,'编队 '+i+' 为空','bad');return;}
+        const sel=[];
+        for(const id of sq){const u=findUnitById(G,id);if(u&&u.alive)sel.push(u);}
+        if(sel.length===0){G.squads[i]=[];toast(G,'编队 '+i+' 已失效','bad');return;}
+        G.selection=sel;G.hotSquad=i;updateSelInfo(G);
+        toast(G,'调用编队 '+i+'（'+sel.length+'）','good');
+      };
+      b.addEventListener('pointerdown',ev=>{
+        ev.preventDefault();longFired=false;
+        pressTimer=setTimeout(()=>{longFired=true;doAssign();},480);
+      });
+      b.addEventListener('pointerup',()=>{
+        if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
+        if(!longFired)doRecall();
+      });
+      b.addEventListener('pointerleave',()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}});
+      b.addEventListener('pointercancel',()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}});
+      el.leftPanel.appendChild(b);
+    }
+  }
+  for(const b of el.leftPanel.children){
+    const k=parseInt(b.dataset.k,10);
+    const sq=g.squads[k];
+    const n=sq?sq.filter(id=>{const u=findUnitById(g,id);return u&&u.alive;}).length:0;
+    b.classList.toggle('has',n>0);
+    b.classList.toggle('hot',g.hotSquad===k&&n>0);
+    b.querySelector('.cnt').textContent=n>0?n:'';
+  }
+}
+function updateSelInfo(g){
+  const sel=g.selection.filter(u=>u.alive);
+  if(sel.length===0){show(el.selInfo,false);return;}
+  show(el.selInfo,true);
+  if(sel.length===1){
+    const u=sel[0],d=UNITS[u.type];
+    el.selInfo.innerHTML='<div class="sn">'+d.n+'</div>'+
+      '<div class="sr">生命 '+Math.ceil(u.hp)+'/'+u.maxHp+' · 射程 '+d.range+'</div>'+
+      '<div class="sr">'+(u.holdPost?'[驻守中]':'')+'</div>';
+  }else{
+    el.selInfo.innerHTML='<div class="sn">已选中 '+sel.length+' 支部队</div>'+
+      '<div class="sr">点击空地移动 · 长按单位打开菜单</div>';
+  }
+}
+function refreshHUD(g){
+  el.cpVal.textContent=Math.floor(g.cp[g.playerSide]);
+  const left=Math.max(0,GAME_LEN-g.time);
+  el.timeVal.textContent=fmtTime(left);
+  if(left<120)el.timeStat.classList.add('warn');else el.timeStat.classList.remove('warn');
+  const branches=g.posts.filter(p=>p.type==='branch');
+  const own=branches.filter(p=>p.owner===g.playerSide).length;
+  el.postVal.textContent=own+'/'+branches.length;
+  const myUnits=g.units.filter(u=>u.side===g.playerSide).length+
+                g.deploying.filter(d=>d.side===g.playerSide).length;
+  el.unitVal.textContent=myUnits;
+}
+let hudTick=0;
+setInterval(()=>{
+  if(!G)return;
+  hudTick++;
+  if(hudTick%8===0){
+    refreshHUD(G);refreshDeployRow(G);refreshSkillRow(G);
+    refreshLeftPanel(G);updateSelInfo(G);
+  }
+},100);
+
+function setupRightPanel(){
+  document.getElementById('rtPlan').onclick=()=>{
+    if(!G)return;
+    el.planPanel.classList.toggle('hidden');
+    if(!el.planPanel.classList.contains('hidden')){
+      G.planMode=null;G.planPts=[];G.mode=null;G.pendingDeploy=null;G.pendingSkill=null;
+    }
+    updateModeTip(G);
+  };
+  el.planPanel.querySelectorAll('.plbtn').forEach(b=>{
+    b.onclick=()=>{
+      if(!G)return;
+      const p=b.dataset.plan;
+      if(p==='cancel'){
+        G.planMode=null;G.planPts=[];
+        el.planPanel.querySelectorAll('.plbtn').forEach(x=>x.classList.remove('active'));
+        updateModeTip(G);
+        return;
+      }
+      if(p==='clear'){
+        G.plans=G.plans.filter(pl=>pl.side!==G.playerSide);
+        toast(G,'已清除所有计划','good');
+        el.planPanel.classList.add('hidden');
+        G.planMode=null;G.planPts=[];
+        return;
+      }
+      if(G.selection.length===0){toast(G,'请先选中部队','bad');return;}
+      G.planMode=p;G.planPts=[];
+      el.planPanel.querySelectorAll('.plbtn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      updateModeTip(G);
+    };
+  });
+  document.getElementById('rtMove').onclick=()=>{
+    if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}
+    toast(G,'点击地图指定移动目标','good');
+  };
+  document.getElementById('rtAttack').onclick=()=>{
+    if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}
+    let cnt=0;
+    for(const u of G.selection){
+      let best=null,bd=Infinity;
+      for(const e of G.units){
+        if(e.side===u.side||!e.alive)continue;
+        if(!visible(G,u.side,e.x,e.y))continue;
+        const d=dist(u.x,u.y,e.x,e.y);
+        if(d<bd){bd=d;best=e;}
+      }
+      if(best){u.tid=best.id;u.holdPost=0;cnt++;}
+    }
+    toast(G,cnt>0?'攻击指令已下达':'未发现可见敌人',cnt>0?'good':'bad');
+  };
+  document.getElementById('rtStop').onclick=()=>{
+    if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}
+    for(const u of G.selection){u.order=null;u.path=null;u.tid=0;u.holdPost=0;}
+    toast(G,'部队停止行动','good');
+  };
+}
+
+/* ============ P2P ============ */
+const Net={
+  role:'none',myId:null,peer:null,roomCode:null,isHost:false,
+  connections:new Map(),clientConn:null,playerList:[],mySide:'atk',
+  onCommand:null,onState:null,onAssign:null,onPlayers:null,
+  genRoomCode(){
+    const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code='';
+    for(let i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+    return code;
+  },
+  async hostCreate(roomCode){
+    this.role='host';this.isHost=true;this.roomCode=roomCode;
+    this.playerList=[{id:'host',name:'房主',side:'atk'}];
+    return new Promise((resolve,reject)=>{
+      this.peer=new Peer('sf-'+roomCode,{
+        debug:1,
+        config:{iceServers:[
+          {urls:'stun:stun.l.google.com:19302'},
+          {urls:'stun:stun1.l.google.com:19302'},
+        ]}
+      });
+      this.peer.on('open',id=>{this.myId=id;resolve(id);});
+      this.peer.on('error',err=>{
+        if(err.type==='unavailable-id')reject(new Error('房间码已被使用，请重试'));
+        else reject(err);
+      });
+      this.peer.on('connection',conn=>{this._handleIncoming(conn);});
+    });
+  },
+  _handleIncoming(conn){
+    conn.on('open',()=>{
+      const clientId=conn.peer;
+      const atkCount=this.playerList.filter(p=>p.side==='atk').length;
+      const defCount=this.playerList.filter(p=>p.side==='def').length;
+      const side=atkCount<=defCount?'atk':'def';
+      const name='玩家'+clientId.slice(-4);
+      this.connections.set(clientId,{conn,side,name});
+      this.playerList.push({id:clientId,name,side});
+      conn.send({type:'assign',side,roomCode:this.roomCode,players:this.playerList});
+      this._broadcastPlayers();
+      if(this.onPlayers)this.onPlayers(this.playerList);
+    });
+    conn.on('data',data=>{
+      let msg;try{msg=JSON.parse(data);}catch(e){return;}
+      if(msg.type==='cmd'&&this.onCommand){
+        const info=this.connections.get(conn.peer);
+        if(info)this.onCommand(info.side,msg,conn.peer);
+      }
+    });
+    conn.on('close',()=>{
+      this.connections.delete(conn.peer);
+      this.playerList=this.playerList.filter(p=>p.id!==conn.peer);
+      this._broadcastPlayers();
+      if(this.onPlayers)this.onPlayers(this.playerList);
+    });
+  },
+  async clientJoin(roomCode){
+    this.role='client';this.isHost=false;this.roomCode=roomCode;
+    return new Promise((resolve,reject)=>{
+      this.peer=new Peer({debug:1,config:{iceServers:[
+        {urls:'stun:stun.l.google.com:19302'},
+        {urls:'stun:stun1.l.google.com:19302'},
+      ]}});
+      this.peer.on('open',id=>{
+        this.myId=id;
+        const conn=this.peer.connect('sf-'+roomCode,{reliable:true});
+        this.clientConn=conn;
+        let opened=false;
+        conn.on('open',()=>{opened=true;resolve(conn);});
+        conn.on('data',data=>{
+          let msg;try{msg=JSON.parse(data);}catch(e){return;}
+          if(msg.type==='assign'){
+            this.mySide=msg.side;this.playerList=msg.players||[];
+            if(this.onAssign)this.onAssign(msg);
+          }else if(msg.type==='state'&&this.onState){
+            this.onState(msg.s);
+          }else if(msg.type==='players'&&this.onPlayers){
+            this.playerList=msg.list||[];this.onPlayers(this.playerList);
+          }
+        });
+        conn.on('error',err=>{if(!opened)reject(new Error('无法连接到房间'));});
+        setTimeout(()=>{if(!opened)reject(new Error('连接超时'));},10000);
+      });
+      this.peer.on('error',err=>reject(new Error('连接失败：'+err.type)));
+    });
+  },
+  broadcastState(s){
+    const msg=JSON.stringify({type:'state',s});
+    for(const {conn} of this.connections.values()){
+      try{conn.send(msg);}catch(e){}
+    }
+  },
+  _broadcastPlayers(){
+    const msg=JSON.stringify({type:'players',list:this.playerList});
+    for(const {conn} of this.connections.values()){
+      try{conn.send(msg);}catch(e){}
+    }
+  },
+  sendToHost(cmd){
+    if(this.clientConn&&this.clientConn.open){
+      try{this.clientConn.send(JSON.stringify(cmd));}catch(e){}
+    }
+  },
+  close(){
+    if(this.peer){try{this.peer.destroy();}catch(e){}}
+    this.peer=null;this.connections.clear();this.clientConn=null;this.role='none';
+  },
+};
+function netBroadcastState(){
+  if(!G||Net.role!=='host')return;
+  const s={
+    t:+G.time.toFixed(2),
+    cp:[G.cp.atk,G.cp.def],
+    u:G.units.map(u=>[u.id,u.side==='atk'?0:1,u.type,
+      Math.round(u.x),Math.round(u.y),Math.round(u.hp),Math.round(u.facing*100)]),
+    p:G.posts.map(p=>[p.owner==='atk'?0:(p.owner==='def'?1:2),Math.round(p.cap),+p.integrate.toFixed(2)]),
+    tr:G.turrets.map(t=>[t.type,Math.round(t.x),Math.round(t.y),Math.round(t.hp),Math.round(t.maxHp)]),
+    tren:G.trenches.map(t=>[Math.round(t.x),Math.round(t.y),t.side==='atk'?0:1]),
+  };
+  Net.broadcastState(s);
+}
+function netApplyState(s){
+  if(!G)return;
+  G.time=s.t;G.cp.atk=s.cp[0];G.cp.def=s.cp[1];
+  const oldById=new Map();
+  for(const u of G.units)oldById.set(u.id,u);
+  const newUnits=[];
+  for(const a of s.u){
+    const [id,sideBit,type,x,y,hp,facing]=a;
+    let u=oldById.get(id);
+    if(!u){
+      u={id,side:sideBit===0?'atk':'def',type,x,y,
+         hp,maxHp:UNITS[type].hp,cd:0,order:null,tid:0,
+         alive:true,facing:facing/100,holdPost:0};
+    }else{
+      u._netTarget={x,y};u.hp=hp;u.facing=facing/100;
+      oldById.delete(id);
+    }
+    newUnits.push(u);
+  }
+  G.units=newUnits;
+  for(let i=0;i<G.posts.length&&i<s.p.length;i++){
+    const p=G.posts[i],a=s.p[i];
+    p.owner=a[0]===0?'atk':(a[0]===1?'def':'neutral');
+    p.cap=a[1];p.integrate=a[2];
+  }
+  G.turrets=s.tr.map(t=>({
+    id:t[0]+'_'+t[1]+'_'+t[2],side:'def',type:t[0],
+    x:t[1],y:t[2],hp:t[3],maxHp:t[4],cd:0,r:TURRETS[t[0]].r,
+  }));
+  G.trenches=s.tren.map(t=>({x:t[0],y:t[1],r:34,side:t[2]===0?'atk':'def'}));
+  if(G.playerSide)recomputeVis(G,G.playerSide);
+}
+
+function showMultiHome(){
+  show(document.getElementById('multiHome'),true);
+  show(document.getElementById('multiHost'),false);
+  show(document.getElementById('multiJoin'),false);
+}
+document.getElementById('mMulti').onclick=()=>{show(el.menu,false);show(el.multi,true);showMultiHome();};
+document.getElementById('mmBack').onclick=()=>{Net.close();show(el.multi,false);show(el.menu,true);};
+document.getElementById('mmHost').onclick=async()=>{
+  show(document.getElementById('multiHome'),false);
+  show(document.getElementById('multiHost'),true);
+  const code=Net.genRoomCode();
+  document.getElementById('hostRoomCode').textContent=code;
+  try{await Net.hostCreate(code);toast(null,'房间已创建：'+code,'good');}
+  catch(e){alert(e.message||'创建失败');showMultiHome();}
+};
+document.getElementById('copyRoomCode').onclick=()=>{
+  const code=document.getElementById('hostRoomCode').textContent;
+  if(navigator.clipboard)navigator.clipboard.writeText(code).then(()=>alert('房间码已复制：'+code));
+};
+document.getElementById('hostStart').onclick=()=>{
+  if(Net.connections.size===0&&!confirm('还没有其他玩家连接，确定开始吗？'))return;
+  G=makeGame({mapId:'grand',side:'atk',diff:'normal'});
+  G.mp={isHost:true};G.playerSide='atk';
+  show(el.multi,false);startPlaying();
+};
+document.getElementById('hostBack').onclick=()=>{Net.close();show(document.getElementById('multiHost'),false);showMultiHome();};
+document.getElementById('mmJoin').onclick=()=>{
+  show(document.getElementById('multiHome'),false);
+  show(document.getElementById('multiJoin'),true);
+  document.getElementById('joinRoomCode').focus();
+};
+document.getElementById('doJoin').onclick=async()=>{
+  const code=document.getElementById('joinRoomCode').value.trim().toUpperCase();
+  if(code.length!==6){alert('请输入 6 位房间码');return;}
+  const status=document.getElementById('joinStatus');
+  status.textContent='正在连接…';
+  try{await Net.clientJoin(code);status.textContent='已连接！等待房主开始…';}
+  catch(e){status.textContent='';alert(e.message||'连接失败');}
+};
+document.getElementById('joinBack').onclick=()=>{Net.close();show(document.getElementById('multiJoin'),false);showMultiHome();};
+Net.onAssign=(msg)=>{
+  G=makeGame({mapId:'grand',side:msg.side||'def',diff:'normal'});
+  G.mp={isHost:false};G.playerSide=msg.side;
+  show(el.multi,false);startPlaying();
+  toast(G,'已加入房间 · 你是'+(msg.side==='atk'?'攻方':'守方'),'good');
+};
+Net.onState=(s)=>netApplyState(s);
+Net.onPlayers=(list)=>{
+  const el_=document.getElementById('hostPlayers');
+  if(!el_)return;
+  if(!list||list.length<=1){
+    el_.innerHTML='<div style="color:#4d5c6b;font-size:12px;">等待玩家加入…</div>';
+    return;
+  }
+  el_.innerHTML=list.map(p=>
+    '<div style="background:#131b24;border:1px solid #223040;border-radius:6px;'+
+    'padding:6px 10px;margin-bottom:6px;font-size:12px;color:#cfe2f5;display:flex;'+
+    'justify-content:space-between;align-items:center;">'+
+    '<span>'+p.name+'</span>'+
+    '<span class="player-badge '+(p.side==='atk'?'atk':'def')+'">'+
+    (p.side==='atk'?'攻方':'守方')+'</span></div>'
+  ).join('');
+};
+Net.onCommand=(side,msg)=>{
+  if(!G)return;
+  if(msg.cmd==='deploy')startDeploy(G,side,msg.unit,msg.x,msg.y);
+  else if(msg.cmd==='move'){
+    const units=G.units.filter(u=>u.side===side&&msg.ids.includes(u.id));
+    if(units.length)orderMove(G,units,msg.x,msg.y);
+  }else if(msg.cmd==='skill')useSkill(G,side,msg.key,msg.x,msg.y);
+};
+
+/* ============ 教程 ============ */
+const TUT_STEPS=[
+  {title:'1 / 6 · 移动视角',
+   text:'单指拖动地图浏览战场；双指捏合缩放。\n先把视角拖到中间的中立支部。',
+   hint:'拖动地图',
+   check(g,ev){
+     if(ev.type!=='cam')return false;
+     const post=g.posts.find(p=>p.name==='中立支部');
+     if(!post)return false;
+     return dist(g.cam.x,g.cam.y,post.x,post.y)<180;
+   }},
+  {title:'2 / 6 · 选中单位',
+   text:'点击己方单位即可选中。\n选中你的一名步兵。',
+   hint:'点击单位',
+   check(g,ev){return ev.type==='sel'&&g.selection.length>0;}},
+  {title:'3 / 6 · 移动与占领',
+   text:'点击地图任意位置，命令部队移动。\n把部队移动到中立支部附近即可占领它。',
+   hint:'移动至中立支部',
+   check(g){
+     const post=g.posts.find(p=>p.name==='中立支部');
+     return post&&post.owner===g.playerSide&&post.cap>=100;
+   }},
+  {title:'4 / 6 · 部署部队',
+   text:'点击下方兵种卡片，再点击己方据点即可部署（部署需要时间）。\n试着部署一名步兵。',
+   hint:'部署步兵',
+   check(g,ev){return ev.type==='deploy'||g.deploying.some(d=>d.side===g.playerSide);}},
+  {title:'5 / 6 · 交战',
+   text:'当敌人进入射程后自动开火。\n靠近敌方支部，清掉守军。',
+   hint:'击溃敌军',
+   check(g){
+     const foe=g.units.filter(u=>u.side!=='atk'&&u.alive).length;
+     if(g._tut_fox_ini===undefined)g._tut_fox_ini=foe+2;
+     return foe<g._tut_fox_ini;
+   }},
+  {title:'6 / 6 · 拿下指挥部',
+   text:'占领敌方支部后，继续推进攻下敌方指挥部即可获胜。\n学会了吗？去实战吧！',
+   hint:'占领敌方指挥部',
+   check(g){
+     const hq=g.posts.find(p=>p.type==='hq'&&p.name==='敌方指挥部');
+     return hq&&hq.owner===g.playerSide;
+   }},
+];
+function startTutorial(){
+  G=makeGame({mapId:'tutorial',side:'atk',diff:'easy'});
+  G.tutorial={idx:0,lastEv:null};
+  G.units=G.units.filter(u=>u.side==='atk'||Math.random()<0.4);
+  startPlaying();showTutHint();
+  toast(G,'新兵训练开始 · 跟随指引完成任务','good');
+}
+function showTutHint(){
+  if(!G||!G.tutorial)return;
+  const step=TUT_STEPS[G.tutorial.idx];
+  let box=document.getElementById('tutBox');
+  if(!box){
+    box=document.createElement('div');
+    box.id='tutBox';
+    box.style.cssText='position:fixed;left:50%;top:70px;transform:translateX(-50%);'+
+      'z-index:40;pointer-events:none;background:rgba(10,18,28,.95);border:1px solid #3a5a7a;'+
+      'border-radius:8px;padding:10px 16px;max-width:min(480px,90vw);'+
+      'box-shadow:0 6px 24px rgba(0,0,0,.6);';
+    document.body.appendChild(box);
+  }
+  box.innerHTML='<div style="font-size:13px;font-weight:700;color:#9fd8ff;letter-spacing:.06em;margin-bottom:5px;">'+
+    step.title+'</div>'+
+    '<div style="font-size:12px;color:#b8cad8;line-height:1.6;white-space:pre-line;">'+step.text+'</div>'+
+    '<div style="font-size:11px;color:#ffce6b;margin-top:6px;">目标：'+step.hint+'</div>';
+}
+function tutStep(dt){
+  if(!G||!G.tutorial)return;
+  if(G.tutorial.idx>=TUT_STEPS.length)return;
+  const step=TUT_STEPS[G.tutorial.idx];
+  const ev=G.tutorial.lastEv||{type:'none'};
+  if(step.check(G,ev)){
+    G.tutorial.lastEv=null;
+    G.tutorial.idx++;
+    if(G.tutorial.idx>=TUT_STEPS.length){
+      const box=document.getElementById('tutBox');
+      if(box)box.remove();
+      toast(G,'教程完成！','good');
+      setTimeout(()=>endGame(G,G.playerSide),1200);
+      return;
+    }
+    toast(G,'✓ 完成 '+G.tutorial.idx+'/'+TUT_STEPS.length,'good');
+    showTutHint();
+  }
+}
+
+/* ============ 存档 ============ */
+const SAVE_KEY='steel_frontline_v12_saves';
+function readSaves(){try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'[]');}catch(e){return[];}}
+function writeSaves(a){try{localStorage.setItem(SAVE_KEY,JSON.stringify(a));}catch(e){}}
+function serialize(g){
+  return{
+    v:12,cfg:g.cfg,time:g.time,
+    cp:{atk:Math.floor(g.cp.atk),def:Math.floor(g.cp.def)},
+    units:g.units.map(u=>({
+      side:u.side,type:u.type,x:Math.round(u.x),y:Math.round(u.y),
+      hp:Math.round(u.hp),hold:u.holdPost?1:0,
+      order:u.order&&u.order.type==='move'?{type:'move',x:Math.round(u.order.x),y:Math.round(u.order.y)}:null,
+    })),
+    posts:g.posts.map(p=>({owner:p.owner,cap:Math.round(p.cap),integrate:p.integrate})),
+    turrets:g.turrets.map(t=>({type:t.type,x:t.x,y:t.y,hp:Math.round(t.hp)})),
+    trenches:g.trenches.map(t=>({x:t.x,y:t.y,side:t.side})),
+    cd:g.cd,
+  };
+}
+function deserialize(data){
+  const mapDef=MAPS.find(m=>m.id===data.cfg.mapId)||MAPS[0];
+  const gen=mapDef.gen();
+  if(gen.mapW){MAP_W=gen.mapW;MAP_H=gen.mapH;}
+  else if(mapDef.id==='grand'){MAP_W=96;MAP_H=64;}
+  else{MAP_W=64;MAP_H=44;}
+  const g=makeGame(data.cfg);
+  g.time=data.time;g.cp.atk=data.cp.atk;g.cp.def=data.cp.def;
+  g.units=[];
+  for(const u of data.units){
+    const nu=spawnUnit(g,u.side,u.type,u.x,u.y);
+    nu.hp=u.hp;
+    if(u.order)nu.order=u.order;
+    if(u.hold)nu.holdPost=1;
+  }
+  for(let i=0;i<g.posts.length&&i<data.posts.length;i++){
+    g.posts[i].owner=data.posts[i].owner;
+    g.posts[i].cap=data.posts[i].cap;
+    g.posts[i].integrate=data.posts[i].integrate;
+  }
+  g.turrets=[];
+  for(const t of data.turrets){
+    const d=TURRETS[t.type];
+    g.turrets.push({id:uid(),side:'def',type:t.type,x:t.x,y:t.y,hp:t.hp,maxHp:d.hp,cd:0,r:d.r});
+  }
+  g.trenches=data.trenches.map(t=>({x:t.x,y:t.y,r:34,side:t.side}));
+  g.cd=data.cd||{atk:{},def:{}};
+  recomputeVis(g,'atk');recomputeVis(g,'def');
+  return g;
+}
+
+/* ============ 菜单 ============ */
+let setupCfg={mapId:'island',side:'atk',diff:'normal'};
+function buildSetup(){
+  const mo=document.getElementById('mapOpts');mo.innerHTML='';
+  MAPS.filter(m=>!m.tutorial).forEach(m=>{
+    const d=document.createElement('div');
+    d.className='opt'+(setupCfg.mapId===m.id?' active':'');
+    d.innerHTML='<div class="on">'+m.n+' <span style="color:#6b7f94;font-weight:400;font-size:11px">['+m.tag+']</span></div><div class="od">'+m.desc+'</div>';
+    d.onclick=()=>{setupCfg.mapId=m.id;buildSetup();};
+    mo.appendChild(d);
+  });
+  const so=document.getElementById('sideOpts');so.innerHTML='';
+  [
+    {k:'atk',n:'攻方 · 进攻军',d:'指挥值基础随时间提升，击杀与占领获得额外 CP。部署 2 秒。'},
+    {k:'def',n:'守方 · 卫戍军',d:'指挥值起步略高且恒定，丢支部会降低恢复。部署 4 秒。守方 AI 不主动越线。'},
+  ].forEach(s=>{
+    const d=document.createElement('div');
+    d.className='opt'+(setupCfg.side===s.k?' active':'');
+    d.innerHTML='<div class="on">'+s.n+'</div><div class="od">'+s.d+'</div>';
+    d.onclick=()=>{setupCfg.side=s.k;buildSetup();};
+    so.appendChild(d);
+  });
+  const dof=document.getElementById('diffOpts');dof.innerHTML='';
+  for(const k in DIFFS){
+    const df=DIFFS[k];
+    const d=document.createElement('div');
+    d.className='opt'+(setupCfg.diff===k?' active':'');
+    d.innerHTML='<div class="on">'+df.n+'</div><div class="od">'+df.desc+'</div>';
+    d.onclick=()=>{setupCfg.diff=k;buildSetup();};
+    dof.appendChild(d);
+  }
+}
+function buildSaveList(){
+  const saves=readSaves();el.saveList.innerHTML='';
+  if(saves.length===0){el.saveList.innerHTML='<div class="empty-tip">暂无存档</div>';return;}
+  saves.forEach((s,i)=>{
+    const d=document.createElement('div');d.className='save-item';
+    const mapName=(MAPS.find(m=>m.id===s.data.cfg.mapId)||MAPS[0]).n;
+    d.innerHTML='<div class="si-main"><div class="si-t">'+s.name+'</div>'+
+      '<div class="si-s">'+mapName+' · '+(s.data.cfg.side==='atk'?'攻方':'守方')+' · '+
+      DIFFS[s.data.cfg.diff].n+' · 已进行 '+fmtTime(s.data.time)+'</div></div>';
+    const b1=document.createElement('button');
+    b1.className='btn primary';b1.textContent='载入';
+    b1.onclick=()=>{G=deserialize(saves[i].data);startPlaying();};
+    const b2=document.createElement('button');
+    b2.className='btn ghost';b2.textContent='删除';
+    b2.onclick=()=>{const arr=readSaves();arr.splice(i,1);writeSaves(arr);buildSaveList();};
+    d.appendChild(b1);d.appendChild(b2);
+    el.saveList.appendChild(d);
+  });
+}
+function startPlaying(){
+  show(el.menu,false);show(el.setup,false);show(el.multi,false);show(el.saves,false);
+  show(el.help,false);show(el.tutorial,false);show(el.settings,false);
+  show(el.result,false);show(el.pause,false);show(el.hud,true);
+  el.planPanel.classList.add('hidden');
+  refreshDeployRow(G);refreshSkillRow(G);refreshLeftPanel(G);
+  refreshHUD(G);updateSelInfo(G);updateModeTip(G);
+  if(G.playerSide==='atk'){G.cam.x=G.spawnPoint.x;G.cam.y=G.spawnPoint.y;}
+  else{const hq=G.posts.find(p=>p.type==='hq');if(hq){G.cam.x=hq.x;G.cam.y=hq.y;}}
+  G.cam.zoom=(Math.min(W,H)<700)?.62:.85;
+}
+function buildSettings(){
+  const qg=document.getElementById('qgrp');
+  [...qg.children].forEach(c=>c.classList.toggle('active',c.dataset.q===CFG.quality));
+  const fg=document.getElementById('fgrp');
+  [...fg.children].forEach(c=>c.classList.toggle('active',parseInt(c.dataset.f,10)===CFG.fps));
+  const xg=document.getElementById('fxgrp');
+  [...xg.children].forEach(c=>c.classList.toggle('active',(c.dataset.fx==='1')===CFG.fx));
+}
+document.getElementById('qgrp').onclick=e=>{
+  if(e.target.dataset.q){CFG.quality=e.target.dataset.q;saveCfg();buildSettings();if(G)buildTerrainCanvas(G);}
+};
+document.getElementById('fgrp').onclick=e=>{
+  if(e.target.dataset.f){CFG.fps=parseInt(e.target.dataset.f,10);saveCfg();buildSettings();}
+};
+document.getElementById('fxgrp').onclick=e=>{
+  if(e.target.dataset.fx){CFG.fx=e.target.dataset.fx==='1';saveCfg();buildSettings();}
+};
+
+let tutIdx=0;
+function showTut(){
+  const step=TUT_STEPS[tutIdx];
+  document.getElementById('tutContent').innerHTML=
+    '<div class="tstep"><h3>'+step.title+'</h3><p>'+step.text.replace(/\n/g,'<br>')+'</p></div>'+
+    '<div style="text-align:center;color:#6b7f94;font-size:11px;margin-top:6px;">'+
+    (tutIdx+1)+' / '+TUT_STEPS.length+'</div>';
+  document.getElementById('tPrev').disabled=tutIdx===0;
+  document.getElementById('tNext').textContent=tutIdx>=TUT_STEPS.length-1?'完成':'下一章';
+}
+document.getElementById('tPrev').onclick=()=>{if(tutIdx>0){tutIdx--;showTut();}};
+document.getElementById('tNext').onclick=()=>{
+  if(tutIdx>=TUT_STEPS.length-1){show(el.tutorial,false);show(el.menu,true);tutIdx=0;}
+  else{tutIdx++;showTut();}
+};
+
+/* ============ 事件绑定 ============ */
+document.getElementById('mNew').onclick=()=>{show(el.menu,false);show(el.setup,true);buildSetup();};
+document.getElementById('mTut').onclick=()=>{show(el.menu,false);startTutorial();};
+document.getElementById('mLoad').onclick=()=>{show(el.menu,false);show(el.saves,true);buildSaveList();};
+document.getElementById('mSet').onclick=()=>{show(el.menu,false);show(el.settings,true);buildSettings();};
+document.getElementById('mHelp').onclick=()=>{show(el.menu,false);show(el.help,true);};
+document.getElementById('hBack').onclick=()=>{show(el.help,false);show(el.menu,true);};
+document.getElementById('sBack').onclick=()=>{show(el.setup,false);show(el.menu,true);};
+document.getElementById('svBack').onclick=()=>{show(el.saves,false);show(el.menu,true);};
+document.getElementById('tBack').onclick=()=>{show(el.tutorial,false);show(el.menu,true);};
+document.getElementById('setBack').onclick=()=>{
+  show(el.settings,false);
+  if(G&&G.state==='paused')show(el.pause,true);
+  else if(!G||G.state==='over')show(el.menu,true);
+};
+document.getElementById('sGo').onclick=()=>{
+  G=makeGame({mapId:setupCfg.mapId,side:setupCfg.side,diff:setupCfg.diff});
+  startPlaying();
+};
+document.getElementById('btnPause').onclick=()=>{
+  if(!G||G.state!=='playing')return;
+  G.state='paused';show(el.pause,true);
+};
+document.getElementById('pResume').onclick=()=>{if(!G)return;G.state='playing';show(el.pause,false);};
+document.getElementById('pSet').onclick=()=>{show(el.pause,false);show(el.settings,true);buildSettings();};
+document.getElementById('pSave').onclick=()=>{
+  if(!G)return;
+  const name=prompt('存档名称：','战役 '+(readSaves().length+1));
+  if(name===null)return;
+  const arr=readSaves();
+  arr.unshift({name:name||'未命名',ts:Date.now(),data:serialize(G)});
+  if(arr.length>12)arr.length=12;
+  writeSaves(arr);toast(G,'已保存','good');
+};
+document.getElementById('pQuit').onclick=()=>{
+  if(!G)return;
+  Net.close();
+  G.state='playing';show(el.pause,false);show(el.hud,false);show(el.menu,true);G=null;
+};
+document.getElementById('rAgain').onclick=()=>{
+  show(el.result,false);show(el.menu,false);show(el.setup,true);buildSetup();G=null;
+};
+document.getElementById('rMenu').onclick=()=>{
+  Net.close();
+  show(el.result,false);show(el.hud,false);show(el.menu,true);G=null;
+};
+
+window.addEventListener('keydown',e=>{
+  if(!G||G.state!=='playing')return;
+  const k=e.key.toLowerCase();
+  if(k==='a'||k==='arrowleft')G.cam.x-=60/G.cam.zoom;
+  if(k==='d'||k==='arrowright')G.cam.x+=60/G.cam.zoom;
+  if(k==='w'||k==='arrowup')G.cam.y-=60/G.cam.zoom;
+  if(k==='s'||k==='arrowdown')G.cam.y+=60/G.cam.zoom;
+  if(k==='escape'){
+    G.mode=null;G.pendingSkill=null;G.pendingDeploy=null;
+    G.planMode=null;G.planPts=[];el.planPanel.classList.add('hidden');
+    closeRadial();updateModeTip(G);
+  }
+  if(k>='1'&&k<='9'){
+    const i=parseInt(k,10);
+    if(e.shiftKey||e.ctrlKey){
+      if(G.selection.length>0){
+        G.squads[i]=G.selection.filter(u=>u.alive).map(u=>u.id);
+        toast(G,'编队 '+i+' 已编入','good');
+      }else toast(G,'请先选中部队','bad');
+    }else{
+      const sq=G.squads[i];
+      if(sq&&sq.length>0){
+        const sel=[];
+        for(const id of sq){const u=findUnitById(G,id);if(u&&u.alive)sel.push(u);}
+        G.selection=sel;G.hotSquad=i;
+        if(sel.length>0)toast(G,'调用编队 '+i,'good');
+        else{G.squads[i]=[];toast(G,'编队 '+i+' 已失效','bad');}
+      }else toast(G,'编队 '+i+' 为空','bad');
+    }
+  }
+  clampCam(G);
+});
+
+/* ============ 启动 ============ */
+resize();
+setupRightPanel();
+buildSettings();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
