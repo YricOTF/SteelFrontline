@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>钢铁前线 · STEEL FRONTLINE V13</title>
+<title>钢铁前线 · STEEL FRONTLINE V14</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;overflow:hidden;background:#05080c;
@@ -99,7 +99,6 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
 #planPanel .plbtn:hover{background:#2e4a68;border-color:#7fc0ff;}
 #planPanel .plbtn.active{background:#8a4a20;border-color:#ffce6b;color:#ffe4b8;}
 
-/* ★ 计划侧栏 */
 #planSidebar{position:absolute;right:60px;top:290px;width:230px;
   background:rgba(10,16,24,.96);border:1px solid #2b3a4a;border-radius:10px;
   padding:10px;pointer-events:auto;z-index:26;
@@ -193,8 +192,8 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
 @keyframes tin{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
 
 #radial{position:fixed;z-index:150;pointer-events:none;}
-#radial .ring{position:absolute;width:170px;height:170px;border-radius:50%;
-  background:radial-gradient(circle,rgba(20,30,42,.85),rgba(10,15,22,.94));
+#radial .ring{position:absolute;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(20,30,42,.9),rgba(10,15,22,.96));
   border:1px solid #3a5a7a;box-shadow:0 8px 32px rgba(0,0,0,.75);pointer-events:auto;
   transform:translate(-50%,-50%);}
 #radial .rbtn{position:absolute;width:56px;height:56px;border-radius:50%;
@@ -202,7 +201,10 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
   font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;
   cursor:pointer;transform:translate(-50%,-50%);pointer-events:auto;touch-action:manipulation;transition:.15s;}
 #radial .rbtn:hover{background:#2e4a68;border-color:#7fc0ff;color:#fff;}
-#radial .rbtn .ic{font-size:16px;line-height:1;}
+#radial .rbtn .ic{font-size:15px;line-height:1;}
+#radial .rbtn.center{width:48px;height:48px;font-size:10px;
+  background:linear-gradient(180deg,#3a2a1a,#1a120a);border-color:#8a6a30;color:#e0c080;}
+#radial .rbtn.center:hover{background:#5a3a1a;border-color:#ffce6b;color:#fff;}
 
 #result .rt{font-size:clamp(28px,8vw,50px);font-weight:900;letter-spacing:.16em;margin-bottom:8px;}
 #result.win .rt{color:#66e09a;text-shadow:0 0 40px rgba(80,220,140,.4);}
@@ -251,7 +253,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
 
 <div id="menu" class="overlay">
   <h1 class="title">钢铁前线</h1>
-  <div class="subtitle">STEEL FRONTLINE · V13</div>
+  <div class="subtitle">STEEL FRONTLINE · V14</div>
   <div class="menu-col">
     <button class="btn primary" id="mNew">开 始 战 役</button>
     <button class="btn" id="mMulti">多 人 对 战</button>
@@ -365,12 +367,15 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
     <h2>操 作 说 明</h2>
     <p><b>视角</b> — 单指拖动平移；双指捏合缩放。PC 端滚轮缩放、WASD 平移。</p>
     <p><b>选择</b> — 单击己方单位选中；单击空地命令移动；<b>长按空地拖动</b>框选部队。<b>Shift+点击</b>可多选。</p>
-    <p><b>长按单位</b> — 弹出战术轮盘（移动 / 攻击 / 驻守 / 停止）。</p>
+    <p><b>长按单位</b> — 弹出战术轮盘（移动 / 攻击 / 驻守 / 停止 / <b>回收</b>）。</p>
+    <p><b>回收</b> — 根据血量与距最近据点的距离计算 CP 返还（最大造价 60%）。点击后需二次确认，防误触。</p>
     <p><b>编队</b> — 选中部队后<b>长按</b>数字按钮编入；<b>短按</b>数字按钮调用。快捷键 1–9。</p>
+    <p><b>丛林</b> — 森林会遮蔽视野。侦察机无法穿透森林；<b>只有侦察兵能看穿，但森林内视野减半</b>。</p>
+    <p><b>情报加成</b> — 目标被持续观察 2 秒以上后，攻击伤害 +25%。</p>
     <p><b>计划侧栏</b> — 右侧"计划"按钮打开计划菜单与侧栏。绘制前线/进攻线后，可在侧栏对每个计划"启动/中止"。</p>
-    <p><b>指挥值</b> — 攻方基础随时间逐步提升，守方起步略高且恒定；据点丢失会降低守方恢复。击杀单位得造价 64%，占领支部 +24，指挥部 +48。</p>
-    <p><b>部署时间</b> — 攻方 2 秒，守方 4 秒。</p>
-    <p><b>炮击</b> — 需在己方单位或据点 420 范围内才能呼叫。范围适中、频率较高、持续较长，伤害为<b>中立伤害</b>。</p>
+    <p><b>指挥值</b> — 攻方基础随时间逐步提升，守方起步略高且恒定。击杀单位得造价 64%，占领支部 +24，指挥部 +48。</p>
+    <p><b>炮击</b> — 需在己方单位或据点 420 范围内才能呼叫。<b>空中打击无限射程</b>。伤害为中立伤害（敌我通吃）。</p>
+    <p><b>守方</b> — 有活动范围限制，无法进入攻方出生点区域。炮台固定不可建造不可修复。</p>
     <p><b>游戏时长</b> — 25 分钟。守方坚守到时间结束即胜。</p>
     <button class="btn ghost" id="hBack" style="width:100%;margin-top:14px;">返回</button>
   </div>
@@ -420,7 +425,6 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
     <div class="plbtn" data-plan="clear">清除</div>
     <div class="plbtn" data-plan="cancel">取消</div>
   </div>
-  <!-- ★ 计划侧栏 -->
   <div id="planSidebar" class="hidden">
     <div class="ps-head">
       <span>计 划</span>
@@ -443,12 +447,16 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;
 <script>
 "use strict";
 
+/* ============================================================
+   工具函数
+   ============================================================ */
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 const lerp=(a,b,t)=>a+(b-a)*t;
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const dist2=(x1,y1,x2,y2)=>{const dx=x1-x2,dy=y1-y2;return dx*dx+dy*dy;};
 const dist=(x1,y1,x2,y2)=>Math.sqrt(dist2(x1,y1,x2,y2));
 let _uid=1;const uid=()=>_uid++;
+
 function hash2(x,y,s){
   let h=Math.imul(x|0,374761393)^Math.imul(y|0,668265263)^Math.imul(s|0,1274126177);
   h=Math.imul(h^(h>>>13),1274126177);
@@ -467,11 +475,13 @@ function fbm(x,y,s,oct){
   return v;
 }
 
-/* ============ 常量 ============ */
+/* ============================================================
+   常量
+   ============================================================ */
 let MAP_W=64, MAP_H=44;
 const CELL=32;
 const TICK=1/30;
-const GAME_LEN=1500;
+const GAME_LEN=1500;  // 25 分钟
 
 const T_PLAIN=0,T_FOREST=1,T_MOUNT=2,T_WATER=3,T_ROAD=4,T_SAND=5,T_BUILDING=6,T_BRIDGE=7;
 const TERRAIN=[
@@ -500,12 +510,7 @@ const TURRETS={
   bunker:{n:'碉堡',    hp:850, dmg:12,range:150,cd:0.6, r:11,vis:170},
 };
 
-/* ★ 技能数值调整：
-   - 侦察机 dur 12 → 16（+33%）
-   - 炮火覆盖 cost 30→39（+30%），dps 27→35（+30%）
-   - 空中打击 cost 45→59（+30%），dps 52→68（+30%）
-   - 空中打击无限射程（无 maxRange）
-*/
+/* 技能：侦察机 dur:16；炮火覆盖/空中打击 伤害与费用 +30%，空中打击无限射程 */
 const SKILLS={
   recon:    {n:'侦察机',  cost:12,cd:30, radius:200,dur:16, maxRange:420},
   barrage:  {n:'炮火覆盖',cost:39,cd:125,radius:46, dur:12,dps:35,neutral:true,maxRange:420},
@@ -518,7 +523,9 @@ const DIFFS={
   hard:  {n:'王牌',interval:2.0,cpMul:1.26,skill:0.78,maxUnits:44},
 };
 
-/* ---------- 地图辅助 ---------- */
+/* ============================================================
+   地图辅助
+   ============================================================ */
 function isLand(t,x,y){const v=t[y*MAP_W+x];return v!==T_WATER&&v!==T_MOUNT&&v!==T_BUILDING;}
 function placeOnLand(t,x,y){
   x=clamp(Math.round(x),1,MAP_W-2);y=clamp(Math.round(y),1,MAP_H-2);
@@ -558,7 +565,9 @@ function carveRoad(t,x1,y1,x2,y2,w){
   }
 }
 
-/* ---------- 地图生成器（保留） ---------- */
+/* ============================================================
+   地图生成器
+   ============================================================ */
 function genIsland(){
   const t=new Uint8Array(MAP_W*MAP_H);
   for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
@@ -850,6 +859,9 @@ const MAPS=[
   {id:'tutorial',n:'新兵训练',desc:'教学关卡，一步步掌握指挥技巧。',gen:genTutorial,tag:'教程',tutorial:true},
 ];
 
+/* ============================================================
+   画布
+   ============================================================ */
 const cv=document.getElementById('game');
 const ctx=cv.getContext('2d',{alpha:false});
 let W=0,H=0,DPR=1;
@@ -863,16 +875,19 @@ window.addEventListener('resize',resize);
 window.addEventListener('orientationchange',()=>setTimeout(resize,180));
 
 const CFG={
-  quality: localStorage.v13q||'mid',
-  fps: parseInt(localStorage.v13f||'60',10),
-  fx: localStorage.v13fx!=='0',
+  quality: localStorage.v14q||'mid',
+  fps: parseInt(localStorage.v14f||'60',10),
+  fx: localStorage.v14fx!=='0',
 };
 function saveCfg(){
-  localStorage.v13q=CFG.quality;
-  localStorage.v13f=CFG.fps;
-  localStorage.v13fx=CFG.fx?'1':'0';
+  localStorage.v14q=CFG.quality;
+  localStorage.v14f=CFG.fps;
+  localStorage.v14fx=CFG.fx?'1':'0';
 }
 
+/* ============================================================
+   游戏状态
+   ============================================================ */
 let G=null;
 
 function makeGame(cfg){
@@ -1005,6 +1020,22 @@ function buildTerrainCanvas(g){
 
 function spawnUnit(g,side,type,x,y){
   const d=UNITS[type];
+  // 确保生成位置可通行
+  if(!canWalk(g,x,y)){
+    let best=null,bestD=Infinity;
+    for(let r=1;r<=8&&!best;r++){
+      for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+        if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
+        const nx=x+dx*CELL*0.5,ny=y+dy*CELL*0.5;
+        if(nx<0||ny<0||nx>=MAP_W*CELL||ny>=MAP_H*CELL)continue;
+        if(canWalk(g,nx,ny)){
+          const dd=dist2(x,y,nx,ny);
+          if(dd<bestD){bestD=dd;best={x:nx,y:ny};}
+        }
+      }
+    }
+    if(best){x=best.x;y=best.y;}
+  }
   const u={
     id:uid(),side,type,x,y,
     hp:d.hp,maxHp:d.hp,cd:0,
@@ -1014,11 +1045,13 @@ function spawnUnit(g,side,type,x,y){
     path:null,pathI:0,
     aimTimer:0,aimTarget:null,
     holdPost:0,
+    observedTime:0,
   };
   g.units.push(u);
   return u;
 }
 
+/* ---------- 地形查询 ---------- */
 function terrainAt(g,wx,wy){
   const cx=Math.floor(wx/CELL),cy=Math.floor(wy/CELL);
   if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)return T_MOUNT;
@@ -1028,6 +1061,17 @@ function canWalk(g,wx,wy){return !!TERRAIN[terrainAt(g,wx,wy)].pass;}
 function speedAt(g,wx,wy){return TERRAIN[terrainAt(g,wx,wy)].spd;}
 function coverAt(g,wx,wy){return TERRAIN[terrainAt(g,wx,wy)].cover;}
 
+function unitSpeedInTerrain(g,u){
+  const d=UNITS[u.type];
+  let base=d.spd*speedAt(g,u.x,u.y);
+  // 坦克在森林额外减速 50%
+  if(u.type==='arm'&&terrainAt(g,u.x,u.y)===T_FOREST){
+    base*=0.5;
+  }
+  return base;
+}
+
+/* ---------- A* 寻路 ---------- */
 function findPath(g,sx,sy,tx,ty){
   const scx=clamp(Math.floor(sx/CELL),0,MAP_W-1),scy=clamp(Math.floor(sy/CELL),0,MAP_H-1);
   let tcx=clamp(Math.floor(tx/CELL),0,MAP_W-1),tcy=clamp(Math.floor(ty/CELL),0,MAP_H-1);
@@ -1122,35 +1166,66 @@ function smoothPath(g,path,sx,sy){
   return out;
 }
 
+/* ============================================================
+   视野（森林遮蔽 + 侦察兵减半）
+   ============================================================ */
 function recomputeVis(g,side){
   const v=new Uint8Array(MAP_W*MAP_H);
-  const mark=(px,py,r)=>{
+
+  function lineCrossesForest(px,py,gx,gy){
+    const dx=gx-px,dy=gy-py;
+    const steps=Math.max(1,Math.ceil(Math.sqrt(dx*dx+dy*dy)/CELL));
+    for(let i=1;i<=steps;i++){
+      const t=i/steps;
+      const cx=Math.floor((px+dx*t)/CELL);
+      const cy=Math.floor((py+dy*t)/CELL);
+      if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)continue;
+      if(g.terrain[cy*MAP_W+cx]===T_FOREST)return true;
+    }
+    return false;
+  }
+
+  const mark=(px,py,r,pierceForest,halveInForest)=>{
     const cx=Math.floor(px/CELL),cy=Math.floor(py/CELL);
     const rr=Math.ceil(r/CELL),r2=r*r;
+    const halfR2=(r*0.5)*(r*0.5);
     for(let y=cy-rr;y<=cy+rr;y++){
       if(y<0||y>=MAP_H)continue;
       for(let x=cx-rr;x<=cx+rr;x++){
         if(x<0||x>=MAP_W)continue;
         const gx=(x+.5)*CELL,gy=(y+.5)*CELL;
-        if(dist2(gx,gy,px,py)<=r2)v[y*MAP_W+x]=1;
+        const d2=dist2(gx,gy,px,py);
+        if(d2>r2)continue;
+        const cellDist=Math.max(Math.abs(x-cx),Math.abs(y-cy));
+        if(cellDist<=1){v[y*MAP_W+x]=1;continue;}
+        const isForest=g.terrain[y*MAP_W+x]===T_FOREST;
+        if(isForest||lineCrossesForest(px,py,gx,gy)){
+          if(!pierceForest)continue;
+          if(halveInForest&&d2>halfR2)continue;
+        }
+        v[y*MAP_W+x]=1;
       }
     }
   };
+
+  // 单位视野：侦察兵能穿透森林（但森林内距离减半）
   for(const u of g.units){
     if(u.side!==side||!u.alive)continue;
-    mark(u.x,u.y,UNITS[u.type].vis);
+    const isScout=u.type==='scout';
+    mark(u.x,u.y,UNITS[u.type].vis,isScout,isScout);
   }
+  // 炮台 / 据点 / 侦察机：不能穿透森林
   for(const t of g.turrets){
     if(t.side!==side)continue;
-    mark(t.x,t.y,TURRETS[t.type].vis);
+    mark(t.x,t.y,TURRETS[t.type].vis,false,false);
   }
   for(const p of g.posts){
     if(p.owner!==side)continue;
-    mark(p.x,p.y,p.type==='hq'?260:190);
+    mark(p.x,p.y,p.type==='hq'?260:190,false,false);
   }
   for(const r of g.recon){
     if(r.side!==side)continue;
-    mark(r.x,r.y,r.r);
+    mark(r.x,r.y,r.r,false,false);
   }
   g.vis[side]=v;
 }
@@ -1162,18 +1237,28 @@ function visible(g,side,wx,wy){
   return arr[cy*MAP_W+cx]===1;
 }
 
-/* ============ 逻辑步进 ============ */
+/* ============================================================
+   守方禁入区
+   ============================================================ */
+function isDefForbiddenArea(g,x,y){
+  const sp=g.spawnPoint;
+  return dist2(x,y,sp.x,sp.y) < 350*350;
+}
+
+/* ============================================================
+   逻辑步进
+   ============================================================ */
 function step(dt){
   const g=G;
   if(g.state!=='playing')return;
   g.tick++;
   g.time+=dt;
-  
-  // ★ 修复：玩家侧技能冷却递减（此前缺失，导致技能只能用一次）
+
+  // 玩家侧技能冷却递减
   for(const k in g.cd[g.playerSide]){
     if(g.cd[g.playerSide][k]>0)g.cd[g.playerSide][k]-=dt;
   }
-  
+
   updateCP(g,dt);
   updateDeploy(g,dt);
   for(const u of g.units){if(u.alive)updateUnit(g,u,dt);}
@@ -1247,20 +1332,39 @@ function awardCaptureCP(g,side,postType){
   if(side===g.playerSide)toast(g,'占领奖励 +'+amount+' CP','good');
 }
 
-/* ★ 坦克在森林额外减速 50% */
-function unitSpeedInTerrain(g,u){
-  const d=UNITS[u.type];
-  let base=d.spd*speedAt(g,u.x,u.y);
-  if(u.type==='arm'&&terrainAt(g,u.x,u.y)===T_FOREST){
-    base*=0.5;
-  }
-  return base;
-}
-
 function updateUnit(g,u,dt){
   const d=UNITS[u.type];
   if(u.cd>0)u.cd-=dt;
   if(u.aimTimer>0)u.aimTimer-=dt;
+
+  // 情报观察时长更新
+  {
+    const enemySide = u.side==='atk'?'def':'atk';
+    if(visible(g,enemySide,u.x,u.y)){
+      u.observedTime = Math.min(10,(u.observedTime||0)+dt);
+    } else {
+      u.observedTime = Math.max(0,(u.observedTime||0)-dt*3);
+    }
+  }
+
+  // 低频地形修正（错峰执行，避免同时计算）
+  if((g.tick + (u.id%30)) % 30 === 0){
+    if(!canWalk(g,u.x,u.y)){
+      let best=null,bestD=Infinity;
+      for(let r=1;r<=6&&!best;r++){
+        for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+          if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
+          const nx=u.x+dx*CELL*0.4,ny=u.y+dy*CELL*0.4;
+          if(nx<0||ny<0||nx>=MAP_W*CELL||ny>=MAP_H*CELL)continue;
+          if(canWalk(g,nx,ny)){
+            const dd=dist2(u.x,u.y,nx,ny);
+            if(dd<bestD){bestD=dd;best={x:nx,y:ny};}
+          }
+        }
+      }
+      if(best){u.x=best.x;u.y=best.y;}
+    }
+  }
 
   if(u.order&&u.order.type==='move'){
     const tx=u.order.x,ty=u.order.y;
@@ -1284,12 +1388,22 @@ function updateUnit(g,u,dt){
       let ang=Math.atan2(target.y-u.y,target.x-u.x);
       const stepLen=base*dt;
       let nx=u.x+Math.cos(ang)*stepLen,ny=u.y+Math.sin(ang)*stepLen;
+
+      // 守方活动范围限制
+      if(u.side==='def'&&isDefForbiddenArea(g,nx,ny)){
+        u.order=null;u.path=null;
+        return;
+      }
+
       if(!canWalk(g,nx,ny)){
         let ok=false;
         for(const off of [.5,-.5,1.0,-1.0,1.5,-1.5,2.2,-2.2]){
           const a2=ang+off;
           const px=u.x+Math.cos(a2)*stepLen,py=u.y+Math.sin(a2)*stepLen;
-          if(canWalk(g,px,py)){ang=a2;nx=px;ny=py;ok=true;break;}
+          if(canWalk(g,px,py)){
+            if(u.side==='def'&&isDefForbiddenArea(g,px,py))continue;
+            ang=a2;nx=px;ny=py;ok=true;break;
+          }
         }
         if(!ok){
           u.stuck+=dt;
@@ -1353,18 +1467,20 @@ function updateUnit(g,u,dt){
 }
 function findUnitById(g,id){for(const u of g.units)if(u.id===id)return u;return null;}
 
-/* 炮兵普通攻击：neutral:false → 只伤敌方单位，无友伤 */
 function fire(g,u,target){
   const d=UNITS[u.type];
+  // 情报加成：目标被持续观察 2 秒以上
+  let mult=1.0;
+  if(target.observedTime && target.observedTime>2) mult=1.25;
   if(u.type==='art'){
     g.projectiles.push({
       x:u.x,y:u.y,tx:target.x+rnd(-12,12),ty:target.y+rnd(-12,12),t:0,
       flight:Math.max(.7,dist(u.x,u.y,target.x,target.y)/330),
-      dmg:d.dmg,splash:d.splash,side:u.side,
-      neutral:false,  // 明确不中立：命中时仅对非同阵营造成伤害
+      dmg:d.dmg*mult,splash:d.splash,side:u.side,
+      neutral:false,
     });
   }else{
-    const dmg=calcDamage(g,u,target,d.dmg);
+    const dmg=calcDamage(g,u,target,d.dmg*mult);
     applyDamage(g,target,dmg,u.side);
     addEffect(g,{type:'tracer',x1:u.x,y1:u.y,x2:target.x,y2:target.y,life:.09,max:.09,
       col:u.side==='atk'?'#ffb08a':'#9fd0ff'});
@@ -1421,7 +1537,6 @@ function updateProjectiles(g,dt){
       const targets=[];
       for(const u of g.units){
         if(!u.alive)continue;
-        // neutral=true（技能）→ 伤所有；neutral=false（普通）→ 跳过同阵营
         if(!p.neutral && u.side===p.side) continue;
         const dd=dist(u.x,u.y,p.tx,p.ty);
         if(dd<=(p.splash||26)+UNITS[u.type].r)targets.push({u,dd});
@@ -1501,6 +1616,9 @@ function updateStrikes(g,dt){
 }
 function addEffect(g,e){g.effects.push(e);}
 
+/* ============================================================
+   指令
+   ============================================================ */
 function orderMove(g,units,x,y){
   const n=units.length;
   if(n===0)return;
@@ -1521,6 +1639,28 @@ function orderMove(g,units,x,y){
     u.path=null;u.pathI=0;
     i++;
   }
+}
+
+/* 回收单位 */
+function recycleUnit(g,u){
+  if(!u.alive||u.side!==g.playerSide)return 0;
+  const d=UNITS[u.type];
+  let nearest=null,nd=Infinity;
+  for(const p of g.posts){
+    if(p.owner!==g.playerSide)continue;
+    const dd=dist2(u.x,u.y,p.x,p.y);
+    if(dd<nd){nd=dd;nearest=p;}
+  }
+  if(!nearest) nd=9999*9999;
+  const distPx=Math.sqrt(nd);
+  const distFactor=clamp(1 - distPx/900*0.65, 0.35, 1.0);
+  const hpFactor=u.hp/u.maxHp;
+  const value=Math.max(1, Math.round(d.cost*0.6*hpFactor*distFactor));
+  g.cp[g.playerSide]=Math.min(999,g.cp[g.playerSide]+value);
+  u.alive=false;
+  addEffect(g,{type:'ring',x:u.x,y:u.y,r:30,life:0.6,max:0.6,col:'#ffce6b'});
+  addEffect(g,{type:'cpreward',x:u.x,y:u.y,life:1.4,max:1.4,text:'+'+value+' CP'});
+  return value;
 }
 
 function startDeploy(g,side,type,px,py){
@@ -1555,7 +1695,9 @@ function updateDeploy(g,dt){
   }
 }
 
-/* ============ 计划系统 V13（重做） ============ */
+/* ============================================================
+   计划系统
+   ============================================================ */
 function applyPlanToUnits(g,plan,units){
   if(!units||units.length===0)return;
   let i=0;
@@ -1573,17 +1715,15 @@ function applyPlanToUnits(g,plan,units){
       u.path=null;u.pathI=0;
       u.holdPost=1;
     }
-    // attack 类型不立即应用，等待 activate
     i++;
   }
 }
-
 function createPlan(g,type,data){
   const plan={
     id: uid(),
     type,
     side: g.playerSide,
-    state: type==='front'?'active':'idle',  // 前线默认激活；进攻默认待命
+    state: type==='front'?'active':'idle',
     unitIds: g.selection.filter(u=>u.alive).map(u=>u.id),
     created: g.time,
     ...data,
@@ -1595,7 +1735,6 @@ function createPlan(g,type,data){
   refreshPlanSidebar(g);
   return plan;
 }
-
 function activatePlan(g,plan){
   if(plan.side!==g.playerSide)return;
   plan.state='active';
@@ -1623,12 +1762,10 @@ function activatePlan(g,plan){
   }
   refreshPlanSidebar(g);
 }
-
 function deactivatePlan(g,plan){
   if(plan.side!==g.playerSide)return;
   plan.state='idle';
   const units=g.units.filter(u=>u.side===plan.side && plan.unitIds.includes(u.id) && u.alive);
-  // 进攻中止 → 返回最近前线
   if(plan.type==='attack'){
     const front=[...g.plans].filter(p=>p.side===plan.side&&p.type==='front').pop();
     if(front){
@@ -1651,12 +1788,10 @@ function deactivatePlan(g,plan){
   }
   refreshPlanSidebar(g);
 }
-
 function removePlan(g,planId){
   g.plans=g.plans.filter(p=>p.id!==planId);
   refreshPlanSidebar(g);
 }
-
 function refreshPlanSidebar(g){
   const list=document.getElementById('planList');
   if(!list)return;
@@ -1716,6 +1851,9 @@ function refreshPlanSidebar(g){
   });
 }
 
+/* ============================================================
+   胜负
+   ============================================================ */
 function checkVictory(g){
   if(g.tutorial) return;
   const hq=g.posts.find(p=>p.type==='hq');
@@ -1726,6 +1864,7 @@ function checkVictory(g){
   if(g.time>=GAME_LEN)endGame(g,'def');
 }
 function endGame(g,winner){
+  removeTutBox();
   g.state='over';g.result=winner;
   const playerWin=(winner===g.playerSide);
   const rt=document.getElementById('rTitle');
@@ -1748,6 +1887,9 @@ function fmtTime(t){
   return m+':'+(s<10?'0':'')+s;
 }
 
+/* ============================================================
+   AI
+   ============================================================ */
 function updateAI(g,dt){
   if(g.mp) return;
   const ai=g.aiSide;
@@ -1783,7 +1925,16 @@ function updateAI(g,dt){
       if(tgt)dep.order={type:'move',x:tgt.x+rnd(-70,70),y:tgt.y+rnd(-70,70)};
     } else {
       const tgt=nearestOwnPost(g,sp.x,sp.y);
-      if(tgt)dep.order={type:'move',x:tgt.x+rnd(-60,60),y:tgt.y+rnd(-60,60)};
+      if(tgt){
+        let tx=tgt.x+rnd(-60,60), ty=tgt.y+rnd(-60,60);
+        if(isDefForbiddenArea(g,tx,ty)){
+          const dx=tx-g.spawnPoint.x, dy=ty-g.spawnPoint.y;
+          const len=Math.sqrt(dx*dx+dy*dy)||1;
+          tx=g.spawnPoint.x + dx/len*400;
+          ty=g.spawnPoint.y + dy/len*400;
+        }
+        dep.order={type:'move',x:tx,y:ty};
+      }
     }
   }
 }
@@ -1840,7 +1991,6 @@ function useSkill(g,side,key,x,y){
   const s=SKILLS[key];
   if(g.cp[side]<s.cost)return false;
   if((g.cd[side][key]||0)>0)return false;
-  // 射程检查（无限射程技能无 maxRange，跳过）
   if(s.maxRange){
     let inRange=false;
     for(const u of g.units){
@@ -1871,7 +2021,9 @@ function useSkill(g,side,key,x,y){
   return true;
 }
 
-/* ============ 渲染 ============ */
+/* ============================================================
+   渲染
+   ============================================================ */
 let lastT=performance.now(),acc=0,lastRender=0;
 function loop(t){
   requestAnimationFrame(loop);
@@ -1925,7 +2077,6 @@ function render(){
       if(!active)ctx.setLineDash([14,8]);
       ctx.stroke();
       ctx.setLineDash([]);
-      // 端点标记
       for(const pt of [plan.a,plan.b]){
         ctx.beginPath();ctx.arc(pt.x,pt.y,6/cam.zoom,0,6.284);
         ctx.fillStyle=active?'#9fd8ff':'rgba(159,216,255,.5)';ctx.fill();
@@ -1937,7 +2088,6 @@ function render(){
       ctx.lineWidth=3/cam.zoom;
       ctx.setLineDash([12,8]);ctx.stroke();ctx.setLineDash([]);
     } else if(plan.type==='attack'){
-      // 从起点向终点画箭头
       const dx=plan.b.x-plan.a.x,dy=plan.b.y-plan.a.y;
       const len=Math.sqrt(dx*dx+dy*dy)||1;
       const ux=dx/len,uy=dy/len;
@@ -1955,7 +2105,6 @@ function render(){
       ctx.strokeStyle=active?'rgba(255,140,90,.95)':'rgba(255,140,90,.55)';
       ctx.lineWidth=(active?3:2.2)/cam.zoom;
       ctx.stroke();
-      // 箭头头部
       const ahx=plan.b.x-ux*w*0.8, ahy=plan.b.y-uy*w*0.8;
       ctx.beginPath();
       ctx.moveTo(plan.b.x,plan.b.y);
@@ -1982,6 +2131,14 @@ function render(){
       ctx.strokeStyle='rgba(120,190,255,.8)';
       ctx.lineWidth=2.5/cam.zoom;ctx.stroke();
     }
+  }
+
+  // 守方禁入区
+  if(g.spawnPoint){
+    ctx.beginPath();ctx.arc(g.spawnPoint.x,g.spawnPoint.y,350,0,6.284);
+    ctx.strokeStyle='rgba(232,83,63,.20)';
+    ctx.lineWidth=1.5/cam.zoom;
+    ctx.setLineDash([10,10]);ctx.stroke();ctx.setLineDash([]);
   }
 
   for(const tr of g.trenches){
@@ -2092,7 +2249,6 @@ function render(){
       ctx.lineWidth=1/cam.zoom;
       ctx.setLineDash([8,8]);ctx.stroke();ctx.setLineDash([]);
     } else {
-      // 无限射程提示
       ctx.fillStyle='rgba(255,206,107,.85)';
       ctx.font='bold 11px sans-serif';
       ctx.textAlign='center';
@@ -2285,7 +2441,9 @@ function drawEffects(g){
   }
 }
 
-/* ============ 输入 ============ */
+/* ============================================================
+   输入
+   ============================================================ */
 const pointers=new Map();
 let pinchStart=null;
 let longPressTimer=null;
@@ -2455,11 +2613,15 @@ function updateHover(mx,my){
     const u=hovered.obj,d=UNITS[u.type];
     const isEnemy=u.side!==G.playerSide;
     const cls=isEnemy?'enemy':'';
+    const obs=u.observedTime||0;
+    const obsTxt = obs>2?' <span style="color:#66e09a">[情报+25%]</span>':
+                   (obs>0?' <span style="color:#ffce6b">[观察中 '+obs.toFixed(1)+'s]</span>':'');
     html='<div class="ht-name '+cls+'">'+d.n+(isEnemy?' [敌]':'')+'</div>'+
       '<div class="ht-row"><span class="ht-label">生命</span><span class="ht-val">'+Math.ceil(u.hp)+'/'+u.maxHp+'</span></div>'+
       '<div class="ht-row"><span class="ht-label">射程</span><span class="ht-val">'+d.range+'</span></div>'+
       '<div class="ht-row"><span class="ht-label">速度</span><span class="ht-val">'+d.spd.toFixed(1)+'</span></div>'+
-      (u.holdPost?'<div class="ht-row" style="color:#9fd8ff">[驻守中]</div>':'');
+      (u.holdPost?'<div class="ht-row" style="color:#9fd8ff">[驻守中]</div>':'')+
+      (obsTxt?'<div class="ht-row">'+obsTxt+'</div>':'');
   }else if(hovered.type==='turret'){
     const t=hovered.obj,d=TURRETS[t.type];
     const cls=t.type==='bunker'?'bunker':'turret';
@@ -2585,7 +2747,9 @@ function handleClick(mx,my,shiftKey){
   g.selection=[];updateSelInfo(g);
 }
 
-/* 战术轮盘 */
+/* ============================================================
+   战术轮盘（含回收）
+   ============================================================ */
 let radialEl=null;
 function openRadial(g,sx,sy,unit){
   closeRadial();
@@ -2596,10 +2760,11 @@ function openRadial(g,sx,sy,unit){
   el.style.left=sx+'px';el.style.top=sy+'px';
   el.innerHTML=
     '<div class="ring"></div>'+
-    '<div class="rbtn" data-act="move" style="left:0px;top:-58px"><span class="ic">➤</span>移动</div>'+
-    '<div class="rbtn" data-act="attack" style="left:58px;top:0px"><span class="ic">✶</span>攻击</div>'+
-    '<div class="rbtn" data-act="defend" style="left:0px;top:58px"><span class="ic">◈</span>驻守</div>'+
-    '<div class="rbtn" data-act="stop" style="left:-58px;top:0px"><span class="ic">■</span>停止</div>';
+    '<div class="rbtn center" data-act="recycle"><span class="ic">♻</span>回收</div>'+
+    '<div class="rbtn" data-act="move" style="left:0px;top:-60px"><span class="ic">➤</span>移动</div>'+
+    '<div class="rbtn" data-act="attack" style="left:60px;top:0px"><span class="ic">✶</span>攻击</div>'+
+    '<div class="rbtn" data-act="defend" style="left:0px;top:60px"><span class="ic">◈</span>驻守</div>'+
+    '<div class="rbtn" data-act="stop" style="left:-60px;top:0px"><span class="ic">■</span>停止</div>';
   document.body.appendChild(el);
   radialEl=el;
   el.querySelectorAll('.rbtn').forEach(b=>{
@@ -2608,6 +2773,31 @@ function openRadial(g,sx,sy,unit){
       const act=b.dataset.act;
       const sel=unit?[unit]:(g.selection.length?g.selection:[]);
       if(sel.length===0){toast(g,'未选中部队','bad');closeRadial();return;}
+
+      if(act==='recycle'){
+        if(!b.dataset.confirm){
+          b.dataset.confirm='1';
+          b.innerHTML='<span class="ic">⚠</span>确认';
+          b.style.background='#6a2a2a';
+          b.style.borderColor='#ff6b4a';
+          setTimeout(()=>{
+            if(radialEl && b.parentNode){
+              b.dataset.confirm='';
+              b.innerHTML='<span class="ic">♻</span>回收';
+              b.style.background='';
+              b.style.borderColor='';
+            }
+          }, 2500);
+          return;
+        }
+        let total=0;
+        for(const u of sel) total += recycleUnit(g,u);
+        toast(g,'回收 '+sel.length+' 支部队 · 获得 '+total+' CP','good');
+        closeRadial();
+        updateSelInfo(g);
+        return;
+      }
+
       if(act==='move'){
         toast(g,'点击地图指定移动目标','good');
       }else if(act==='attack'){
@@ -2643,7 +2833,9 @@ function closeRadial(){
   if(radialEl){radialEl.remove();radialEl=null;}
 }
 
-/* ============ UI ============ */
+/* ============================================================
+   UI
+   ============================================================ */
 const el={
   menu:document.getElementById('menu'),
   setup:document.getElementById('setup'),
@@ -2697,7 +2889,7 @@ function updateModeTip(g){
 function refreshDeployRow(g){
   el.deployRow.innerHTML='';
   const sp=getSpawnPoints(g,g.playerSide);
-  const descs={inf:'廉价主力',scout:'视野极佳',eng:'可挖壕沟',arm:'高火力',art:'远程压制'};
+  const descs={inf:'廉价主力',scout:'视野穿透森林',eng:'可挖壕沟',arm:'高火力',art:'远程压制'};
   for(const k in UNITS){
     const d=UNITS[k];
     const card=document.createElement('div');
@@ -2837,7 +3029,6 @@ setInterval(()=>{
   if(hudTick%8===0){
     refreshHUD(G);refreshDeployRow(G);refreshSkillRow(G);
     refreshLeftPanel(G);updateSelInfo(G);
-    // 侧栏刷新（计划中的部队数量变化）
     if(!el.planSidebar.classList.contains('hidden')) refreshPlanSidebar(G);
   }
 },100);
@@ -2915,7 +3106,9 @@ function setupRightPanel(){
   };
 }
 
-/* ============ P2P ============ */
+/* ============================================================
+   P2P
+   ============================================================ */
 const Net={
   role:'none',myId:null,peer:null,roomCode:null,isHost:false,
   connections:new Map(),clientConn:null,playerList:[],mySide:'atk',
@@ -3049,7 +3242,7 @@ function netApplyState(s){
     if(!u){
       u={id,side:sideBit===0?'atk':'def',type,x,y,
          hp,maxHp:UNITS[type].hp,cd:0,order:null,tid:0,
-         alive:true,facing:facing/100,holdPost:0};
+         alive:true,facing:facing/100,holdPost:0,observedTime:0};
     }else{
       u._netTarget={x,y};u.hp=hp;u.facing=facing/100;
       oldById.delete(id);
@@ -3142,7 +3335,9 @@ Net.onCommand=(side,msg)=>{
   }else if(msg.cmd==='skill')useSkill(G,side,msg.key,msg.x,msg.y);
 };
 
-/* ============ 教程 ============ */
+/* ============================================================
+   教程
+   ============================================================ */
 const TUT_STEPS=[
   {title:'1 / 6 · 移动视角',
    text:'单指拖动地图浏览战场；双指捏合缩放。\n先把视角拖到中间的中立支部。',
@@ -3185,6 +3380,7 @@ const TUT_STEPS=[
    }},
 ];
 function startTutorial(){
+  removeTutBox();
   G=makeGame({mapId:'tutorial',side:'atk',diff:'easy'});
   G.tutorial={idx:0,lastEv:null};
   G.units=G.units.filter(u=>u.side==='atk'||Math.random()<0.4);
@@ -3209,6 +3405,10 @@ function showTutHint(){
     '<div style="font-size:12px;color:#b8cad8;line-height:1.6;white-space:pre-line;">'+step.text+'</div>'+
     '<div style="font-size:11px;color:#ffce6b;margin-top:6px;">目标：'+step.hint+'</div>';
 }
+function removeTutBox(){
+  const box=document.getElementById('tutBox');
+  if(box)box.remove();
+}
 function tutStep(dt){
   if(!G||!G.tutorial)return;
   if(G.tutorial.idx>=TUT_STEPS.length)return;
@@ -3218,8 +3418,7 @@ function tutStep(dt){
     G.tutorial.lastEv=null;
     G.tutorial.idx++;
     if(G.tutorial.idx>=TUT_STEPS.length){
-      const box=document.getElementById('tutBox');
-      if(box)box.remove();
+      removeTutBox();
       toast(G,'教程完成！','good');
       setTimeout(()=>endGame(G,G.playerSide),1200);
       return;
@@ -3229,13 +3428,15 @@ function tutStep(dt){
   }
 }
 
-/* ============ 存档 ============ */
-const SAVE_KEY='steel_frontline_v13_saves';
+/* ============================================================
+   存档
+   ============================================================ */
+const SAVE_KEY='steel_frontline_v14_saves';
 function readSaves(){try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'[]');}catch(e){return[];}}
 function writeSaves(a){try{localStorage.setItem(SAVE_KEY,JSON.stringify(a));}catch(e){}}
 function serialize(g){
   return{
-    v:13,cfg:g.cfg,time:g.time,
+    v:14,cfg:g.cfg,time:g.time,
     cp:{atk:Math.floor(g.cp.atk),def:Math.floor(g.cp.def)},
     units:g.units.map(u=>({
       side:u.side,type:u.type,x:Math.round(u.x),y:Math.round(u.y),
@@ -3279,7 +3480,9 @@ function deserialize(data){
   return g;
 }
 
-/* ============ 菜单 ============ */
+/* ============================================================
+   菜单
+   ============================================================ */
 let setupCfg={mapId:'island',side:'atk',diff:'normal'};
 function buildSetup(){
   const mo=document.getElementById('mapOpts');mo.innerHTML='';
@@ -3293,7 +3496,7 @@ function buildSetup(){
   const so=document.getElementById('sideOpts');so.innerHTML='';
   [
     {k:'atk',n:'攻方 · 进攻军',d:'指挥值基础随时间提升，击杀与占领获得额外 CP。部署 2 秒。'},
-    {k:'def',n:'守方 · 卫戍军',d:'指挥值起步略高且恒定，丢支部会降低恢复。部署 4 秒。守方 AI 不主动越线。'},
+    {k:'def',n:'守方 · 卫戍军',d:'指挥值起步略高且恒定，丢支部会降低恢复。部署 4 秒。守方有活动范围限制。'},
   ].forEach(s=>{
     const d=document.createElement('div');
     d.className='opt'+(setupCfg.side===s.k?' active':'');
@@ -3331,6 +3534,7 @@ function buildSaveList(){
   });
 }
 function startPlaying(){
+  removeTutBox();
   show(el.menu,false);show(el.setup,false);show(el.multi,false);show(el.saves,false);
   show(el.help,false);show(el.tutorial,false);show(el.settings,false);
   show(el.result,false);show(el.pause,false);show(el.hud,true);
@@ -3341,6 +3545,7 @@ function startPlaying(){
   if(G.playerSide==='atk'){G.cam.x=G.spawnPoint.x;G.cam.y=G.spawnPoint.y;}
   else{const hq=G.posts.find(p=>p.type==='hq');if(hq){G.cam.x=hq.x;G.cam.y=hq.y;}}
   G.cam.zoom=(Math.min(W,H)<700)?.62:.85;
+  if(G.tutorial) showTutHint();
 }
 function buildSettings(){
   const qg=document.getElementById('qgrp');
@@ -3376,7 +3581,9 @@ document.getElementById('tNext').onclick=()=>{
   else{tutIdx++;showTut();}
 };
 
-/* ============ 事件绑定 ============ */
+/* ============================================================
+   事件绑定
+   ============================================================ */
 document.getElementById('mNew').onclick=()=>{show(el.menu,false);show(el.setup,true);buildSetup();};
 document.getElementById('mTut').onclick=()=>{show(el.menu,false);startTutorial();};
 document.getElementById('mLoad').onclick=()=>{show(el.menu,false);show(el.saves,true);buildSaveList();};
@@ -3412,13 +3619,16 @@ document.getElementById('pSave').onclick=()=>{
 };
 document.getElementById('pQuit').onclick=()=>{
   if(!G)return;
+  removeTutBox();
   Net.close();
   G.state='playing';show(el.pause,false);show(el.hud,false);show(el.menu,true);G=null;
 };
 document.getElementById('rAgain').onclick=()=>{
+  removeTutBox();
   show(el.result,false);show(el.menu,false);show(el.setup,true);buildSetup();G=null;
 };
 document.getElementById('rMenu').onclick=()=>{
+  removeTutBox();
   Net.close();
   show(el.result,false);show(el.hud,false);show(el.menu,true);G=null;
 };
@@ -3456,7 +3666,9 @@ window.addEventListener('keydown',e=>{
   clampCam(G);
 });
 
-/* ============ 启动 ============ */
+/* ============================================================
+   启动
+   ============================================================ */
 resize();
 setupRightPanel();
 buildSettings();
