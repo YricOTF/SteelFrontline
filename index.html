@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>钢铁前线 · STEEL FRONTLINE V19</title>
+<title>钢铁前线 · STEEL FRONTLINE V21</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;overflow:hidden;background:#05080c;font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#cfd9e6;user-select:none;-webkit-user-select:none;overscroll-behavior:none;}
@@ -40,6 +40,9 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 .help .tag{display:inline-block;background:#22303f;border-radius:3px;padding:1px 6px;font-size:11px;color:#9fd8ff;margin:0 2px;}
 .warn-box{background:rgba(200,80,40,.15);border:1px solid rgba(200,80,40,.5);border-radius:7px;padding:10px;font-size:11.5px;color:#ffbfae;line-height:1.6;margin-bottom:12px;}
 .warn-box b{color:#ff9b7d;}
+.status-bar{padding:8px 12px;border-radius:5px;font-size:11.5px;text-align:center;background:rgba(20,30,42,.7);border:1px solid #253444;color:#8fa3b8;margin-bottom:10px;line-height:1.5;}
+.status-bar.ok{border-color:rgba(80,220,140,.5);background:rgba(80,220,140,.08);color:#aef0cb;}
+.status-bar.wait{border-color:rgba(255,180,80,.5);background:rgba(255,180,80,.08);color:#ffe4b8;}
 
 #hud{position:fixed;inset:0;pointer-events:none;z-index:20;}
 #topBar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:6px;padding:6px 8px;padding-top:calc(6px + env(safe-area-inset-top));background:linear-gradient(180deg,rgba(8,12,18,.94),rgba(8,12,18,.5) 80%,transparent);pointer-events:auto;z-index:21;}
@@ -48,8 +51,10 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 .stat .val{font-size:14px;font-weight:800;color:#cfe2f5;font-variant-numeric:tabular-nums;line-height:1.15;}
 .stat.cp .val{color:#ffce6b;}
 .stat.warn .val{color:#ff7a5c;}
+.stat.env .val{font-size:12px;color:#c8e6ff;}
 .tb-spacer{flex:1;}
-.tbtn{pointer-events:auto;width:36px;height:36px;border-radius:6px;background:rgba(20,30,42,.9);border:1px solid #2b3a4a;color:#a8bdd0;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+.tbtn{pointer-events:auto;height:36px;border-radius:6px;background:rgba(20,30,42,.9);border:1px solid #2b3a4a;color:#a8bdd0;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;padding:0 10px;font-weight:700;gap:4px;}
+.tbtn.on{background:#3a5a7e;border-color:#7fc0ff;color:#e6f4ff;}
 
 #leftPanel{position:absolute;left:6px;top:60px;display:flex;flex-direction:column;gap:4px;pointer-events:auto;z-index:21;max-height:50vh;overflow-y:auto;}
 .sqbtn{width:36px;height:32px;border-radius:5px;background:rgba(20,30,42,.85);border:1px solid #2b3a4a;color:#a8bdd0;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;touch-action:manipulation;}
@@ -65,9 +70,9 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 
 #recycleBtn{position:absolute;right:60px;top:60px;width:46px;height:42px;border-radius:7px;background:linear-gradient(180deg,#3a2a1a,#1a120a);border:1px solid #8a6a30;color:#e0c080;font-size:10px;font-weight:700;cursor:pointer;pointer-events:auto;z-index:21;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 #recycleBtn.dis{opacity:.35;cursor:not-allowed;}
-#recycleBtn .ic{font-size:14px;line-height:1;}
 
-#planSidebar{position:absolute;right:112px;top:60px;width:250px;background:rgba(10,16,24,.96);border:1px solid #2b3a4a;border-radius:10px;padding:10px;pointer-events:auto;z-index:26;box-shadow:0 8px 28px rgba(0,0,0,.7);max-height:calc(100vh - 120px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+/* 计划面板（独立一级 UI） */
+#planSidebar{position:absolute;right:8px;top:60px;width:270px;background:rgba(10,16,24,.97);border:1px solid #2b3a4a;border-radius:10px;padding:10px;pointer-events:auto;z-index:26;box-shadow:0 8px 28px rgba(0,0,0,.7);max-height:calc(100vh - 120px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
 .ps-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#9fd8ff;letter-spacing:.14em;padding-bottom:8px;border-bottom:1px solid #223040;}
 .ps-close{background:none;border:none;color:#7d8fa2;font-size:18px;cursor:pointer;padding:0 4px;font-family:inherit;}
 .ps-draw-label{font-size:11px;color:#6b7f94;letter-spacing:.1em;margin-top:2px;}
@@ -88,7 +93,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 .plan-item .pi-btns{display:flex;gap:5px;}
 .plan-item .pi-btn{flex:1;padding:5px 6px;border-radius:5px;font-size:11px;font-weight:700;border:1px solid #2b3a4a;background:#1b2735;color:#c8dcee;cursor:pointer;font-family:inherit;}
 .plan-item .pi-btn.start{background:rgba(80,180,120,.22);border-color:rgba(80,200,120,.5);color:#aef0cb;}
-.plan-item .pi-btn.stop{background:rgba(180,90,60,.22);border-color:rgba(200,110,80,.5);color:#ffbfae;}
+.plan-item .pi-btn.stop{background:rgba(180,90,60,.22);border-color:(200,110,80,.5);color:#ffbfae;}
 .plan-item .pi-btn.del{flex:0 0 26px;padding:5px 0;color:#7d8fa2;font-size:14px;}
 .ps-clear{margin-top:6px;width:100%;padding:6px;border-radius:6px;background:#1b2735;border:1px solid #2b3a4a;color:#7d8fa2;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
 .ps-empty{font-size:11px;color:#5f7285;text-align:center;padding:14px 8px;line-height:1.6;}
@@ -132,12 +137,11 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 #radial{position:fixed;z-index:150;pointer-events:none;}
 #radial .ring{position:absolute;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(20,30,42,.9),rgba(10,15,22,.96));border:1px solid #3a5a7a;box-shadow:0 8px 32px rgba(0,0,0,.75);pointer-events:auto;transform:translate(-50%,-50%);}
 #radial .rbtn{position:absolute;width:56px;height:56px;border-radius:50%;background:linear-gradient(180deg,#22303f,#131c26);border:1px solid #3a5a7a;color:#c8dcee;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transform:translate(-50%,-50%);pointer-events:auto;}
-#radial .rbtn .ic{font-size:15px;line-height:1;}
 #radial .rbtn.center{width:48px;height:48px;font-size:10px;background:linear-gradient(180deg,#3a2a1a,#1a120a);border-color:#8a6a30;color:#e0c080;}
 
 #result .rt{font-size:clamp(28px,8vw,50px);font-weight:900;letter-spacing:.16em;margin-bottom:8px;}
-#result.win .rt{color:#66e09a;text-shadow:0 0 40px rgba(80,220,140,.4);}
-#result.lose .rt{color:#e05a3c;text-shadow:0 0 40px rgba(220,80,60,.4);}
+#result.win .rt{color:#66e09a;}
+#result.lose .rt{color:#e05a3c;}
 #result .rs{color:#7d90a4;font-size:13px;margin-bottom:24px;text-align:center;line-height:1.7;}
 
 .settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #1e2937;}
@@ -151,20 +155,22 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 #tutorial .tstep p{font-size:12px;color:#8fa3b8;line-height:1.6;}
 #tutorial .nav{display:flex;gap:8px;margin-top:12px;}
 
-.room-code{font-family:monospace;font-size:32px;letter-spacing:.3em;color:#ffce6b;text-align:center;padding:16px;background:#0d141c;border:1px solid #26333f;border-radius:8px;margin:10px 0;font-weight:900;}
+.room-code{font-family:monospace;font-size:32px;letter-spacing:.3em;color:#ffce6b;text-align:center;padding:16px;background:#0d141c;border:1px solid #26333f;border-radius:8px;margin:10px 0;font-weight:900;cursor:pointer;}
 .room-input{width:100%;padding:12px;background:#0d141c;border:1px solid #26333f;border-radius:6px;color:#cfe2f5;font-size:18px;font-family:monospace;letter-spacing:.2em;text-align:center;text-transform:uppercase;outline:none;}
+.room-input:focus{border-color:#7fc0ff;}
 .player-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;font-size:11px;font-weight:700;}
 .player-badge.atk{background:rgba(232,83,63,.2);color:#ff9b7d;border:1px solid rgba(232,83,63,.4);}
 .player-badge.def{background:rgba(63,143,232,.2);color:#8ec4ff;border:1px solid rgba(63,143,232,.4);}
-#debugLog{position:absolute;left:6px;top:100px;width:280px;max-height:200px;overflow:auto;background:rgba(0,0,0,.85);border:1px solid #2b3a4a;border-radius:6px;padding:6px;font-family:monospace;font-size:10px;color:#7fc0ff;z-index:33;pointer-events:auto;display:none;}
+.sig-badge{font-size:10px;color:#7fc0ff;background:rgba(127,192,255,.1);border:1px solid rgba(127,192,255,.3);border-radius:4px;padding:2px 8px;display:inline-block;margin-left:6px;}
 @media(max-width:480px){
   .rtbtn{width:42px;height:38px;font-size:9.5px;}
   .sqbtn{width:32px;height:28px;font-size:11px;}
   .ucard{min-width:64px;padding:5px 8px;}
   .ucard .un{font-size:11px;}
-  #planSidebar{width:210px;right:100px;}
+  #planSidebar{width:230px;}
   #recycleBtn{right:52px;width:42px;height:38px;}
   .room-code{font-size:26px;}
+  .tbtn{padding:0 8px;font-size:11px;}
 }
 </style>
 </head>
@@ -173,7 +179,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 
 <div id="menu" class="overlay">
   <h1 class="title">钢铁前线</h1>
-  <div class="subtitle">STEEL FRONTLINE · V19</div>
+  <div class="subtitle">STEEL FRONTLINE · V21</div>
   <div class="menu-col">
     <button class="btn primary" id="mNew">开 始 战 役</button>
     <button class="btn" id="mMulti">多 人 对 战</button>
@@ -202,36 +208,65 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 
 <div id="multi" class="overlay hidden">
   <div class="panel">
-    <h2>多 人 对 战</h2>
+    <h2>多 人 对 战 <span class="sig-badge" id="sigBadge">探测中…</span></h2>
     <div id="multiHome">
       <div id="fileWarn" class="warn-box hidden">
-        ⚠ <b>检测到 file:// 协议</b> — 直接双击 HTML 打开会导致 WebRTC 数据通道被浏览器安全策略限制，多人联机可能收不到同步数据。<br>
-        建议：<b>改用 HTTP 服务器打开</b>（如 `python -m http.server`，或 VSCode 的 Live Server），然后通过 `http://localhost:端口/文件名.html` 访问。
+        ⚠ 检测到 <b>file:// 协议</b>。建议用 HTTP 服务器打开（如 <b>python -m http.server 8000</b>），否则浏览器会限制 WebRTC。
       </div>
       <div style="font-size:12px;color:#8fa3b8;line-height:1.7;margin-bottom:14px;">
-        房主和客户端必须选择相同后端。若 PeerJS 连不上可尝试 EMQX。
+        房主创建房间后得到 6 位房间码，发给朋友输入即可加入。房主为攻方。
       </div>
       <div class="rowlabel">连接方式</div>
       <div class="opt-grid" id="backendOpts"></div>
       <button class="btn primary" id="mmHost" style="width:100%;">创 建 房 间</button>
       <button class="btn" id="mmJoin" style="width:100%;margin-top:8px;">加 入 房 间</button>
+      <button class="btn ghost" id="mmManual" style="width:100%;margin-top:8px;font-size:12px;">手 动 P2P 直 连</button>
       <button class="btn ghost" id="mmBack" style="width:100%;margin-top:12px;">返回</button>
     </div>
     <div id="multiHost" class="hidden">
-      <div class="rowlabel">房间码</div>
+      <div class="rowlabel">房间码 · 点击复制</div>
       <div class="room-code" id="hostRoomCode">------</div>
-      <button class="btn small" id="copyRoomCode" style="width:100%;">复 制 房 间 码</button>
-      <div class="rowlabel" style="margin-top:16px;">已连接玩家</div>
-      <div id="hostPlayers" style="min-height:40px;"><div style="color:#4d5c6b;font-size:12px;">等待玩家加入…</div></div>
-      <button class="btn primary" id="hostStart" style="width:100%;margin-top:14px;">开 始 战 斗</button>
-      <button class="btn ghost" id="hostBack" style="width:100%;margin-top:8px;">返回</button>
+      <div class="status-bar" id="hostStatus">正在创建房间…</div>
+      <div class="rowlabel" style="margin-top:12px;">已连接玩家</div>
+      <div id="hostPlayers" style="min-height:40px;">
+        <div style="color:#4d5c6b;font-size:12px;text-align:center;padding:8px;">等待玩家加入…</div>
+      </div>
+      <button class="btn primary" id="hostStart" style="width:100%;margin-top:14px;" disabled>开 始 战 斗</button>
+      <button class="btn ghost" id="hostBack" style="width:100%;margin-top:8px;">关闭房间</button>
     </div>
     <div id="multiJoin" class="hidden">
       <div class="rowlabel">输入房间码</div>
-      <input class="room-input" id="joinRoomCode" maxlength="6" placeholder="------" autocomplete="off">
+      <input class="room-input" id="joinRoomCode" maxlength="6" placeholder="------" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
       <button class="btn primary" id="doJoin" style="width:100%;margin-top:12px;">加 入 房 间</button>
-      <div id="joinStatus" style="font-size:12px;color:#8fa3b8;margin-top:12px;text-align:center;min-height:20px;"></div>
+      <div class="status-bar" id="joinStatus">等待输入房间号</div>
       <button class="btn ghost" id="joinBack" style="width:100%;margin-top:12px;">返回</button>
+    </div>
+    <div id="multiManual" class="hidden">
+      <div class="rowlabel">手动 P2P 直连 · 通过微信/QQ 交换邀请码</div>
+      <div class="opt-grid" id="manualTabs">
+        <div class="opt active" data-mtab="host">我是房主</div>
+        <div class="opt" data-mtab="client">我是玩家</div>
+      </div>
+      <div id="manualHost" style="display:block;">
+        <div class="rowlabel">步骤① · 生成邀请码</div>
+        <button class="btn" id="genOffer" style="width:100%;">生成邀请码</button>
+        <textarea id="offerCode" readonly style="width:100%;height:80px;margin-top:6px;background:#0d141c;color:#9fd8ff;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
+        <button class="btn small" id="copyOffer" style="width:100%;margin-top:6px;">复制邀请码</button>
+        <div class="rowlabel" style="margin-top:10px;">步骤② · 粘贴朋友的应答码</div>
+        <textarea id="answerCode" placeholder="粘贴应答码…" style="width:100%;height:80px;background:#0d141c;color:#cfe2f5;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
+        <button class="btn primary" id="acceptAnswer" style="width:100%;margin-top:6px;">连接玩家</button>
+        <div class="status-bar" id="manualHostStatus" style="margin-top:8px;">等待生成邀请码</div>
+      </div>
+      <div id="manualClient" style="display:none;">
+        <div class="rowlabel">步骤① · 粘贴房主的邀请码</div>
+        <textarea id="offerInput" placeholder="粘贴邀请码…" style="width:100%;height:80px;background:#0d141c;color:#cfe2f5;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
+        <button class="btn" id="genAnswer" style="width:100%;margin-top:6px;">生成应答码</button>
+        <div class="rowlabel" style="margin-top:10px;">步骤② · 把应答码发回给房主</div>
+        <textarea id="myAnswerCode" readonly style="width:100%;height:80px;background:#0d141c;color:#9fd8ff;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
+        <button class="btn small" id="copyAnswer" style="width:100%;margin-top:6px;">复制应答码</button>
+        <div class="status-bar" id="manualClientStatus" style="margin-top:8px;">等待输入邀请码</div>
+      </div>
+      <button class="btn ghost" id="manualBack" style="width:100%;margin-top:12px;">返回</button>
     </div>
   </div>
 </div>
@@ -270,13 +305,13 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
   <div class="panel help">
     <h2>操 作 说 明</h2>
     <p><b>视角</b> — 单指拖动；双指捏合缩放。PC：WASD平移、空格定位、滚轮缩放。</p>
-    <p><b>选择</b> — 单击单位；长按空地350ms拖动框选；双击选中同类型；Shift多选；Ctrl+A全选。</p>
-    <p><b>长按单位</b> — 战术轮盘：移动/攻击/驻守/停止/回收。右侧常驻回收按钮也可用。</p>
-    <p><b>PC快捷键</b> — Q技能 / H驻守 / S停止 / P计划 / ESC取消 / 1-9编队 / Ctrl+A全选 / 空格居中。</p>
-    <p><b>计划侧栏</b> — 绘制：前线、区域防卫、线性防卫、进攻（基于已有前线）。</p>
-    <p><b>部署</b> — 点击兵种卡片后，在己方橙色部署点圈内任意位置点击。</p>
-    <p><b>多人</b> — 房主和客户端选相同后端。客户端进战场后需等"战场同步完成"。</p>
-    <p><b>本地测试建议</b> — 使用 HTTP 服务器打开（不要 file:// 双击），例如 <span class="tag">python -m http.server 8000</span>，再访问 http://localhost:8000/文件名.html</p>
+    <p><b>选择</b> — 单击单位；长按空地350ms拖动框选；双击同类型；Shift多选；Ctrl+A全选。</p>
+    <p><b>长按单位</b> — 战术轮盘：移动/攻击/驻守/停止/回收。右侧常驻回收按钮。</p>
+    <p><b>PC快捷键</b> — Q技能 / H驻守 / S停止 / P计划 / ESC取消 / 1-9编队 / 空格居中。</p>
+    <p><b>计划侧栏</b> — 从顶部「计划」按钮打开。计划只能分配给编队；框选时自动整理为新编队。</p>
+    <p><b>地形</b> — 除坦克外，所有兵种可越过山地，但速度 -85%。</p>
+    <p><b>环境</b> — 开局随机季节与昼夜。夜战视野降低，冬春各有速度/CP影响。</p>
+    <p><b>多人</b> — 公共服务器（MQTT信令）、手动P2P、虚拟局域网。</p>
     <p><b>时长</b> — 25分钟。守方坚守即胜。</p>
     <button class="btn ghost" id="hBack" style="width:100%;margin-top:14px;">返回</button>
   </div>
@@ -309,20 +344,21 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
     <div class="stat" id="timeStat"><span class="lbl">剩余</span><span class="val" id="timeVal">25:00</span></div>
     <div class="stat"><span class="lbl">支部</span><span class="val" id="postVal">0/4</span></div>
     <div class="stat"><span class="lbl">部队</span><span class="val" id="unitVal">0</span></div>
+    <div class="stat env"><span class="lbl">环境</span><span class="val" id="envVal">—</span></div>
     <div class="tb-spacer"></div>
+    <button class="tbtn" id="btnPlan"><span>⌘</span>计划</button>
     <button class="tbtn" id="btnPause">❚❚</button>
   </div>
   <div id="leftPanel"></div>
   <div id="rightPanel">
-    <button class="rtbtn" id="rtPlan"><span class="ic">⌘</span>计划</button>
     <button class="rtbtn" id="rtMove"><span class="ic">➤</span>移动</button>
     <button class="rtbtn" id="rtAttack"><span class="ic">✶</span>攻击</button>
     <button class="rtbtn" id="rtStop"><span class="ic">■</span>停止</button>
   </div>
   <button id="recycleBtn" class="dis"><span class="ic">♻</span>回收</button>
   <div id="planSidebar" class="hidden">
-    <div class="ps-head"><span>计 划</span><button class="ps-close" id="psClose">×</button></div>
-    <div class="ps-draw-label">绘制</div>
+    <div class="ps-head"><span>计 划 管 理</span><button class="ps-close" id="psClose">×</button></div>
+    <div class="ps-draw-label">绘制 · 计划只能分配给编队</div>
     <div class="ps-draw-grid">
       <button class="draw-btn" data-draw="front">前线<small>多点折线</small></button>
       <button class="draw-btn" data-draw="zone">区域防卫<small>圆圈</small></button>
@@ -339,12 +375,11 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
   </div>
   <div id="selInfo" class="hidden"></div>
   <div id="modeTip" class="hidden"></div>
-  <div id="syncOverlay" class="hidden"><span class="spin"></span>正在同步战场数据…<div class="txt">若长时间无响应，请检查网络或改用 HTTP 服务器打开</div></div>
+  <div id="syncOverlay" class="hidden"><span class="spin"></span>正在同步战场数据…<div class="txt">若长时间无响应，请检查网络或改用 HTTP 服务器</div></div>
   <div id="toast"></div>
 </div>
 <div id="hoverTip" class="hidden"></div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
 <script>
 "use strict";
@@ -364,6 +399,7 @@ let MAP_W=80, MAP_H=56;
 const CELL=32;
 const TICK=1/30;
 const GAME_LEN=1500;
+const DAY_CYCLE=360;
 const T_PLAIN=0,T_FOREST=1,T_MOUNT=2,T_WATER=3,T_ROAD=4,T_SAND=5,T_BUILDING=6,T_BRIDGE=7;
 const TERRAIN=[
   {n:'平原',pass:1,spd:1.00,cover:0.00,c1:'#4a7a3d',c2:'#548842'},
@@ -379,24 +415,32 @@ const UNITS={
   inf:  {n:'步兵班',cost:8, hp:110,spd:16.5,dmg:10,range:78, cd:0.85,vis:142,r:6, cap:1.0},
   scout:{n:'侦察班',cost:6, hp:70, spd:28.5,dmg:5, range:60, cd:1.0, vis:250,r:5, cap:0.6},
   eng:  {n:'工兵班',cost:10,hp:100,spd:15.0,dmg:4, range:46, cd:1.4, vis:132,r:6, cap:1.0,trench:1},
-  arm:  {n:'装甲连',cost:24,hp:300,spd:25.5,dmg:28,range:118,cd:1.55,vis:162,r:9, cap:1.0},
+  arm:  {n:'装甲连',cost:30,hp:300,spd:25.5,dmg:28,range:118,cd:1.55,vis:162,r:9, cap:1.0},
   art:  {n:'炮兵连',cost:32,hp:130,spd:10.5,dmg:60,range:252,cd:10, vis:122,r:8, splash:26,aim:2.4,cap:0.5,keepRange:1},
 };
 const TURRETS={
-  mg:    {n:'机枪堡',  hp:805,  dmg:17, range:207, cd:0.39,r:10,vis:172},
-  at:    {n:'反坦克炮',hp:1127, dmg:69, range:276, cd:2.09,r:11,vis:192},
-  fort:  {n:'要塞炮',  hp:1610, dmg:105,range:391, cd:3.13,r:14,vis:232},
-  bunker:{n:'碉堡',    hp:978,  dmg:14, range:173, cd:0.52,r:11,vis:170},
+  mg:        {n:'机枪堡',  hp:805,  dmg:17, range:207, cd:0.39,r:10,vis:172},
+  at:        {n:'反坦克炮',hp:1127, dmg:69, range:276, cd:2.09,r:11,vis:192},
+  fort:      {n:'要塞炮',  hp:1610, dmg:105,range:391, cd:3.13,r:14,vis:232},
+  bunker:    {n:'碉堡',    hp:978,  dmg:14, range:173, cd:0.52,r:11,vis:170},
+  watchtower:{n:'哨塔',    hp:170,  dmg:10, range:150, cd:0.85,r:7, vis:400},
 };
 const SKILLS={
   recon:    {n:'侦察机',  cost:12,cd:30, radius:200,dur:16, maxRange:1500},
-  barrage:  {n:'炮火覆盖',cost:39,cd:125,radius:46, dur:12,dps:42,neutral:true,maxRange:1500},
+  barrage:  {n:'炮火覆盖',cost:39,cd:125,radius:46, dur:12,dps:82,neutral:true,maxRange:1500,friendlyRange:420},
   airstrike:{n:'空中打击',cost:59,cd:158,radius:60, dur:8, dps:82,neutral:true,maxRange:1500},
 };
 const DIFFS={
   easy:  {n:'新兵',interval:4.4,cpMul:0.76,skill:0.12,maxUnits:24},
   normal:{n:'老兵',interval:2.9,cpMul:1.00,skill:0.42,maxUnits:34},
   hard:  {n:'王牌',interval:2.0,cpMul:1.26,skill:0.78,maxUnits:44},
+};
+const DEPLOY_CAP={atk:28,def:20};
+const SEASONS={
+  spring:{n:'春',icon:'🌸',cpMul:1.15,dmgMul:1.00,spdMul:1.00,visMul:1.00,desc:'CP +15%'},
+  summer:{n:'夏',icon:'☀',cpMul:1.00,dmgMul:1.10,spdMul:1.00,visMul:1.00,desc:'伤害 +10%'},
+  autumn:{n:'秋',icon:'🍂',cpMul:1.00,dmgMul:1.00,spdMul:1.15,visMul:1.00,desc:'速度 +15%'},
+  winter:{n:'冬',icon:'❄',cpMul:1.00,dmgMul:1.00,spdMul:0.90,visMul:0.90,desc:'速度 -10% 视野 -10%'},
 };
 const SQUAD_COLORS=['#ff6b6b','#ffb84d','#ffe066','#7dff8a','#66e0ff','#6b8aff','#a76bff','#ff6bde','#ffffff'];
 const DEF_DEPLOY_COST_MUL = 1.15;
@@ -420,7 +464,7 @@ function genIsland(){
     if(v===T_PLAIN){
       const m=fbm(x*.10+13,y*.10+13,23,4);
       const f=fbm(x*.145+77,y*.145+77,41,3);
-      if(m>.68)v=T_MOUNT;else if(f>.575)v=T_FOREST;
+      if(m>.72)v=T_MOUNT;else if(f>.575)v=T_FOREST;
     }
     t[y*MAP_W+x]=v;
   }
@@ -440,6 +484,8 @@ function genIsland(){
     {x:13,y:20,type:'at'},{x:67,y:20,type:'at'},
     {x:18,y:40,type:'mg'},{x:62,y:40,type:'mg'},
     {x:32,y:26,type:'bunker'},{x:48,y:26,type:'bunker'},
+    {x:28,y:32,type:'watchtower'},{x:52,y:32,type:'watchtower'},
+    {x:8,y:32,type:'watchtower'},{x:72,y:32,type:'watchtower'},
   ];
   turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
   return {terrain:t,posts,spawn,turrets};
@@ -475,6 +521,7 @@ function genValley(){
     {x:22,y:18,type:'at'},{x:50,y:18,type:'at'},
     {x:22,y:36,type:'mg'},{x:50,y:36,type:'mg'},
     {x:30,y:26,type:'bunker'},{x:42,y:26,type:'bunker'},
+    {x:34,y:32,type:'watchtower'},{x:38,y:45,type:'watchtower'},
   ];
   turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
   return {terrain:t,posts,spawn,turrets};
@@ -486,7 +533,7 @@ function genPlain(){
     let v=T_PLAIN;
     const f=fbm(x*.11+5,y*.11+5,91,4);
     const m=fbm(x*.09+55,y*.09+55,17,3);
-    if(m>.755)v=T_MOUNT;else if(f>.545)v=T_FOREST;
+    if(m>.78)v=T_MOUNT;else if(f>.545)v=T_FOREST;
     t[y*MAP_W+x]=v;
   }
   const posts=[
@@ -507,25 +554,32 @@ function genPlain(){
     {x:13,y:20,type:'at'},{x:75,y:20,type:'at'},
     {x:20,y:40,type:'mg'},{x:68,y:40,type:'mg'},
     {x:30,y:28,type:'bunker'},{x:58,y:28,type:'bunker'},
+    {x:8,y:38,type:'watchtower'},{x:80,y:38,type:'watchtower'},
+    {x:44,y:36,type:'watchtower'},
   ];
   turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
   return {terrain:t,posts,spawn,turrets};
 }
+/* ★ 重写：去掉中间山脉，改为规整的网格城市 */
 function genCity(){
   MAP_W=84; MAP_H=60;
   const t=new Uint8Array(MAP_W*MAP_H).fill(T_PLAIN);
+  // 仅四周留一圈边界山脉
   for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    if(x<2||y<2||x>MAP_W-3||y>MAP_H-3)t[y*MAP_W+x]=T_MOUNT;
+    if(x<1||y<1||x>MAP_W-2||y>MAP_H-2)t[y*MAP_W+x]=T_MOUNT;
   }
+  // 规则街区
   const bx=[10,24,38,52,66,78],by=[8,20,32,44];
   for(let i=0;i<bx.length-1;i++)for(let j=0;j<by.length-1;j++){
     const x0=bx[i],y0=by[j],x1=bx[i+1],y1=by[j+1];
-    if(i===1&&j===0)continue;
+    // 中央留一大广场（无障碍）
+    if(i===2&&j===1)continue;
     for(let y=y0+1;y<y1-1;y++)for(let x=x0+1;x<x1-1;x++)
-      if(Math.random()<0.82)t[y*MAP_W+x]=T_BUILDING;
+      if(Math.random()<0.85)t[y*MAP_W+x]=T_BUILDING;
   }
+  // 主干道（垂直）
   [12,28,42,56,72].forEach(cx=>{
-    for(let y=3;y<MAP_H-3;y++)for(let d=0;d<=1;d++){
+    for(let y=2;y<MAP_H-2;y++)for(let d=0;d<=1;d++){
       const nx=cx+d;
       if(nx>=0&&nx<MAP_W){
         const v=t[y*MAP_W+nx];
@@ -533,8 +587,9 @@ function genCity(){
       }
     }
   });
+  // 主干道（水平）
   [10,22,34,46].forEach(cy=>{
-    for(let x=3;x<MAP_W-3;x++)for(let d=0;d<=1;d++){
+    for(let x=2;x<MAP_W-2;x++)for(let d=0;d<=1;d++){
       const ny=cy+d;
       if(ny>=0&&ny<MAP_H){
         const v=t[ny*MAP_W+x];
@@ -556,6 +611,7 @@ function genCity(){
     {x:14,y:16,type:'at'},{x:70,y:16,type:'at'},
     {x:16,y:40,type:'mg'},{x:68,y:40,type:'mg'},
     {x:36,y:28,type:'bunker'},{x:48,y:28,type:'bunker'},
+    {x:22,y:50,type:'watchtower'},{x:62,y:50,type:'watchtower'},
   ];
   turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
   return {terrain:t,posts,spawn,turrets};
@@ -568,7 +624,7 @@ function genRiver(){
     const f=fbm(x*.12+5,y*.12+5,141,3);
     if(f>.61)v=T_FOREST;
     const m=fbm(x*.085+99,y*.085+99,73,3);
-    if(m>.77)v=T_MOUNT;
+    if(m>.79)v=T_MOUNT;
     t[y*MAP_W+x]=v;
   }
   const riverY=[];
@@ -611,6 +667,7 @@ function genRiver(){
     {x:14,y:18,type:'at'},{x:70,y:18,type:'at'},
     {x:20,y:42,type:'mg'},{x:64,y:42,type:'mg'},
     {x:32,y:20,type:'bunker'},{x:52,y:20,type:'bunker'},
+    {x:10,y:44,type:'watchtower'},{x:74,y:44,type:'watchtower'},
   ];
   turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
   return {terrain:t,posts,spawn,turrets};
@@ -621,7 +678,7 @@ function genTutorial(){
   for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
     let v=T_PLAIN;
     if(x<22 && y<16 && fbm(x*.14,y*.14,3,3)>.55) v=T_FOREST;
-    if(x>56 && y>8 && y<34 && fbm(x*.12+11,y*.12+11,9,3)>.63) v=T_MOUNT;
+    if(x>56 && y>8 && y<34 && fbm(x*.12+11,y*.12+11,9,3)>.68) v=T_MOUNT;
     t[y*MAP_W+x]=v;
   }
   const posts=[
@@ -643,7 +700,7 @@ function genGrand(){
     let v=T_PLAIN;
     const f=fbm(x*.075+7,y*.075+7,201,4);
     const m=fbm(x*.06+63,y*.06+63,101,4);
-    if(m>.72)v=T_MOUNT;
+    if(m>.76)v=T_MOUNT;
     else if(f>.58)v=T_FOREST;
     const riverY=Math.round(40+Math.sin(x*.09)*5+Math.sin(x*.21)*2);
     if(Math.abs(y-riverY)<2)v=T_WATER;
@@ -690,11 +747,12 @@ function genGrand(){
     {x:64,y:73,type:'fort'},{x:50,y:66,type:'mg'},{x:78,y:66,type:'mg'},
     {x:40,y:26,type:'bunker'},{x:88,y:26,type:'bunker'},
     {x:40,y:54,type:'bunker'},{x:88,y:54,type:'bunker'},
+    {x:14,y:20,type:'watchtower'},{x:114,y:20,type:'watchtower'},
+    {x:14,y:60,type:'watchtower'},{x:114,y:60,type:'watchtower'},
   ];
   turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
   return {terrain:t,posts,spawn:spawns[0],spawns,turrets,mapW:MAP_W,mapH:MAP_H};
 }
-
 const MAPS=[
   {id:'island',n:'翡翠群岛',desc:'四面环海的孤岛。',gen:genIsland,tag:'海岛'},
   {id:'valley',n:'赤石山谷',desc:'两侧绝壁夹出的狭长走廊。',gen:genValley,tag:'山谷'},
@@ -705,6 +763,7 @@ const MAPS=[
   {id:'tutorial',n:'新兵训练',desc:'教学关卡。',gen:genTutorial,tag:'教程',tutorial:true},
 ];
 
+/* ============ 画布 ============ */
 const cv=document.getElementById('game');
 const ctx=cv.getContext('2d',{alpha:false});
 let W=0,H=0,DPR=1;
@@ -712,12 +771,8 @@ function resize(){DPR=Math.min(window.devicePixelRatio||1,2);W=cv.clientWidth;H=
 window.addEventListener('resize',resize);
 window.addEventListener('orientationchange',()=>setTimeout(resize,180));
 
-const CFG={
-  quality: localStorage.v19q||'mid',
-  fps: parseInt(localStorage.v19f||'60',10),
-  fx: localStorage.v19fx!=='0',
-};
-function saveCfg(){try{localStorage.v19q=CFG.quality;localStorage.v19f=CFG.fps;localStorage.v19fx=CFG.fx?'1':'0';}catch(e){}}
+const CFG={quality:localStorage.v21q||localStorage.v20q||'mid',fps:parseInt(localStorage.v21f||localStorage.v20f||'60',10),fx:(localStorage.v21fx||localStorage.v20fx)!=='0'};
+function saveCfg(){try{localStorage.v21q=CFG.quality;localStorage.v21f=CFG.fps;localStorage.v21fx=CFG.fx?'1':'0';}catch(e){}}
 
 let G=null;
 
@@ -727,6 +782,11 @@ function makeGame(cfg){
   if(gen.mapW){ MAP_W=gen.mapW; MAP_H=gen.mapH; }
   else if(mapDef.id==='grand'){ MAP_W=128; MAP_H=80; }
   else { MAP_W=80; MAP_H=56; }
+
+  // 随机季节
+  const seasonKeys=Object.keys(SEASONS);
+  const season=cfg.season||seasonKeys[Math.floor(Math.random()*seasonKeys.length)];
+  const seasonDef=SEASONS[season];
 
   const g={
     cfg,mapDef,terrain:gen.terrain,terrainCanvas:null,
@@ -749,13 +809,24 @@ function makeGame(cfg){
     mp:null,tutorial:null,
     forbiddenRadius:350,
     _clientReady:false,
+    season:season,
+    dayTime:cfg.dayTime!==undefined?cfg.dayTime:Math.random(),
+    env:{cpMul:1,dmgMul:1,spdMul:1,visMul:1,dayAmount:1},
+    _clientStrikes:[],
+    _squadCounter:0,
   };
+  g.env.cpMul=seasonDef.cpMul;
+  g.env.dmgMul=seasonDef.dmgMul;
+  g.env.spdMul=seasonDef.spdMul;
+  g.env.visMul=seasonDef.visMul;
+  updateEnv(g,0);
+
   gen.posts.forEach((p,i)=>{
     g.posts.push({id:i,x:p.x*CELL+CELL/2,y:p.y*CELL+CELL/2,type:p.type,owner:'def',cap:100,integrate:1,name:p.name});
   });
   gen.turrets.forEach(p=>{
     const d=TURRETS[p.type];
-    g.turrets.push({id:uid(),side:'def',type:p.type,x:p.x*CELL+CELL/2,y:p.y*CELL+CELL/2,hp:d.hp,maxHp:d.hp,cd:rnd(0,1),r:d.r});
+    g.turrets.push({id:uid(),side:'def',type:p.type,x:p.x*CELL+CELL/2,y:p.y*CELL+CELL/2,hp:d.hp,maxHp:d.hp,cd:rnd(0,1),r:d.r,discovered:false});
   });
   computeForbiddenRadius(g);
   g.posts.forEach(p=>{
@@ -777,6 +848,18 @@ function makeGame(cfg){
   recomputeVis(g,'atk');recomputeVis(g,'def');
   updateDeployPoints(g);
   return g;
+}
+
+function updateEnv(g,dt){
+  g.dayTime=(g.dayTime+dt/DAY_CYCLE)%1;
+  const raw=0.5+0.5*Math.cos(g.dayTime*Math.PI*2);
+  const dayAmount=Math.pow(raw,0.7);
+  g.env.dayAmount=dayAmount;
+  const seasonDef=SEASONS[g.season];
+  g.env.cpMul=seasonDef.cpMul;
+  g.env.dmgMul=seasonDef.dmgMul;
+  g.env.spdMul=seasonDef.spdMul;
+  g.env.visMul=seasonDef.visMul*(0.75+0.25*dayAmount);
 }
 
 function computeForbiddenRadius(g){
@@ -860,14 +943,14 @@ function spawnUnit(g,side,type,x,y){
       y=sp.y+dy/len*(R+40);
     }
   }
-  if(!canWalk(g,x,y)){
+  if(!canWalk(g,x,y,type)){
     let best=null,bestD=Infinity;
     for(let r=1;r<=8&&!best;r++){
       for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
         if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
         const nx=x+dx*CELL*0.5,ny=y+dy*CELL*0.5;
         if(nx<0||ny<0||nx>=MAP_W*CELL||ny>=MAP_H*CELL)continue;
-        if(canWalk(g,nx,ny)){const dd=dist2(x,y,nx,ny);if(dd<bestD){bestD=dd;best={x:nx,y:ny};}}
+        if(canWalk(g,nx,ny,type)){const dd=dist2(x,y,nx,ny);if(dd<bestD){bestD=dd;best={x:nx,y:ny};}}
       }
     }
     if(best){x=best.x;y=best.y;}
@@ -878,22 +961,33 @@ function spawnUnit(g,side,type,x,y){
 }
 
 function terrainAt(g,wx,wy){const cx=Math.floor(wx/CELL),cy=Math.floor(wy/CELL);if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)return T_MOUNT;return g.terrain[cy*MAP_W+cx];}
-function canWalk(g,wx,wy){return !!TERRAIN[terrainAt(g,wx,wy)].pass;}
-function speedAt(g,wx,wy){return TERRAIN[terrainAt(g,wx,wy)].spd;}
+/* ★ 新增 unitType 参数：山地仅对坦克阻挡 */
+function canWalk(g,wx,wy,unitType){
+  const tv=terrainAt(g,wx,wy);
+  const info=TERRAIN[tv];
+  if(info.pass)return true;
+  if(tv===T_MOUNT && unitType && unitType!=='arm')return true;
+  return false;
+}
+function speedAt(g,wx,wy){
+  const tv=terrainAt(g,wx,wy);
+  if(tv===T_MOUNT)return 0.15;
+  return TERRAIN[tv].spd;
+}
 function coverAt(g,wx,wy){return TERRAIN[terrainAt(g,wx,wy)].cover;}
-function unitSpeedInTerrain(g,u){const d=UNITS[u.type];let base=d.spd*speedAt(g,u.x,u.y);if(u.type==='arm'&&terrainAt(g,u.x,u.y)===T_FOREST)base*=0.5;return base;}
+function unitSpeedInTerrain(g,u){const d=UNITS[u.type];let base=d.spd*speedAt(g,u.x,u.y);if(u.type==='arm'&&terrainAt(g,u.x,u.y)===T_FOREST)base*=0.5;base*=g.env.spdMul||1;return base;}
 
-function findPath(g,sx,sy,tx,ty){
+function findPath(g,sx,sy,tx,ty,unitType){
   const scx=clamp(Math.floor(sx/CELL),0,MAP_W-1),scy=clamp(Math.floor(sy/CELL),0,MAP_H-1);
   let tcx=clamp(Math.floor(tx/CELL),0,MAP_W-1),tcy=clamp(Math.floor(ty/CELL),0,MAP_H-1);
-  if(!TERRAIN[g.terrain[tcy*MAP_W+tcx]].pass){
+  if(!canWalk(g,tcx*CELL+CELL/2,tcy*CELL+CELL/2,unitType)){
     let found=null,bd=Infinity;
     for(let r=1;r<8&&!found;r++){
       for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
         if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
         const nx=tcx+dx,ny=tcy+dy;
         if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;
-        if(TERRAIN[g.terrain[ny*MAP_W+nx]].pass){const d=dx*dx+dy*dy;if(d<bd){bd=d;found={x:nx,y:ny};}}
+        if(canWalk(g,nx*CELL+CELL/2,ny*CELL+CELL/2,unitType)){const d=dx*dx+dy*dy;if(d<bd){bd=d;found={x:nx,y:ny};}}
       }
     }
     if(!found)return null;
@@ -927,12 +1021,14 @@ function findPath(g,sx,sy,tx,ty){
       if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;
       const ni=ny*MAP_W+nx;
       if(closed[ni])continue;
-      const tv=g.terrain[ni];if(!TERRAIN[tv].pass)continue;
+      const tv=g.terrain[ni];
+      if(!canWalk(g,nx*CELL+CELL/2,ny*CELL+CELL/2,unitType))continue;
       if(dx&&dy){
-        if(!TERRAIN[g.terrain[cy*MAP_W+nx]].pass)continue;
-        if(!TERRAIN[g.terrain[ny*MAP_W+cx]].pass)continue;
+        if(!canWalk(g,nx*CELL+CELL/2,cy*CELL+CELL/2,unitType))continue;
+        if(!canWalk(g,cx*CELL+CELL/2,ny*CELL+CELL/2,unitType))continue;
       }
-      const mc=TERRAIN[tv].spd>0?1/TERRAIN[tv].spd:1;
+      let mc=1;
+      if(tv===T_MOUNT)mc=1/0.15;else if(TERRAIN[tv].spd>0)mc=1/TERRAIN[tv].spd;
       const sc=mc*((dx&&dy)?1.414:1);
       const nt=gScore[ci]+sc;
       if(nt<gScore[ni]){gScore[ni]=nt;parent[ni]=ci;const h=Math.abs(nx-tcx)+Math.abs(ny-tcy);open.push({i:ni,f:nt+h});}
@@ -940,12 +1036,13 @@ function findPath(g,sx,sy,tx,ty){
   }
   return null;
 }
-function hasLOS(g,x1,y1,x2,y2){const steps=Math.ceil(dist(x1,y1,x2,y2)/10);for(let i=1;i<steps;i++){const t=i/steps;if(!canWalk(g,lerp(x1,x2,t),lerp(y1,y2,t)))return false;}return true;}
-function smoothPath(g,path,sx,sy){if(!path||path.length<2)return path;const out=[];let curX=sx,curY=sy;let i=0;while(i<path.length){let j=path.length-1;for(;j>i;j--)if(hasLOS(g,curX,curY,path[j].x,path[j].y))break;if(j<i)j=i;out.push(path[j]);curX=path[j].x;curY=path[j].y;i=j+1;}return out;}
+function hasLOS(g,x1,y1,x2,y2){const steps=Math.ceil(dist(x1,y1,x2,y2)/10);for(let i=1;i<steps;i++){const t=i/steps;const v=terrainAt(g,lerp(x1,x2,t),lerp(y1,y2,t));if(v===T_MOUNT||v===T_WATER||v===T_BUILDING)return false;}return true;}
+function smoothPath(g,path,sx,sy,unitType){if(!path||path.length<2)return path;const out=[];let curX=sx,curY=sy;let i=0;while(i<path.length){let j=path.length-1;for(;j>i;j--)if(hasLOS(g,curX,curY,path[j].x,path[j].y))break;if(j<i)j=i;out.push(path[j]);curX=path[j].x;curY=path[j].y;i=j+1;}return out;}
 
 function recomputeVis(g,side){
   const v=new Uint8Array(MAP_W*MAP_H);
   function lineCrossesForest(px,py,gx,gy){const dx=gx-px,dy=gy-py;const steps=Math.max(1,Math.ceil(Math.sqrt(dx*dx+dy*dy)/CELL));for(let i=1;i<=steps;i++){const t=i/steps;const cx=Math.floor((px+dx*t)/CELL);const cy=Math.floor((py+dy*t)/CELL);if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)continue;if(g.terrain[cy*MAP_W+cx]===T_FOREST)return true;}return false;}
+  const visMul=g.env.visMul||1;
   const mark=(px,py,r,pierceForest,halveInForest)=>{
     const cx=Math.floor(px/CELL),cy=Math.floor(py/CELL);
     const rr=Math.ceil(r/CELL),r2=r*r;
@@ -965,14 +1062,21 @@ function recomputeVis(g,side){
       }
     }
   };
-  for(const u of g.units){if(u.side!==side||!u.alive)continue;const isScout=u.type==='scout';mark(u.x,u.y,UNITS[u.type].vis,isScout,isScout);}
-  for(const t of g.turrets){if(t.side!==side)continue;mark(t.x,t.y,TURRETS[t.type].vis,false,false);}
-  for(const p of g.posts){if(p.owner!==side)continue;mark(p.x,p.y,p.type==='hq'?260:190,false,false);}
+  for(const u of g.units){if(u.side!==side||!u.alive)continue;const isScout=u.type==='scout';mark(u.x,u.y,UNITS[u.type].vis*visMul,isScout,isScout);}
+  for(const t of g.turrets){if(t.side!==side)continue;mark(t.x,t.y,TURRETS[t.type].vis*visMul,false,false);}
+  for(const p of g.posts){if(p.owner!==side)continue;mark(p.x,p.y,(p.type==='hq'?260:190)*visMul,false,false);}
   for(const r of g.recon){if(r.side!==side)continue;mark(r.x,r.y,r.r,false,false);}
   g.vis[side]=v;
+  // 标记敌方的防御设施为已探明
+  if(g.playerSide===side){
+    for(const t of g.turrets){
+      if(t.side===side||t.discovered)continue;
+      const cx=Math.floor(t.x/CELL),cy=Math.floor(t.y/CELL);
+      if(cx>=0&&cy>=0&&cx<MAP_W&&cy<MAP_H&&v[cy*MAP_W+cx])t.discovered=true;
+    }
+  }
 }
 function visible(g,side,wx,wy){const arr=g.vis[side];if(!arr)return true;const cx=Math.floor(wx/CELL),cy=Math.floor(wy/CELL);if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)return false;return arr[cy*MAP_W+cx]===1;}
-
 function isDefForbiddenArea(g,x,y){const sp=g.spawnPoint;const R=g.forbiddenRadius||350;return dist2(x,y,sp.x,sp.y)<R*R;}
 
 function step(dt){
@@ -981,6 +1085,7 @@ function step(dt){
   g.tick++;
   if(Net.role==='client')return;
   g.time+=dt;
+  updateEnv(g,dt);
   for(const k in g.cd[g.playerSide])if(g.cd[g.playerSide][k]>0)g.cd[g.playerSide][k]-=dt;
   updateCP(g,dt);
   updateDeploy(g,dt);
@@ -1008,6 +1113,7 @@ function updateCP(g,dt){
     else{r=0.85;for(const p of g.posts){if(p.owner==='def')continue;if(p.type==='hq')r-=0.25;else r-=0.10;}}
     r=Math.max(0.15,r);
     if(g.aiSide===side)r*=DIFFS[g.cfg.diff].cpMul;
+    r*=g.env.cpMul;
     g.cpFrac[side]+=r*dt;
     if(g.cpFrac[side]>=1){const inc=Math.floor(g.cpFrac[side]);g.cpFrac[side]-=inc;g.cp[side]=Math.min(999,g.cp[side]+inc);}
   };
@@ -1040,14 +1146,14 @@ function updateUnit(g,u,dt){
     else u.observedTime=Math.max(0,(u.observedTime||0)-dt*3);
   }
   if((g.tick+(u.id%30))%30===0){
-    if(!canWalk(g,u.x,u.y)){
+    if(!canWalk(g,u.x,u.y,u.type)){
       let best=null,bestD=Infinity;
       for(let r=1;r<=6&&!best;r++){
         for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
           if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
           const nx=u.x+dx*CELL*0.4,ny=u.y+dy*CELL*0.4;
           if(nx<0||ny<0||nx>=MAP_W*CELL||ny>=MAP_H*CELL)continue;
-          if(canWalk(g,nx,ny)){const dd=dist2(u.x,u.y,nx,ny);if(dd<bestD){bestD=dd;best={x:nx,y:ny};}}
+          if(canWalk(g,nx,ny,u.type)){const dd=dist2(u.x,u.y,nx,ny);if(dd<bestD){bestD=dd;best={x:nx,y:ny};}}
         }
       }
       if(best){u.x=best.x;u.y=best.y;}
@@ -1075,8 +1181,8 @@ function updateUnit(g,u,dt){
       let target=null;
       if(u.path&&u.pathI<u.path.length){target=u.path[u.pathI];if(dist(u.x,u.y,target.x,target.y)<14)u.pathI++;}
       if(!target||u.pathI>=u.path.length){
-        const raw=findPath(g,u.x,u.y,tx,ty);
-        if(raw){u.path=smoothPath(g,raw,u.x,u.y);u.pathI=0;target=u.path[0]||{x:tx,y:ty};}
+        const raw=findPath(g,u.x,u.y,tx,ty,u.type);
+        if(raw){u.path=smoothPath(g,raw,u.x,u.y,u.type);u.pathI=0;target=u.path[0]||{x:tx,y:ty};}
         else target={x:tx,y:ty};
       }
       const base=unitSpeedInTerrain(g,u);
@@ -1085,12 +1191,12 @@ function updateUnit(g,u,dt){
       let nx=u.x+Math.cos(ang)*stepLen,ny=u.y+Math.sin(ang)*stepLen;
       const wasInForbidden = u.side==='def' && isDefForbiddenArea(g,u.x,u.y);
       if(u.side==='def'&&!wasInForbidden&&isDefForbiddenArea(g,nx,ny)){u.order=null;u.path=null;return;}
-      if(!canWalk(g,nx,ny)){
+      if(!canWalk(g,nx,ny,u.type)){
         let ok=false;
         for(const off of [.5,-.5,1.0,-1.0,1.5,-1.5,2.2,-2.2]){
           const a2=ang+off;
           const px=u.x+Math.cos(a2)*stepLen,py=u.y+Math.sin(a2)*stepLen;
-          if(canWalk(g,px,py)){
+          if(canWalk(g,px,py,u.type)){
             if(u.side==='def'&&!wasInForbidden&&isDefForbiddenArea(g,px,py))continue;
             ang=a2;nx=px;ny=py;ok=true;break;
           }
@@ -1131,12 +1237,12 @@ function updateUnit(g,u,dt){
       const ang=Math.atan2(u.y-target.y,u.x-target.x);
       const backX=u.x+Math.cos(ang)*20;
       const backY=u.y+Math.sin(ang)*20;
-      if(canWalk(g,backX,backY)){u.order={type:'move',x:backX,y:backY};u.path=null;u.pathI=0;}
+      if(canWalk(g,backX,backY,u.type)){u.order={type:'move',x:backX,y:backY};u.path=null;u.pathI=0;}
     } else if(dd>idealMax){
       const ang=Math.atan2(target.y-u.y,target.x-u.x);
       const fwdX=u.x+Math.cos(ang)*25;
       const fwdY=u.y+Math.sin(ang)*25;
-      if(canWalk(g,fwdX,fwdY)){u.order={type:'move',x:fwdX,y:fwdY};u.path=null;u.pathI=0;}
+      if(canWalk(g,fwdX,fwdY,u.type)){u.order={type:'move',x:fwdX,y:fwdY};u.path=null;u.pathI=0;}
     }
   }
   if(target&&u.cd<=0){
@@ -1159,11 +1265,11 @@ function updateUnit(g,u,dt){
   }
 }
 function findUnitById(g,id){for(const u of g.units)if(u.id===id)return u;return null;}
-
 function fire(g,u,target){
   const d=UNITS[u.type];
   let mult=1.0;
   if(target.observedTime&&target.observedTime>2)mult=1.25;
+  mult*=g.env.dmgMul||1;
   if(u.type==='art'){
     g.projectiles.push({x:u.x,y:u.y,tx:target.x+rnd(-12,12),ty:target.y+rnd(-12,12),t:0,flight:Math.max(.7,dist(u.x,u.y,target.x,target.y)/330),dmg:d.dmg*mult,splash:d.splash,side:u.side,neutral:false});
   }else{
@@ -1194,16 +1300,17 @@ function updateTurret(g,t,dt){
   if(t.cd>0)return;
   let best=null,bd=Infinity;
   const R=d.range;
+  const targetSide=(t.side==='def')?'atk':'def';
   for(const u of g.units){
-    if(u.side!=='atk'||!u.alive)continue;
+    if(u.side!==targetSide||!u.alive)continue;
     const dd=dist2(t.x,t.y,u.x,u.y);
     if(dd<R*R&&dd<bd){bd=dd;best=u;}
   }
   if(best){
     t.cd=d.cd;
-    const dmg=calcDamage(g,t,best,d.dmg);
-    applyDamage(g,best,dmg,'def');
-    addEffect(g,{type:'tracer',x1:t.x,y1:t.y,x2:best.x,y2:best.y,life:.1,max:.1,col:'#ffd07a'});
+    const dmg=calcDamage(g,t,best,d.dmg*(g.env.dmgMul||1));
+    applyDamage(g,best,dmg,t.side);
+    addEffect(g,{type:'tracer',x1:t.x,y1:t.y,x2:best.x,y2:best.y,life:.1,max:.1,col:t.side==='def'?'#ffd07a':'#9fd0ff'});
   }
 }
 function updateProjectiles(g,dt){
@@ -1277,7 +1384,6 @@ function orderMove(g,units,x,y){
     i++;
   }
 }
-
 function recycleUnit(g,u){
   if(!u.alive||u.side!==g.playerSide)return 0;
   const d=UNITS[u.type];
@@ -1294,14 +1400,13 @@ function recycleUnit(g,u){
   addEffect(g,{type:'cpreward',x:u.x,y:u.y,life:1.4,max:1.4,text:'+'+value+' CP'});
   return value;
 }
-
 function startDeploy(g,side,type,px,py,maxDist){
   const d=UNITS[type];
   const cost = side==='def' ? Math.round(d.cost*DEF_DEPLOY_COST_MUL) : d.cost;
   if(g.cp[side]<cost)return null;
+  const cap=DEPLOY_CAP[side]||24;
   const cnt=g.units.filter(u=>u.side===side&&u.alive).length+g.deploying.filter(x=>x.side===side).length;
-  const maxU=(g.aiSide===side)?DIFFS[g.cfg.diff].maxUnits:52;
-  if(cnt>=maxU){toast(g,'部队已达上限',side===g.playerSide?'bad':'');return null;}
+  if(cnt>=cap){if(side===g.playerSide)toast(g,'部署容量已满（'+cap+'）','bad');return null;}
   g.cp[side]-=cost;
   const baseTime=(side==='atk')?2.0:4.0;
   const dep={x:px,y:py,type,side,timeLeft:baseTime,total:baseTime,order:null,maxDist:maxDist||150};
@@ -1311,11 +1416,12 @@ function startDeploy(g,side,type,px,py,maxDist){
 function updateDeploy(g,dt){
   for(let i=g.deploying.length-1;i>=0;i--){
     const dep=g.deploying[i];
+    if(dep._client){ if(performance.now()>dep._endAt) g.deploying.splice(i,1); continue; }
     dep.timeLeft-=dt;
     if(dep.timeLeft<=0){
       let x=dep.x,y=dep.y,tries=0;
       const maxD=dep.maxDist||150;
-      while(!canWalk(g,x,y)&&tries<40){
+      while(!canWalk(g,x,y,dep.type)&&tries<40){
         const a=Math.random()*6.283,r=15+Math.random()*maxD*0.7;
         x=dep.x+Math.cos(a)*r;y=dep.y+Math.sin(a)*r;tries++;
       }
@@ -1327,7 +1433,6 @@ function updateDeploy(g,dt){
     }
   }
 }
-
 function distributeAlongLine(g,units,points){
   if(!points||points.length<2||units.length===0)return;
   let totalLen=0;
@@ -1358,34 +1463,65 @@ function distributeAlongLine(g,units,points){
 }
 function applyPlanToUnits(g,plan,units){
   if(!units||units.length===0)return;
-  if(plan.type==='front'||plan.type==='line'){
-    distributeAlongLine(g,units.filter(u=>u.side===plan.side),plan.points);
-  } else if(plan.type==='zone'){
+  if(plan.type==='front'||plan.type==='line')distributeAlongLine(g,units.filter(u=>u.side===plan.side),plan.points);
+  else if(plan.type==='zone'){
     for(const u of units){
       if(u.side!==plan.side)continue;
       const a=Math.random()*6.283;
       const r=Math.random()*plan.r*0.75;
       u.order={type:'move',x:plan.cx+Math.cos(a)*r,y:plan.cy+Math.sin(a)*r};
-      u.path=null;u.pathI=0;
-      u.holdPost=1;
+      u.path=null;u.pathI=0;u.holdPost=1;
     }
   }
 }
+/* ★ 计划只能分配给编队：若用框选，自动整理成一个新编队 */
+function ensureSelectionIsSquad(g){
+  if(g.selection.length===0)return null;
+  // 找出选择所属的编队
+  const selIds=g.selection.filter(u=>u.alive).map(u=>u.id).sort().join(',');
+  for(const k in g.squads){
+    const ids=(g.squads[k]||[]).filter(id=>{const u=findUnitById(g,id);return u&&u.alive;}).sort().join(',');
+    if(ids&&ids===selIds)return parseInt(k,10);
+  }
+  // 找一个空闲编队槽位
+  let slot=0;
+  for(let i=1;i<=9;i++){ if(!g.squads[i]||g.squads[i].length===0){slot=i;break;} }
+  if(slot===0){ // 全满，复用当前 hotSquad
+    slot=g.hotSquad&&g.squads[g.hotSquad]?g.hotSquad:1;
+  }
+  g.squads[slot]=g.selection.filter(u=>u.alive).map(u=>u.id);
+  toast(g,'已自动整理为编队 '+slot,'good');
+  refreshLeftPanel(g);
+  return slot;
+}
 function createPlan(g,type,data){
-  const plan={id:uid(),type,side:g.playerSide,state:type==='attack'?'idle':'active',unitIds:g.selection.filter(u=>u.alive).map(u=>u.id),created:g.time,...data};
+  const squadId=ensureSelectionIsSquad(g);
+  const plan={id:uid(),type,side:g.playerSide,state:type==='attack'?'idle':'active',
+    squadId:squadId,
+    unitIds:g.selection.filter(u=>u.alive).map(u=>u.id),
+    created:g.time,...data};
   g.plans.push(plan);
   if(type!=='attack')applyPlanToUnits(g,plan,g.selection.slice());
   refreshPlanSidebar(g);
   return plan;
 }
+function getPlanUnits(g,plan){
+  if(plan.squadId){
+    const sq=g.squads[plan.squadId]||[];
+    const units=[];
+    for(const id of sq){const u=findUnitById(g,id);if(u&&u.alive)units.push(u);}
+    return units;
+  }
+  return g.units.filter(u=>u.side===plan.side && plan.unitIds.includes(u.id) && u.alive);
+}
 function activatePlan(g,plan){
   if(plan.side!==g.playerSide)return;
   plan.state='active';
-  const units=g.units.filter(u=>u.side===plan.side && plan.unitIds.includes(u.id) && u.alive);
+  const units=getPlanUnits(g,plan);
+  if(units.length===0){toast(g,'该编队没有存活部队','bad');plan.state='idle';refreshPlanSidebar(g);return;}
   if(plan.type==='attack'){
     const targetPts=plan.targetPoints;
-    let targetLen=0;
-    const targetLens=[];
+    let targetLen=0;const targetLens=[];
     for(let i=0;i<targetPts.length-1;i++){const l=dist(targetPts[i].x,targetPts[i].y,targetPts[i+1].x,targetPts[i+1].y);targetLens.push(l);targetLen+=l;}
     for(let k=0;k<units.length;k++){
       const u=units[k];
@@ -1403,32 +1539,23 @@ function activatePlan(g,plan){
       if(tgt){u.order={type:'move',x:tgt.x+rnd(-25,25),y:tgt.y+rnd(-25,25)};u.path=null;u.pathI=0;u.holdPost=0;}
     }
     toast(g,'进攻计划已启动 · '+units.length+' 支部队出击','good');
-  } else if(plan.type==='front'||plan.type==='line'){
-    applyPlanToUnits(g,plan,units);
-    toast(g,'前线已激活','good');
-  } else if(plan.type==='zone'){
-    applyPlanToUnits(g,plan,units);
-    toast(g,'区域防卫已激活','good');
-  }
+  } else if(plan.type==='front'||plan.type==='line'){applyPlanToUnits(g,plan,units);toast(g,'前线已激活','good');}
+  else if(plan.type==='zone'){applyPlanToUnits(g,plan,units);toast(g,'区域防卫已激活','good');}
   refreshPlanSidebar(g);
 }
 function deactivatePlan(g,plan){
   if(plan.side!==g.playerSide)return;
   plan.state='idle';
-  const units=g.units.filter(u=>u.side===plan.side && plan.unitIds.includes(u.id) && u.alive);
+  const units=getPlanUnits(g,plan);
   if(plan.type==='attack'){
     const front=[...g.plans].filter(p=>p.side===plan.side&&(p.type==='front'||p.type==='line')).pop();
     const returnPts=front?front.points:plan.startPoints;
     if(returnPts&&returnPts.length>=2){distributeAlongLine(g,units,returnPts);toast(g,'进攻已中止 · 返回前线','good');}
     else{for(const u of units){u.order=null;u.holdPost=1;}toast(g,'进攻已中止','good');}
-  } else {
-    for(const u of units){u.order=null;u.holdPost=1;}
-    toast(g,'计划已中止','good');
-  }
+  } else {for(const u of units){u.order=null;u.holdPost=1;}toast(g,'计划已中止','good');}
   refreshPlanSidebar(g);
 }
 function removePlan(g,planId){g.plans=g.plans.filter(p=>p.id!==planId);refreshPlanSidebar(g);}
-
 function refreshPlanSidebar(g){
   const list=document.getElementById('planList');
   if(!list)return;
@@ -1443,18 +1570,18 @@ function refreshPlanSidebar(g){
     else if(p.type==='attack'){typeName='进攻';typeCls='attack';}
     else if(p.type==='zone'){typeName='区域防卫';typeCls='zone';}
     else if(p.type==='line'){typeName='线性防卫';typeCls='line';}
-    const liveCount=p.unitIds.filter(id=>{const u=findUnitById(g,id);return u&&u.alive;}).length;
+    const liveCount=getPlanUnits(g,p).length;
     const stateTxt=p.state==='active'?'执行中':'待命';
+    const squadTxt=p.squadId?'编队 '+p.squadId:'—';
     let btns='';
     if(p.state==='active')btns='<button class="pi-btn stop" data-act="stop" data-id="'+p.id+'">中止</button>';
     else btns='<button class="pi-btn start" data-act="start" data-id="'+p.id+'">启动</button>';
-    item.innerHTML='<div class="pi-title"><span>#'+(idx+1)+'</span><span class="pi-type '+typeCls+'">'+typeName+'</span></div><div class="pi-info">部队 '+liveCount+' 支 · '+stateTxt+'</div><div class="pi-btns">'+btns+'<button class="pi-btn" data-act="focus" data-id="'+p.id+'">定位</button><button class="pi-btn del" data-act="del" data-id="'+p.id+'">×</button></div>';
+    item.innerHTML='<div class="pi-title"><span>#'+(idx+1)+'</span><span class="pi-type '+typeCls+'">'+typeName+'</span></div><div class="pi-info">'+squadTxt+' · '+liveCount+' 支 · '+stateTxt+'</div><div class="pi-btns">'+btns+'<button class="pi-btn" data-act="focus" data-id="'+p.id+'">定位</button><button class="pi-btn del" data-act="del" data-id="'+p.id+'">×</button></div>';
     list.appendChild(item);
   });
   list.querySelectorAll('.pi-btn').forEach(btn=>{
     btn.onclick=()=>{
-      const act=btn.dataset.act;
-      const id=parseInt(btn.dataset.id,10);
+      const act=btn.dataset.act;const id=parseInt(btn.dataset.id,10);
       const plan=g.plans.find(p=>p.id===id);
       if(!plan)return;
       if(act==='start')activatePlan(g,plan);
@@ -1463,16 +1590,12 @@ function refreshPlanSidebar(g){
       else if(act==='focus'){
         let cx,cy;
         if(plan.type==='zone'){cx=plan.cx;cy=plan.cy;}
-        else{
-          const pts=plan.type==='attack'?plan.targetPoints:plan.points;
-          if(pts&&pts.length){cx=pts[Math.floor(pts.length/2)].x;cy=pts[Math.floor(pts.length/2)].y;}
-        }
+        else{const pts=plan.type==='attack'?plan.targetPoints:plan.points;if(pts&&pts.length){cx=pts[Math.floor(pts.length/2)].x;cy=pts[Math.floor(pts.length/2)].y;}}
         if(cx!==undefined){g.cam.x=cx;g.cam.y=cy;}
       }
     };
   });
 }
-
 function checkVictory(g){
   if(g.tutorial) return;
   const hq=g.posts.find(p=>p.type==='hq');
@@ -1486,16 +1609,15 @@ function endGame(g,winner){
   removeTutBox();
   g.state='over';g.result=winner;
   const playerWin=(winner===g.playerSide);
-  const rt=document.getElementById('rTitle');
-  const rs=document.getElementById('rSub');
-  const rl=document.getElementById('result');
+  const rt=document.getElementById('rTitle');const rs=document.getElementById('rSub');const rl=document.getElementById('result');
   rt.textContent=playerWin?'胜  利':'失  败';
   rl.className='overlay '+(playerWin?'win':'lose');
   rl.classList.remove('hidden');
   const hq=g.posts.find(p=>p.type==='hq');
   const branches=g.posts.filter(p=>p.type==='branch');
   const atkB=branches.filter(p=>p.owner==='atk').length;
-  rs.innerHTML=(winner==='atk'?'攻方成功夺取大本营与多数支部':'守方坚守阵地至最后一刻')+'<br>用时 '+fmtTime(g.time)+' · 攻方控制支部 '+atkB+'/'+branches.length+'<br>大本营状态：'+(hq.owner==='atk'?'<span style="color:#ff8a5c">失守</span>':'<span style="color:#6cb6ff">完好</span>');
+  const s=SEASONS[g.season];
+  rs.innerHTML=(winner==='atk'?'攻方成功夺取大本营与多数支部':'守方坚守阵地至最后一刻')+'<br>用时 '+fmtTime(g.time)+' · 攻方控制支部 '+atkB+'/'+branches.length+'<br>大本营状态：'+(hq.owner==='atk'?'<span style="color:#ff8a5c">失守</span>':'<span style="color:#6cb6ff">完好</span>')+'<br>环境：'+s.icon+s.n+' · '+s.desc;
   show(document.getElementById('hud'),false);
 }
 function fmtTime(t){const m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+(s<10?'0':'')+s;}
@@ -1520,13 +1642,14 @@ function aiTick(g,dt,ai){
   g.ai.timer=cfg.interval;
   const myUnits=g.units.filter(u=>u.side===ai&&u.alive);
   const deployingCnt=g.deploying.filter(d=>d.side===ai).length;
-  if(myUnits.length+deployingCnt>=cfg.maxUnits)return;
+  const cap=DEPLOY_CAP[ai]||24;
+  if(myUnits.length+deployingCnt>=cap)return;
   const spawns=getSpawnPoints(g,ai);
   if(spawns.length===0)return;
   let type='inf';
   const cp=g.cp[ai];const r=Math.random();
   if(cp>=32&&r<.20)type='art';
-  else if(cp>=24&&r<.52)type='arm';
+  else if(cp>=30&&r<.52)type='arm';
   else if(myUnits.filter(u=>u.type==='scout').length<2&&cp>=6)type='scout';
   else if(myUnits.filter(u=>u.type==='eng').length<3&&cp>=10&&Math.random()<.4)type='eng';
   else if(cp>=8)type='inf';
@@ -1581,6 +1704,15 @@ function useSkill(g,side,key,x,y){
     if(!inRange){for(const p of g.posts){if(p.owner!==side)continue;if(dist(p.x,p.y,x,y)<=s.maxRange){inRange=true;break;}}}
     if(!inRange){if(side===g.playerSide)toast(g,'超出射程 · 需己方基地/据点1500范围内','bad');return false;}
   }
+  // 炮火覆盖：必须在友方单位 420 范围内
+  if(s.friendlyRange){
+    let ok=false;
+    for(const u of g.units){
+      if(u.side!==side||!u.alive)continue;
+      if(dist(u.x,u.y,x,y)<=s.friendlyRange){ok=true;break;}
+    }
+    if(!ok){if(side===g.playerSide)toast(g,'炮火覆盖必须在我方单位420范围内','bad');return false;}
+  }
   g.cp[side]-=s.cost;
   g.cd[side][key]=s.cd;
   if(key==='recon'){g.recon.push({side,x,y,r:s.radius,until:g.time+s.dur});addEffect(g,{type:'recon',x,y,r:s.radius,life:s.dur,max:s.dur});recomputeVis(g,side);}
@@ -1588,41 +1720,55 @@ function useSkill(g,side,key,x,y){
   return true;
 }
 
+/* ==================== 渲染 ==================== */
 let lastT=performance.now(),acc=0,lastRender=0;
 function loop(t){
   requestAnimationFrame(loop);
   const dt=(t-lastT)/1000;lastT=t;
-  if(G&&G.state==='playing'){acc+=Math.min(dt,.3);let steps=0;while(acc>=TICK&&steps<10){step(TICK);acc-=TICK;steps++;}if(steps>=10)acc=0;}
+  if(G&&G.state==='playing'){
+    if(Net.role!=='client'){
+      acc+=Math.min(dt,.3);let steps=0;
+      while(acc>=TICK&&steps<10){step(TICK);acc-=TICK;steps++;}
+      if(steps>=10)acc=0;
+    }else{
+      clientTick(G,Math.min(dt,.1));
+    }
+  }
   const minInterval=1000/CFG.fps-1;
   if(t-lastRender>=minInterval){lastRender=t;render();}
 }
-
+function clientTick(g,dt){
+  for(let i=g.effects.length-1;i>=0;i--){g.effects[i].life-=dt;if(g.effects[i].life<=0)g.effects.splice(i,1);}
+  const now=performance.now();
+  if(g.deploying&&g.deploying.length){
+    g.deploying=g.deploying.filter(d=>!d._client||now<d._endAt);
+  }
+  if(g._clientStrikes&&g._clientStrikes.length){
+    for(let i=g._clientStrikes.length-1;i>=0;i--){
+      const sk=g._clientStrikes[i];
+      while(sk.nextBoom<=now&&sk.nextBoom<sk.endAt){
+        const a=Math.random()*6.283,rr=Math.random()*sk.radius;
+        addEffect(g,{type:'boom',x:sk.x+Math.cos(a)*rr,y:sk.y+Math.sin(a)*rr,r:30,life:.5,max:.5});
+        sk.nextBoom+=sk.interval;
+      }
+      if(now>=sk.endAt)g._clientStrikes.splice(i,1);
+    }
+  }
+  for(let i=g.recon.length-1;i>=0;i--){ if(g.recon[i].until<g.time)g.recon.splice(i,1); }
+}
 function render(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
-  ctx.fillStyle='#05080c';
-  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#05080c';ctx.fillRect(0,0,W,H);
   if(!G)return;
   const g=G,cam=g.cam;
   const shx=g.shake>0?rnd(-1,1)*g.shake*7:0;
   const shy=g.shake>0?rnd(-1,1)*g.shake*7:0;
-
   if(Net.role==='client'){
     const k=1-Math.pow(0.001,0.05);
-    for(const u of g.units){
-      if(u._netTarget){
-        u.x+=(u._netTarget.x-u.x)*k;
-        u.y+=(u._netTarget.y-u.y)*k;
-      }
-    }
+    for(const u of g.units){if(u._netTarget){u.x+=(u._netTarget.x-u.x)*k;u.y+=(u._netTarget.y-u.y)*k;}}
   }
-
-  ctx.save();
-  ctx.translate(W/2+shx,H/2+shy);
-  ctx.scale(cam.zoom,cam.zoom);
-  ctx.translate(-cam.x,-cam.y);
-
+  ctx.save();ctx.translate(W/2+shx,H/2+shy);ctx.scale(cam.zoom,cam.zoom);ctx.translate(-cam.x,-cam.y);
   if(g.terrainCanvas)ctx.drawImage(g.terrainCanvas,0,0);
-
   for(const plan of g.plans){
     if(plan.side!==g.playerSide)continue;
     const active=plan.state==='active';
@@ -1632,8 +1778,7 @@ function render(){
       ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
       for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);
       ctx.strokeStyle=col;ctx.lineWidth=3.5/cam.zoom;
-      if(!active)ctx.setLineDash([14,8]);
-      ctx.stroke();ctx.setLineDash([]);
+      if(!active)ctx.setLineDash([14,8]);ctx.stroke();ctx.setLineDash([]);
       for(const pt of pts){ctx.beginPath();ctx.arc(pt.x,pt.y,5/cam.zoom,0,6.284);ctx.fillStyle=active?(plan.type==='front'?'#9fd8ff':'#c8a8ff'):'rgba(159,216,255,.5)';ctx.fill();}
     } else if(plan.type==='zone'){
       ctx.beginPath();ctx.arc(plan.cx,plan.cy,plan.r,0,6.284);
@@ -1652,7 +1797,6 @@ function render(){
       if(!active)ctx.setLineDash([10,8]);ctx.stroke();ctx.setLineDash([]);
     }
   }
-
   if(g.planMode&&g.planPts.length>0){
     const pts=g.planPts;
     if(g.planMode==='zone'&&pts.length>0){
@@ -1677,13 +1821,11 @@ function render(){
       for(let i=0;i<pts.length;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,5/cam.zoom,0,6.284);ctx.fillStyle=col;ctx.fill();}
     }
   }
-
   if(g.spawnPoint){
     ctx.beginPath();ctx.arc(g.spawnPoint.x,g.spawnPoint.y,g.forbiddenRadius||350,0,6.284);
     ctx.strokeStyle='rgba(232,83,63,.20)';ctx.lineWidth=1.5/cam.zoom;
     ctx.setLineDash([10,10]);ctx.stroke();ctx.setLineDash([]);
   }
-
   if(g.mode==='deploy'){
     for(const dp of g.deployPoints){
       if(dp.side!==g.playerSide)continue;
@@ -1691,15 +1833,12 @@ function render(){
       ctx.fillStyle='rgba(255,180,90,.08)';ctx.fill();
       ctx.strokeStyle='rgba(255,180,90,.6)';ctx.lineWidth=2/cam.zoom;
       ctx.setLineDash([8,6]);ctx.stroke();ctx.setLineDash([]);
-      ctx.beginPath();ctx.arc(dp.x,dp.y,6/cam.zoom,0,6.284);
-      ctx.fillStyle='#ffb45a';ctx.fill();
-      ctx.fillStyle='#1a1a1a';
-      ctx.font='bold '+(9/cam.zoom)+'px sans-serif';
+      ctx.beginPath();ctx.arc(dp.x,dp.y,6/cam.zoom,0,6.284);ctx.fillStyle='#ffb45a';ctx.fill();
+      ctx.fillStyle='#1a1a1a';ctx.font='bold '+(9/cam.zoom)+'px sans-serif';
       ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText('+',dp.x,dp.y+1);
     }
   }
-
   for(const tr of g.trenches){
     const known=(tr.side===g.playerSide)||visible(g,g.playerSide,tr.x,tr.y);
     if(!known)continue;
@@ -1708,14 +1847,14 @@ function render(){
     ctx.strokeStyle=tr.side==='atk'?'rgba(255,140,90,.55)':'rgba(120,190,255,.55)';
     ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([]);
   }
-
   for(const p of g.posts)drawPost(g,p);
-
   for(const t of g.turrets){
-    if(g.playerSide!=='def'&&!visible(g,g.playerSide,t.x,t.y))continue;
-    drawTurret(g,t);
+    const isOwn=(t.side===g.playerSide);
+    const inView=visible(g,g.playerSide,t.x,t.y);
+    const discovered=t.discovered||inView||isOwn;
+    if(!discovered)continue;
+    drawTurret(g,t,inView||isOwn);
   }
-
   for(const dep of g.deploying){
     if(dep.side!==g.playerSide&&!visible(g,g.playerSide,dep.x,dep.y))continue;
     const prog=1-dep.timeLeft/dep.total;
@@ -1728,30 +1867,24 @@ function render(){
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(UNITS[dep.type].n[0],dep.x,dep.y);
   }
-
   for(const u of g.units){
     if(!u.alive)continue;
     if(u.side!==g.playerSide&&!visible(g,g.playerSide,u.x,u.y))continue;
     drawUnit(g,u);
   }
-
   for(const p of g.projectiles){
     const pr=p.t/p.flight;
-    const x=lerp(p.x,p.tx,pr);
-    const y=lerp(p.y,p.ty,pr)-Math.sin(pr*Math.PI)*90;
+    const x=lerp(p.x,p.tx,pr);const y=lerp(p.y,p.ty,pr)-Math.sin(pr*Math.PI)*90;
     ctx.beginPath();ctx.arc(x,y,3,0,6.284);
     ctx.fillStyle=p.neutral?'#ffce6b':(p.side==='atk'?'#ffb27a':'#9fd0ff');ctx.fill();
   }
-
   if(CFG.fx)drawEffects(g);
-
   if(g.drag&&g.drag.active&&g.drag.box){
     const b=g.drag.box;
     ctx.strokeStyle='rgba(120,220,160,.95)';ctx.lineWidth=2/cam.zoom;
     ctx.fillStyle='rgba(120,220,160,.14)';
     ctx.fillRect(b.x,b.y,b.w,b.h);ctx.strokeRect(b.x,b.y,b.w,b.h);
   }
-
   const pulse=0.5+0.5*Math.sin(performance.now()/240);
   for(const u of g.selection){
     if(!u.alive)continue;
@@ -1760,26 +1893,20 @@ function render(){
     ctx.strokeStyle='rgba(125,255,176,'+(0.6+pulse*0.4)+')';
     ctx.lineWidth=2.2/cam.zoom;ctx.stroke();
   }
-
   for(const k in g.squads){
     const sq=g.squads[k];
     if(!sq||sq.length===0)continue;
     const color=SQUAD_COLORS[parseInt(k,10)-1];
     for(const id of sq){
       const u=findUnitById(g,id);
-      if(!u||!u.alive)continue;
-      if(u.side!==g.playerSide)continue;
+      if(!u||!u.alive||u.side!==g.playerSide)continue;
       if(!visible(g,g.playerSide,u.x,u.y))continue;
       const r=UNITS[u.type].r+3;
       ctx.beginPath();ctx.arc(u.x,u.y,r,0,6.284);
-      ctx.strokeStyle=color;
-      ctx.globalAlpha=0.7;
-      ctx.lineWidth=2/cam.zoom;
-      ctx.stroke();
+      ctx.strokeStyle=color;ctx.globalAlpha=0.7;ctx.lineWidth=2/cam.zoom;ctx.stroke();
       ctx.globalAlpha=1;
     }
   }
-
   if(g._hoverUnit&&!g.selection.includes(g._hoverUnit)){
     const u=g._hoverUnit;
     if(u.alive){
@@ -1788,7 +1915,6 @@ function render(){
       ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
     }
   }
-
   if(g.radialTargets){
     const pl=0.5+0.5*Math.sin(performance.now()/180);
     for(const u of g.radialTargets){
@@ -1801,12 +1927,18 @@ function render(){
       ctx.setLineDash([]);ctx.lineDashOffset=0;
     }
   }
-
   if(g.mode==='skill'&&g.pointerWorld){
     const s=SKILLS[g.pendingSkill];
     ctx.beginPath();ctx.arc(g.pointerWorld.x,g.pointerWorld.y,s.radius,0,6.284);
     ctx.fillStyle=s.neutral?'rgba(255,206,107,.15)':'rgba(255,120,80,.13)';ctx.fill();
     ctx.strokeStyle=s.neutral?'rgba(255,206,107,.85)':'rgba(255,140,90,.85)';ctx.lineWidth=2/cam.zoom;ctx.stroke();
+    if(s.friendlyRange){
+      let hasFriendly=false;
+      for(const u of g.units){if(u.side===g.playerSide&&u.alive&&dist(u.x,u.y,g.pointerWorld.x,g.pointerWorld.y)<=s.friendlyRange){hasFriendly=true;break;}}
+      ctx.beginPath();ctx.arc(g.pointerWorld.x,g.pointerWorld.y,s.friendlyRange,0,6.284);
+      ctx.strokeStyle=hasFriendly?'rgba(120,255,180,.6)':'rgba(255,120,120,.6)';ctx.lineWidth=1.5/cam.zoom;
+      ctx.setLineDash([10,8]);ctx.stroke();ctx.setLineDash([]);
+    }
     if(s.maxRange){
       ctx.beginPath();ctx.arc(g.pointerWorld.x,g.pointerWorld.y,s.maxRange,0,6.284);
       ctx.strokeStyle='rgba(255,140,90,.20)';ctx.lineWidth=1/cam.zoom;
@@ -1817,10 +1949,14 @@ function render(){
     ctx.beginPath();ctx.arc(g.pointerWorld.x,g.pointerWorld.y,20,0,6.284);
     ctx.strokeStyle='rgba(255,180,90,.9)';ctx.lineWidth=2/cam.zoom;ctx.stroke();
   }
-
   ctx.restore();
+  // 夜晚调色
+  if(g.env.dayAmount<1&&g.state==='playing'){
+    const alpha=(1-g.env.dayAmount)*0.42;
+    ctx.fillStyle='rgba(8,16,42,'+alpha+')';
+    ctx.fillRect(0,0,W,H);
+  }
 }
-
 function drawPost(g,p){
   const col=p.owner==='atk'?'#ff6b42':(p.owner==='def'?'#4c9cff':'#8899aa');
   const R=p.type==='hq'?50:36;
@@ -1858,19 +1994,27 @@ function drawPost(g,p){
     ctx.fillText('整合中',p.x,p.y+R+28);
   }
 }
-function drawTurret(g,t){
-  const known=(g.playerSide==='def')||visible(g,g.playerSide,t.x,t.y);
-  if(!known)return;
-  const col=t.type==='bunker'?'#8ad0ff':'#5fa8ff';
+/* ★ drawTurret 增加 showHp 参数 */
+function drawTurret(g,t,showHp){
+  const col=t.type==='bunker'?'#8ad0ff':(t.type==='watchtower'?'#a0d8a0':'#5fa8ff');
   ctx.save();ctx.translate(t.x,t.y);
   ctx.beginPath();ctx.arc(0,0,t.r+4,0,6.284);
   ctx.fillStyle='rgba(10,18,28,.9)';ctx.fill();
   ctx.lineWidth=2.5;ctx.strokeStyle=col;ctx.stroke();
   ctx.beginPath();ctx.arc(0,0,t.r*.62,0,6.284);
-  ctx.fillStyle=t.type==='bunker'?'#2e4a3a':'#2a4a6e';ctx.fill();
+  ctx.fillStyle=t.type==='bunker'?'#2e4a3a':(t.type==='watchtower'?'#3a4a30':'#2a4a6e');ctx.fill();
   ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
   if(t.type==='bunker'){
     for(let i=0;i<4;i++){const a=i*Math.PI/2;ctx.beginPath();ctx.moveTo(Math.cos(a)*(t.r*0.3),Math.sin(a)*(t.r*0.3));ctx.lineTo(Math.cos(a)*(t.r+5),Math.sin(a)*(t.r+5));ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.stroke();}
+  }else if(t.type==='watchtower'){
+    // 三角塔形
+    ctx.beginPath();
+    ctx.moveTo(0,-t.r-4);
+    ctx.lineTo(t.r*0.7,t.r*0.5);
+    ctx.lineTo(-t.r*0.7,t.r*0.5);
+    ctx.closePath();
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,-t.r-4);ctx.lineTo(0,t.r*0.5);ctx.stroke();
   }else{
     ctx.beginPath();ctx.moveTo(0,0);
     const a=(t.type==='fort')?-Math.PI/2:(-Math.PI/2+.5);
@@ -1878,11 +2022,14 @@ function drawTurret(g,t){
     ctx.strokeStyle=col;ctx.lineWidth=3.5;ctx.lineCap='round';ctx.stroke();
   }
   ctx.restore();
-  const hw=26;
-  ctx.fillStyle='rgba(0,0,0,.65)';
-  ctx.fillRect(t.x-hw/2,t.y-t.r-11,hw,4);
-  ctx.fillStyle=col;
-  ctx.fillRect(t.x-hw/2,t.y-t.r-11,hw*(t.hp/t.maxHp),4);
+  // 已发现但不在视野内 → 不显示血条
+  if(showHp){
+    const hw=26;
+    ctx.fillStyle='rgba(0,0,0,.65)';
+    ctx.fillRect(t.x-hw/2,t.y-t.r-11,hw,4);
+    ctx.fillStyle=col;
+    ctx.fillRect(t.x-hw/2,t.y-t.r-11,hw*(t.hp/t.maxHp),4);
+  }
 }
 function drawUnit(g,u){
   const d=UNITS[u.type];
@@ -1919,18 +2066,13 @@ function drawUnit(g,u){
   }
   ctx.restore();
   if(u.hp<u.maxHp){
-    const hw=Math.max(14,d.r*2.4);
-    const yy=u.y-d.r-8;
-    ctx.fillStyle='rgba(0,0,0,.7)';
-    ctx.fillRect(u.x-hw/2,yy,hw,3.5);
+    const hw=Math.max(14,d.r*2.4);const yy=u.y-d.r-8;
+    ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(u.x-hw/2,yy,hw,3.5);
     const p=u.hp/u.maxHp;
     ctx.fillStyle=p>.55?'#5fd88a':(p>.25?'#ffce6b':'#ff6b4a');
     ctx.fillRect(u.x-hw/2,yy,hw*p,3.5);
   }
-  if(u.holdPost){
-    ctx.beginPath();ctx.arc(u.x,u.y-d.r-3,2.2,0,6.284);
-    ctx.fillStyle='#9fd8ff';ctx.fill();
-  }
+  if(u.holdPost){ctx.beginPath();ctx.arc(u.x,u.y-d.r-3,2.2,0,6.284);ctx.fillStyle='#9fd8ff';ctx.fill();}
 }
 function drawEffects(g){
   for(const e of g.effects){
@@ -1966,9 +2108,9 @@ function drawEffects(g){
   }
 }
 
+/* ==================== 输入 ==================== */
 const pointers=new Map();
 let pinchStart=null,longPressTimer=null,pendingLongPress=null,hoverTipEl=null,lastTapTime=0,lastTapX=0,lastTapY=0;
-
 function screenToWorld(sx,sy){const g=G;return{x:(sx-W/2)/g.cam.zoom+g.cam.x,y:(sy-H/2)/g.cam.zoom+g.cam.y};}
 function cancelPendingLongPress(){if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}pendingLongPress=null;}
 function isClientWaiting(){return Net.role==='client'&&!G._clientReady;}
@@ -1984,8 +2126,7 @@ cv.addEventListener('pointerdown',e=>{
     cancelPendingLongPress();
     const ps=[...pointers.values()];
     pinchStart={d:dist(ps[0].x,ps[0].y,ps[1].x,ps[1].y),zoom:G.cam.zoom};
-    G.drag=null;
-    return;
+    G.drag=null;return;
   }
   if(pointers.size===1){
     const w=screenToWorld(mx,my);
@@ -1999,29 +2140,21 @@ cv.addEventListener('pointerdown',e=>{
       if(!pendingLongPress||!pointers.has(e.pointerId))return;
       const pp=pointers.get(e.pointerId);
       if(pp.moved)return;
-      if(pendingLongPress.unitUnder){
-        openRadial(G,pendingLongPress.mx,pendingLongPress.my,pendingLongPress.unitUnder);
-        if(navigator.vibrate)navigator.vibrate(15);
-      } else {
-        G.drag={active:true,x0:pendingLongPress.wx,y0:pendingLongPress.wy,box:null};
-        if(navigator.vibrate)navigator.vibrate(10);
-      }
+      if(pendingLongPress.unitUnder){openRadial(G,pendingLongPress.mx,pendingLongPress.my,pendingLongPress.unitUnder);if(navigator.vibrate)navigator.vibrate(15);}
+      else{G.drag={active:true,x0:pendingLongPress.wx,y0:pendingLongPress.wy,box:null};if(navigator.vibrate)navigator.vibrate(10);}
       longPressTimer=null;pendingLongPress=null;
     },350);
   }
 });
-
 cv.addEventListener('pointermove',e=>{
   if(!G)return;
   const p=pointers.get(e.pointerId);
   const rect=cv.getBoundingClientRect();
   const mx=e.clientX-rect.left,my=e.clientY-rect.top;
-  G.pointerScreen={x:mx,y:my};
-  G.pointerWorld=screenToWorld(mx,my);
+  G.pointerScreen={x:mx,y:my};G.pointerWorld=screenToWorld(mx,my);
   if(e.pointerType==='mouse'&&!p&&G.state==='playing')updateHover(mx,my);
   if(!p)return;
-  const dx=mx-p.x,dy=my-p.y;
-  p.x=mx;p.y=my;
+  const dx=mx-p.x,dy=my-p.y;p.x=mx;p.y=my;
   const td=Math.sqrt((mx-p.startX)*(mx-p.startX)+(my-p.startY)*(my-p.startY));
   if(td>8){p.moved=true;if(longPressTimer){cancelPendingLongPress();}}
   if(pointers.size===2&&pinchStart){
@@ -2035,37 +2168,27 @@ cv.addEventListener('pointermove',e=>{
       const w=screenToWorld(mx,my);
       G.drag.box={x:Math.min(G.drag.x0,w.x),y:Math.min(G.drag.y0,w.y),w:Math.abs(w.x-G.drag.x0),h:Math.abs(w.y-G.drag.y0)};
     } else if(p.moved){
-      p.dragged=true;
-      G.cam.x-=dx/G.cam.zoom;G.cam.y-=dy/G.cam.zoom;
-      clampCam(G);
+      p.dragged=true;G.cam.x-=dx/G.cam.zoom;G.cam.y-=dy/G.cam.zoom;clampCam(G);
       if(G.tutorial) G.tutorial.lastEv={type:'cam'};
     }
   }
 });
-
 cv.addEventListener('pointerup',e=>{
-  const p=pointers.get(e.pointerId);
-  pointers.delete(e.pointerId);
+  const p=pointers.get(e.pointerId);pointers.delete(e.pointerId);
   if(pointers.size<2)pinchStart=null;
   cancelPendingLongPress();
   if(!p||!G)return;
   if(G.drag&&G.drag.active){
-    const box=G.drag.box;
-    G.drag=null;
+    const box=G.drag.box;G.drag=null;
     if(box&&box.w>8&&box.h>8){
       const sel=[];
-      for(const u of G.units){
-        if(u.side!==G.playerSide||!u.alive)continue;
-        if(u.x>=box.x&&u.x<=box.x+box.w&&u.y>=box.y&&u.y<=box.y+box.h)sel.push(u);
-      }
+      for(const u of G.units){if(u.side!==G.playerSide||!u.alive)continue;if(u.x>=box.x&&u.x<=box.x+box.w&&u.y>=box.y&&u.y<=box.y+box.h)sel.push(u);}
       if(e.shiftKey){for(const u of sel)if(!G.selection.includes(u))G.selection.push(u);}
       else G.selection=sel;
       updateSelInfo(G);
       if(G.selection.length>0)toast(G,'选中 '+G.selection.length+' 支部队','good');
       else if(!e.shiftKey)toast(G,'未框选到部队','bad');
-    } else {
-      if(!e.shiftKey){G.selection=[];updateSelInfo(G);}
-    }
+    } else {if(!e.shiftKey){G.selection=[];updateSelInfo(G);}}
     return;
   }
   if(p.moved)return;
@@ -2077,22 +2200,10 @@ cv.addEventListener('pointerup',e=>{
   lastTapTime=now;lastTapX=mx;lastTapY=my;
   handleClick(mx,my,e.shiftKey,isDoubleTap);
 });
-
-cv.addEventListener('pointercancel',e=>{
-  pointers.delete(e.pointerId);pinchStart=null;
-  cancelPendingLongPress();
-  if(G)G.drag=null;
-});
-cv.addEventListener('wheel',e=>{
-  if(!G)return;
-  e.preventDefault();
-  const f=e.deltaY>0?.88:1.14;
-  G.cam.zoom=clamp(G.cam.zoom*f,.42,2.2);clampCam(G);
-},{passive:false});
+cv.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);pinchStart=null;cancelPendingLongPress();if(G)G.drag=null;});
+cv.addEventListener('wheel',e=>{if(!G)return;e.preventDefault();const f=e.deltaY>0?.88:1.14;G.cam.zoom=clamp(G.cam.zoom*f,.42,2.2);clampCam(G);},{passive:false});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
-
 function clampCam(g){const pad=100;g.cam.x=clamp(g.cam.x,-pad,MAP_W*CELL+pad);g.cam.y=clamp(g.cam.y,-pad,MAP_H*CELL+pad);}
-
 function updateHover(mx,my){
   if(!G||G.state!=='playing'){hideHoverTip();return;}
   const w=screenToWorld(mx,my);
@@ -2103,9 +2214,7 @@ function updateHover(mx,my){
     if(isEnemy&&!visible(G,G.playerSide,u.x,u.y))continue;
     if(dist(w.x,w.y,u.x,u.y)<UNITS[u.type].r+14){hovered={type:'unit',obj:u};break;}
   }
-  if(!hovered&&G.playerSide==='def'){
-    for(const t of G.turrets){if(dist(w.x,w.y,t.x,t.y)<t.r+14){hovered={type:'turret',obj:t};break;}}
-  }
+  if(!hovered&&G.playerSide==='def'){for(const t of G.turrets){if(dist(w.x,w.y,t.x,t.y)<t.r+14){hovered={type:'turret',obj:t};break;}}}
   if(!hovered){for(const p of G.posts){if(dist(w.x,w.y,p.x,p.y)<(p.type==='hq'?50:36)){hovered={type:'post',obj:p};break;}}}
   if(!hovered){G._hoverUnit=null;hideHoverTip();return;}
   G._hoverUnit=hovered.type==='unit'?hovered.obj:null;
@@ -2114,13 +2223,10 @@ function updateHover(mx,my){
   if(hovered.type==='unit'){
     const u=hovered.obj,d=UNITS[u.type];
     const isEnemy=u.side!==G.playerSide;
-    const obs=u.observedTime||0;
-    const obsTxt=obs>2?' <span style="color:#66e09a">[情报+25%]</span>':(obs>0?' <span style="color:#ffce6b">[观察 '+obs.toFixed(1)+'s]</span>':'');
     html='<div class="ht-name '+(isEnemy?'enemy':'')+'">'+d.n+(isEnemy?' [敌]':'')+'</div>'+
       '<div class="ht-row"><span class="ht-label">生命</span><span class="ht-val">'+Math.ceil(u.hp)+'/'+u.maxHp+'</span></div>'+
       '<div class="ht-row"><span class="ht-label">射程</span><span class="ht-val">'+d.range+'</span></div>'+
-      (u.holdPost?'<div class="ht-row" style="color:#9fd8ff">[驻守中]</div>':'')+
-      (obsTxt?'<div class="ht-row">'+obsTxt+'</div>':'');
+      (u.holdPost?'<div class="ht-row" style="color:#9fd8ff">[驻守中]</div>':'');
   }else if(hovered.type==='turret'){
     const t=hovered.obj,d=TURRETS[t.type];
     html='<div class="ht-name turret">'+d.n+'</div>'+
@@ -2132,8 +2238,7 @@ function updateHover(mx,my){
     const ownerTxt=p.owner==='atk'?'攻方':(p.owner==='def'?'守方':'中立');
     html='<div class="ht-name">'+p.name+'</div>'+
       '<div class="ht-row"><span class="ht-label">控制</span><span class="ht-val">'+ownerTxt+'</span></div>'+
-      '<div class="ht-row"><span class="ht-label">占领</span><span class="ht-val">'+Math.round(p.cap)+'%</span></div>'+
-      (p.owner==='atk'&&p.integrate<1?'<div class="ht-row" style="color:#ffce6b">整合中 '+Math.round(p.integrate*100)+'%</div>':'');
+      '<div class="ht-row"><span class="ht-label">占领</span><span class="ht-val">'+Math.round(p.cap)+'%</span></div>';
   }
   hoverTipEl.innerHTML=html;
   hoverTipEl.classList.remove('hidden');
@@ -2141,94 +2246,126 @@ function updateHover(mx,my){
   let tx=mx+14,ty=my+14;
   if(tx+tipW>W)tx=mx-tipW-14;
   if(ty+tipH>H)ty=my-tipH-14;
-  hoverTipEl.style.left=tx+'px';
-  hoverTipEl.style.top=ty+'px';
+  hoverTipEl.style.left=tx+'px';hoverTipEl.style.top=ty+'px';
 }
 function hideHoverTip(){if(hoverTipEl)hoverTipEl.classList.add('hidden');}
 cv.addEventListener('pointerleave',hideHoverTip);
 
-function handleClick(mx,my,shiftKey,isDoubleTap){
-  const g=G;
-  const w=screenToWorld(mx,my);
+/* 客户端本地技能视觉 */
+function spawnClientSkillVisual(g,key,x,y){
+  const s=SKILLS[key];
+  if(key==='recon'){
+    g.recon.push({side:g.playerSide,x,y,r:s.radius,until:g.time+s.dur});
+    addEffect(g,{type:'recon',x,y,r:s.radius,life:s.dur,max:s.dur});
+    return;
+  }
+  addEffect(g,{type:'target',x,y,r:s.radius,life:1.6,max:1.6});
+  g._clientStrikes=g._clientStrikes||[];
+  const now=performance.now();
+  g._clientStrikes.push({x,y,radius:s.radius,nextBoom:now+1600,endAt:now+(1.6+s.dur)*1000,interval:key==='airstrike'?300:500});
+}
 
+function handleClick(mx,my,shiftKey,isDoubleTap){
+  const g=G;const w=screenToWorld(mx,my);
   if(g.planMode){
-    if(g.planMode==='zone'){
-      createPlan(g,'zone',{cx:w.x,cy:w.y,r:150});
-      toast(g,'区域防卫已建立','good');
-      g.planMode=null;g.planPts=[];g.planPhase=null;
-      updateModeTip(g);refreshPlanSidebar(g);
-      return;
-    } else {
-      if(isDoubleTap && g.planPts.length>=2){finishPlanDraw(g);return;}
-      if(g.planPts.length>=2){
-        const last=g.planPts[g.planPts.length-1];
-        if(dist(w.x,w.y,last.x,last.y)<25/g.cam.zoom){finishPlanDraw(g);return;}
-      }
-      g.planPts.push({x:w.x,y:w.y});
-      updateModeTip(g);
-      return;
+    if(g.planMode==='zone'){createPlan(g,'zone',{cx:w.x,cy:w.y,r:150});toast(g,'区域防卫已建立','good');g.planMode=null;g.planPts=[];g.planPhase=null;updateModeTip(g);refreshPlanSidebar(g);return;}
+    else{
+      if(isDoubleTap&&g.planPts.length>=2){finishPlanDraw(g);return;}
+      if(g.planPts.length>=2){const last=g.planPts[g.planPts.length-1];if(dist(w.x,w.y,last.x,last.y)<25/g.cam.zoom){finishPlanDraw(g);return;}}
+      g.planPts.push({x:w.x,y:w.y});updateModeTip(g);return;
     }
   }
 
+  /* ---------- 客户端 ---------- */
   if(Net.role==='client'){
     if(isClientWaiting()){toast(g,'正在同步战场数据…','bad');return;}
+
+    // 双击同类型全选
+    if(isDoubleTap&&g.selection.length>0){
+      const firstType=g.selection[0].type;
+      const sel=[];
+      for(const u of g.units){
+        if(u.side!==g.playerSide||!u.alive||u.type!==firstType)continue;
+        const sx=(u.x-g.cam.x)*g.cam.zoom+W/2;
+        const sy=(u.y-g.cam.y)*g.cam.zoom+H/2;
+        if(sx>=0&&sx<=W&&sy>=0&&sy<=H)sel.push(u);
+      }
+      if(sel.length>0){g.selection=sel;updateSelInfo(g);toast(g,'选中 '+sel.length+' 支'+UNITS[firstType].n,'good');}
+      return;
+    }
+
+    // 部署
     if(g.mode==='deploy'&&g.pendingDeploy){
       Net.sendToHost({type:'cmd',cmd:'deploy',unit:g.pendingDeploy,x:w.x,y:w.y});
-      const cost = g.playerSide==='def' ? Math.round(UNITS[g.pendingDeploy].cost*DEF_DEPLOY_COST_MUL) : UNITS[g.pendingDeploy].cost;
+      const cost=g.playerSide==='def'?Math.round(UNITS[g.pendingDeploy].cost*DEF_DEPLOY_COST_MUL):UNITS[g.pendingDeploy].cost;
       g.cp[g.playerSide]=Math.max(0,g.cp[g.playerSide]-cost);
+      const baseTime=(g.playerSide==='atk')?2.0:4.0;
+      g.deploying.push({x:w.x,y:w.y,type:g.pendingDeploy,side:g.playerSide,timeLeft:baseTime,total:baseTime,order:null,maxDist:150,_client:true,_endAt:performance.now()+baseTime*1000});
       g.mode=null;g.pendingDeploy=null;updateModeTip(g);refreshHUD(g);
       return;
     }
+
+    // 技能
     if(g.mode==='skill'&&g.pendingSkill){
-      Net.sendToHost({type:'cmd',cmd:'skill',key:g.pendingSkill,x:w.x,y:w.y});
       const s=SKILLS[g.pendingSkill];
+      if(s.friendlyRange){
+        let ok=false;
+        for(const u of g.units){if(u.side===g.playerSide&&u.alive&&dist(u.x,u.y,w.x,w.y)<=s.friendlyRange){ok=true;break;}}
+        if(!ok){toast(g,'炮火覆盖必须在我方单位420范围内','bad');return;}
+      }
+      Net.sendToHost({type:'cmd',cmd:'skill',key:g.pendingSkill,x:w.x,y:w.y});
+      spawnClientSkillVisual(g,g.pendingSkill,w.x,w.y);
       g.cp[g.playerSide]=Math.max(0,g.cp[g.playerSide]-s.cost);
       g.cd[g.playerSide][g.pendingSkill]=s.cd;
-      g.mode=null;g.pendingSkill=null;updateModeTip(g);
-      refreshHUD(g);refreshSkillRow(g);
+      g.mode=null;g.pendingSkill=null;updateModeTip(g);refreshHUD(g);refreshSkillRow(g);
       return;
     }
+
+    // ★ 单位选中（原来缺失）
+    let pickedClient=null,pdC=Infinity;
+    for(const u of g.units){
+      if(u.side!==g.playerSide||!u.alive)continue;
+      const d=dist(w.x,w.y,u.x,u.y);
+      if(d<UNITS[u.type].r+14&&d<pdC){pdC=d;pickedClient=u;}
+    }
+    if(pickedClient){
+      if(shiftKey){
+        const idx=g.selection.indexOf(pickedClient);
+        if(idx>=0)g.selection.splice(idx,1);else g.selection.push(pickedClient);
+      } else g.selection=[pickedClient];
+      updateSelInfo(g);
+      return;
+    }
+
+    // 移动指令
     if(g.selection.length>0){
       Net.sendToHost({type:'cmd',cmd:'move',ids:g.selection.map(u=>u.id),x:w.x,y:w.y});
+      addEffect(g,{type:'ring',x:w.x,y:w.y,r:22,life:.4,max:.4,col:g.playerSide==='atk'?'#ff8a5c':'#6cb6ff'});
       return;
     }
+    g.selection=[];updateSelInfo(g);
     return;
   }
 
+  /* ---------- 房主 ---------- */
   if(g.mode==='skill'){
-    if(useSkill(g,g.playerSide,g.pendingSkill,w.x,w.y)){
-      g.mode=null;g.pendingSkill=null;
-      updateModeTip(g);refreshSkillRow(g);
-    }
+    if(useSkill(g,g.playerSide,g.pendingSkill,w.x,w.y)){g.mode=null;g.pendingSkill=null;updateModeTip(g);refreshSkillRow(g);}
     return;
   }
-
   if(g.mode==='deploy'){
     let found=null;
-    for(const dp of g.deployPoints){
-      if(dp.side!==g.playerSide)continue;
-      if(dist(w.x,w.y,dp.x,dp.y)<=dp.r){found=dp;break;}
-    }
+    for(const dp of g.deployPoints){if(dp.side!==g.playerSide)continue;if(dist(w.x,w.y,dp.x,dp.y)<=dp.r){found=dp;break;}}
     if(found){
       const dep=startDeploy(g,g.playerSide,g.pendingDeploy,w.x,w.y,found.r);
-      if(dep){
-        toast(g,UNITS[g.pendingDeploy].n+' 部署中…','good');
-        if(g.tutorial) g.tutorial.lastEv={type:'deploy'};
-      }
-    }else{
-      toast(g,'请点击己方部署点范围','bad');
-    }
-    g.mode=null;g.pendingDeploy=null;
-    updateModeTip(g);refreshDeployRow(g);
-    return;
+      if(dep){toast(g,UNITS[g.pendingDeploy].n+' 部署中…','good');if(g.tutorial)g.tutorial.lastEv={type:'deploy'};}
+    }else{toast(g,'请点击己方部署点范围','bad');}
+    g.mode=null;g.pendingDeploy=null;updateModeTip(g);refreshDeployRow(g);return;
   }
-
-  if(isDoubleTap && g.selection.length>0){
+  if(isDoubleTap&&g.selection.length>0){
     const firstType=g.selection[0].type;
     const sel=[];
     for(const u of g.units){
-      if(u.side!==G.playerSide||!u.alive)continue;
-      if(u.type!==firstType)continue;
+      if(u.side!==G.playerSide||!u.alive||u.type!==firstType)continue;
       const sx=(u.x-g.cam.x)*g.cam.zoom+W/2;
       const sy=(u.y-g.cam.y)*g.cam.zoom+H/2;
       if(sx>=0&&sx<=W&&sy>=0&&sy<=H)sel.push(u);
@@ -2236,7 +2373,6 @@ function handleClick(mx,my,shiftKey,isDoubleTap){
     if(sel.length>0){g.selection=sel;updateSelInfo(g);toast(g,'选中 '+sel.length+' 支'+UNITS[firstType].n,'good');}
     return;
   }
-
   let picked=null,pd=Infinity;
   for(const u of g.units){
     if(u.side!==g.playerSide||!u.alive)continue;
@@ -2245,47 +2381,33 @@ function handleClick(mx,my,shiftKey,isDoubleTap){
     if(d<rr&&d<pd){pd=d;picked=u;}
   }
   if(picked){
-    if(shiftKey){
-      const idx=g.selection.indexOf(picked);
-      if(idx>=0)g.selection.splice(idx,1);
-      else g.selection.push(picked);
-    } else g.selection=[picked];
-    updateSelInfo(G);
-    if(G.tutorial) G.tutorial.lastEv={type:'sel'};
+    if(shiftKey){const idx=g.selection.indexOf(picked);if(idx>=0)g.selection.splice(idx,1);else g.selection.push(picked);}
+    else g.selection=[picked];
+    updateSelInfo(G);if(G.tutorial)G.tutorial.lastEv={type:'sel'};
     return;
   }
-  if(g.selection.length>0){
-    orderMove(g,g.selection,w.x,w.y);
-    addEffect(g,{type:'ring',x:w.x,y:w.y,r:22,life:.4,max:.4,col:g.playerSide==='atk'?'#ff8a5c':'#6cb6ff'});
-    return;
-  }
+  if(g.selection.length>0){orderMove(g,g.selection,w.x,w.y);addEffect(g,{type:'ring',x:w.x,y:w.y,r:22,life:.4,max:.4,col:g.playerSide==='atk'?'#ff8a5c':'#6cb6ff'});return;}
   g.selection=[];updateSelInfo(g);
 }
-
 function finishPlanDraw(g){
   const pts=g.planPts.slice();
   if(g.planMode==='front'){
     if(pts.length<2){toast(g,'前线至少需要2个点','bad');return;}
-    createPlan(g,'front',{points:pts});
-    toast(g,'前线已建立','good');
-    g.planMode=null;g.planPts=[];g.planPhase=null;
-    updateModeTip(g);refreshPlanSidebar(g);
+    createPlan(g,'front',{points:pts});toast(g,'前线已建立','good');
+    g.planMode=null;g.planPts=[];g.planPhase=null;updateModeTip(g);refreshPlanSidebar(g);
   } else if(g.planMode==='line'){
     if(pts.length<2){toast(g,'线性防卫至少需要2个点','bad');return;}
-    createPlan(g,'line',{points:pts});
-    toast(g,'线性防卫已建立','good');
-    g.planMode=null;g.planPts=[];g.planPhase=null;
-    updateModeTip(g);refreshPlanSidebar(g);
+    createPlan(g,'line',{points:pts});toast(g,'线性防卫已建立','good');
+    g.planMode=null;g.planPts=[];g.planPhase=null;updateModeTip(g);refreshPlanSidebar(g);
   } else if(g.planMode==='attack'){
     if(pts.length<2){toast(g,'目标线至少需要2个点','bad');return;}
     if(!g.planStartLine||g.planStartLine.length<2){toast(g,'缺少前线基准','bad');return;}
-    createPlan(g,'attack',{startPoints:g.planStartLine,targetPoints:pts});
-    toast(g,'进攻计划已建立 · 可在侧栏启动','good');
-    g.planMode=null;g.planPts=[];g.planPhase=null;g.planStartLine=null;
-    updateModeTip(g);refreshPlanSidebar(g);
+    createPlan(g,'attack',{startPoints:g.planStartLine,targetPoints:pts});toast(g,'进攻计划已建立 · 可在侧栏启动','good');
+    g.planMode=null;g.planPts=[];g.planPhase=null;g.planStartLine=null;updateModeTip(g);refreshPlanSidebar(g);
   }
 }
 
+/* ==================== 战术轮盘 ==================== */
 let radialEl=null;
 function openRadial(g,sx,sy,unit){
   closeRadial();
@@ -2293,11 +2415,9 @@ function openRadial(g,sx,sy,unit){
   g.radialTargets=unit?[unit]:(g.selection.length?g.selection.slice():[]);
   if(g.radialTargets.length===0)return;
   const el=document.createElement('div');
-  el.id='radial';
-  el.style.left=sx+'px';el.style.top=sy+'px';
+  el.id='radial';el.style.left=sx+'px';el.style.top=sy+'px';
   el.innerHTML='<div class="ring"></div><div class="rbtn center" data-act="recycle"><span class="ic">♻</span>回收</div><div class="rbtn" data-act="move" style="left:0px;top:-60px"><span class="ic">➤</span>移动</div><div class="rbtn" data-act="attack" style="left:60px;top:0px"><span class="ic">✶</span>攻击</div><div class="rbtn" data-act="defend" style="left:0px;top:60px"><span class="ic">◈</span>驻守</div><div class="rbtn" data-act="stop" style="left:-60px;top:0px"><span class="ic">■</span>停止</div>';
-  document.body.appendChild(el);
-  radialEl=el;
+  document.body.appendChild(el);radialEl=el;
   el.querySelectorAll('.rbtn').forEach(b=>{
     b.addEventListener('click',ev=>{
       ev.stopPropagation();
@@ -2313,15 +2433,9 @@ function openRadial(g,sx,sy,unit){
         closeRadial();return;
       }
       if(act==='recycle'){
-        if(!b.dataset.confirm){
-          b.dataset.confirm='1';b.innerHTML='<span class="ic">⚠</span>确认';b.style.background='#6a2a2a';b.style.borderColor='#ff6b4a';
-          setTimeout(()=>{if(radialEl&&b.parentNode){b.dataset.confirm='';b.innerHTML='<span class="ic">♻</span>回收';b.style.background='';b.style.borderColor='';}},2500);
-          return;
-        }
-        let total=0;
-        for(const u of sel)total+=recycleUnit(g,u);
-        toast(g,'回收 '+sel.length+' 支部队 · 获得 '+total+' CP','good');
-        closeRadial();updateSelInfo(g);return;
+        if(!b.dataset.confirm){b.dataset.confirm='1';b.innerHTML='<span class="ic">⚠</span>确认';b.style.background='#6a2a2a';b.style.borderColor='#ff6b4a';setTimeout(()=>{if(radialEl&&b.parentNode){b.dataset.confirm='';b.innerHTML='<span class="ic">♻</span>回收';b.style.background='';b.style.borderColor='';}},2500);return;}
+        let total=0;for(const u of sel)total+=recycleUnit(g,u);
+        toast(g,'回收 '+sel.length+' 支部队 · 获得 '+total+' CP','good');closeRadial();updateSelInfo(g);return;
       }
       if(act==='move'){toast(g,'点击地图指定移动目标','good');}
       else if(act==='attack'){
@@ -2346,16 +2460,19 @@ function openRadial(g,sx,sy,unit){
 }
 function closeRadial(){if(G)G.radialTargets=null;if(radialEl){radialEl.remove();radialEl=null;}}
 
+/* ==================== UI ==================== */
 const el={
   menu:document.getElementById('menu'),setup:document.getElementById('setup'),multi:document.getElementById('multi'),
   saves:document.getElementById('saves'),help:document.getElementById('help'),tutorial:document.getElementById('tutorial'),
   settings:document.getElementById('settings'),hud:document.getElementById('hud'),pause:document.getElementById('pause'),
   result:document.getElementById('result'),cpVal:document.getElementById('cpVal'),timeVal:document.getElementById('timeVal'),
   postVal:document.getElementById('postVal'),unitVal:document.getElementById('unitVal'),timeStat:document.getElementById('timeStat'),
+  envVal:document.getElementById('envVal'),
   deployRow:document.getElementById('deployRow'),skillRow:document.getElementById('skillRow'),leftPanel:document.getElementById('leftPanel'),
   selInfo:document.getElementById('selInfo'),modeTip:document.getElementById('modeTip'),toast:document.getElementById('toast'),
   saveList:document.getElementById('saveList'),planSidebar:document.getElementById('planSidebar'),hoverTip:document.getElementById('hoverTip'),
   recycleBtn:document.getElementById('recycleBtn'),syncOverlay:document.getElementById('syncOverlay'),
+  btnPlan:document.getElementById('btnPlan'),
 };
 function show(el_,s){if(s)el_.classList.remove('hidden');else el_.classList.add('hidden');}
 function toast(g,text,kind){
@@ -2369,53 +2486,51 @@ function toast(g,text,kind){
 function updateModeTip(g){
   let text='';
   if(g.mode==='deploy')text='点击己方部署点圈内任意位置 · ESC取消';
-  else if(g.mode==='skill')text=SKILLS[g.pendingSkill].n+' · 点击目标区域 · ESC取消';
+  else if(g.mode==='skill'){
+    const s=SKILLS[g.pendingSkill];
+    text=s.n+' · '+(s.friendlyRange?'需在我方单位420范围内':'点击目标区域')+' · ESC取消';
+  }
   else if(g.planMode==='front')text='绘制前线 · 已'+g.planPts.length+'点 · 双击或点最后一点结束';
   else if(g.planMode==='line')text='绘制线性防卫 · 已'+g.planPts.length+'点 · 双击或点最后一点结束';
   else if(g.planMode==='zone')text='绘制区域防卫 · 点击中心位置';
-  else if(g.planMode==='attack')text='绘制目标线 · 已'+g.planPts.length+'点 · 基于已有前线 · 双击或点最后一点结束';
-  if(text){show(el.modeTip,true);el.modeTip.innerHTML=text+'<span class="key">ESC</span>';}
-  else show(el.modeTip,false);
+  else if(g.planMode==='attack')text='绘制目标线 · 已'+g.planPts.length+'点 · 基于已有前线';
+  if(text){show(el.modeTip,true);el.modeTip.innerHTML=text+'<span class="key">ESC</span>';}else show(el.modeTip,false);
 }
-
 function refreshDeployRow(g){
   el.deployRow.innerHTML='';
-  const descs={inf:'廉价主力',scout:'视野穿透森林',eng:'可挖壕沟/修设施',arm:'高火力',art:'远程压制'};
+  const descs={inf:'廉价主力',scout:'视野穿透森林',eng:'可挖壕沟',arm:'高机动',art:'远程压制'};
   for(const k in UNITS){
     const d=UNITS[k];
-    const cost = g.playerSide==='def' ? Math.round(d.cost*DEF_DEPLOY_COST_MUL) : d.cost;
+    const cost=g.playerSide==='def'?Math.round(d.cost*DEF_DEPLOY_COST_MUL):d.cost;
     const card=document.createElement('div');
     card.className='ucard';
     if(g.cp[g.playerSide]<cost)card.classList.add('dis');
     card.innerHTML='<div class="un">'+d.n+'</div><div class="uc">'+cost+' CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">'+(descs[k]||'')+'</div>';
     card.onclick=()=>{
       if(g.state!=='playing')return;
-      if(Net.role==='client'&&!g._clientReady){toast(g,'正在同步战场数据…','bad');return;}
+      if(Net.role==='client'&&!g._clientReady){toast(g,'正在同步…','bad');return;}
       if(g.cp[g.playerSide]<cost){toast(g,'指挥值不足','bad');return;}
       g.mode='deploy';g.pendingDeploy=k;g.pendingSkill=null;
-      g.planMode=null;g.planPts=[];el.planSidebar.classList.add('hidden');
-      updateModeTip(g);
+      g.planMode=null;g.planPts=[];el.planSidebar.classList.add('hidden');updateModeTip(g);
     };
     el.deployRow.appendChild(card);
   }
   const card=document.createElement('div');
   card.className='ucard';
   if(g.cp[g.playerSide]<5)card.classList.add('dis');
-  card.innerHTML='<div class="un">挖掘壕沟</div><div class="uc">5 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">需选中工兵</div>';
+  card.innerHTML='<div class="un">挖掘壕沟</div><div class="uc">5 CP</div>';
   card.onclick=()=>{
     const engs=g.selection.filter(u=>u.type==='eng'&&u.alive);
     if(engs.length===0){toast(g,'请先选中工兵班','bad');return;}
     if(g.cp[g.playerSide]<5){toast(g,'指挥值不足','bad');return;}
     if(Net.role==='client'){Net.sendToHost({type:'cmd',cmd:'trench',ids:engs.map(u=>u.id)});g.cp[g.playerSide]-=5;toast(g,'工兵开始构筑壕沟','good');return;}
-    g.cp[g.playerSide]-=5;
-    for(const e of engs)e.order={type:'trench'};
-    toast(g,'工兵开始构筑壕沟','good');
+    g.cp[g.playerSide]-=5;for(const e of engs)e.order={type:'trench'};toast(g,'工兵开始构筑壕沟','good');
   };
   el.deployRow.appendChild(card);
 }
 function refreshSkillRow(g){
   el.skillRow.innerHTML='';
-  const descs={recon:'基地1500内',barrage:'中立·基地1500内',airstrike:'中立·基地1500内'};
+  const descs={recon:'基地1500内',barrage:'需友军420内',airstrike:'中立'};
   for(const k in SKILLS){
     const s=SKILLS[k];
     const cd=g.cd[g.playerSide][k]||0;
@@ -2426,12 +2541,11 @@ function refreshSkillRow(g){
     card.innerHTML='<div class="un">'+s.n+'</div><div class="uc">'+(cd>0?cd.toFixed(0)+'s':s.cost+' CP')+'</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">'+(descs[k]||'')+'</div>';
     card.onclick=()=>{
       if(g.state!=='playing')return;
-      if(Net.role==='client'&&!g._clientReady){toast(g,'正在同步战场数据…','bad');return;}
+      if(Net.role==='client'&&!g._clientReady){toast(g,'正在同步…','bad');return;}
       if((g.cd[g.playerSide][k]||0)>0){toast(g,'技能冷却中','bad');return;}
       if(g.cp[g.playerSide]<s.cost){toast(g,'指挥值不足','bad');return;}
       g.mode='skill';g.pendingSkill=k;g.pendingDeploy=null;
-      g.planMode=null;g.planPts=[];el.planSidebar.classList.add('hidden');
-      updateModeTip(g);
+      g.planMode=null;g.planPts=[];el.planSidebar.classList.add('hidden');updateModeTip(g);
     };
     el.skillRow.appendChild(card);
   }
@@ -2449,6 +2563,7 @@ function refreshLeftPanel(g){
         if(G.selection.length===0){toast(G,'请先选中部队再编入','bad');return;}
         G.squads[i]=G.selection.filter(u=>u.alive).map(u=>u.id);
         toast(G,'编队 '+i+' 已编入 '+G.squads[i].length+' 支','good');
+        refreshLeftPanel(G);
       };
       const doRecall=()=>{
         if(!G||G.state!=='playing')return;
@@ -2456,9 +2571,8 @@ function refreshLeftPanel(g){
         if(!sq||sq.length===0){toast(G,'编队 '+i+' 为空','bad');return;}
         const sel=[];
         for(const id of sq){const u=findUnitById(G,id);if(u&&u.alive)sel.push(u);}
-        if(sel.length===0){G.squads[i]=[];toast(G,'编队 '+i+' 已失效','bad');return;}
-        G.selection=sel;G.hotSquad=i;updateSelInfo(G);
-        toast(G,'调用编队 '+i+'（'+sel.length+'）','good');
+        if(sel.length===0){G.squads[i]=[];toast(G,'编队 '+i+' 已失效','bad');refreshLeftPanel(G);return;}
+        G.selection=sel;G.hotSquad=i;updateSelInfo(G);toast(G,'调用编队 '+i+'（'+sel.length+'）','good');
       };
       b.addEventListener('pointerdown',ev=>{ev.preventDefault();longFired=false;pressTimer=setTimeout(()=>{longFired=true;doAssign();},480);});
       b.addEventListener('pointerup',()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}if(!longFired)doRecall();});
@@ -2477,16 +2591,20 @@ function refreshLeftPanel(g){
   }
 }
 function updateSelInfo(g){
-  const sel=g.selection.filter(u=>u.alive);
+  // 严格校验 selection：只保留真实存在且存活于 g.units 的单位
+  const validIds=new Set(g.units.filter(u=>u.alive).map(u=>u.id));
+  g.selection=g.selection.filter(u=>u.alive&&validIds.has(u.id));
+  // 同步映射到 g.units 里的对象（防止引用过期）
+  const byId=new Map(g.units.map(u=>[u.id,u]));
+  g.selection=g.selection.map(u=>byId.get(u.id)).filter(Boolean);
+  const sel=g.selection;
   if(sel.length===0){show(el.selInfo,false);el.recycleBtn.classList.add('dis');return;}
-  show(el.selInfo,true);
-  el.recycleBtn.classList.remove('dis');
+  show(el.selInfo,true);el.recycleBtn.classList.remove('dis');
   if(sel.length===1){
     const u=sel[0],d=UNITS[u.type];
     el.selInfo.innerHTML='<div class="sn">'+d.n+'</div><div class="sr">生命 '+Math.ceil(u.hp)+'/'+u.maxHp+' · 射程 '+d.range+'</div><div class="sr">'+(u.holdPost?'[驻守中]':'')+'</div>';
   }else{
-    const counts={};
-    for(const u of sel)counts[u.type]=(counts[u.type]||0)+1;
+    const counts={};for(const u of sel)counts[u.type]=(counts[u.type]||0)+1;
     let txt=Object.entries(counts).map(([k,v])=>UNITS[k].n+'×'+v).join(' · ');
     el.selInfo.innerHTML='<div class="sn">已选中 '+sel.length+' 支部队</div><div class="sr">'+txt+'</div>';
   }
@@ -2500,7 +2618,11 @@ function refreshHUD(g){
   const own=branches.filter(p=>p.owner===g.playerSide).length;
   el.postVal.textContent=own+'/'+branches.length;
   const myUnits=g.units.filter(u=>u.side===g.playerSide).length+g.deploying.filter(d=>d.side===g.playerSide).length;
-  el.unitVal.textContent=myUnits;
+  const cap=DEPLOY_CAP[g.playerSide]||24;
+  el.unitVal.textContent=myUnits+'/'+cap;
+  const s=SEASONS[g.season];
+  const phase=g.env.dayAmount>0.55?'白天':(g.env.dayAmount<0.3?'夜晚':'黄昏');
+  el.envVal.textContent=s.icon+s.n+'·'+phase;
 }
 let hudTick=0;
 setInterval(()=>{
@@ -2510,29 +2632,31 @@ setInterval(()=>{
     refreshHUD(G);refreshDeployRow(G);refreshSkillRow(G);
     refreshLeftPanel(G);updateSelInfo(G);
     if(!el.planSidebar.classList.contains('hidden'))refreshPlanSidebar(G);
-    if(Net.role==='client'&&!G._clientReady){show(el.syncOverlay,true);}
-    else{show(el.syncOverlay,false);}
+    if(Net.role==='client'&&!G._clientReady){show(el.syncOverlay,true);}else{show(el.syncOverlay,false);}
   }
 },100);
-
 function setupRightPanel(){
-  document.getElementById('rtPlan').onclick=()=>{
+  // ★ 独立一级 UI：顶部栏「计划」按钮
+  el.btnPlan.onclick=()=>{
     if(!G)return;
-    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步战场数据…','bad');return;}
+    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步…','bad');return;}
     el.planSidebar.classList.toggle('hidden');
+    el.btnPlan.classList.toggle('on',!el.planSidebar.classList.contains('hidden'));
     if(!el.planSidebar.classList.contains('hidden')){
       G.planMode=null;G.planPts=[];G.planPhase=null;G.planStartLine=null;
-      G.mode=null;G.pendingDeploy=null;G.pendingSkill=null;
-      refreshPlanSidebar(G);
+      G.mode=null;G.pendingDeploy=null;G.pendingSkill=null;refreshPlanSidebar(G);
     }
     updateModeTip(G);
   };
-  document.getElementById('psClose').onclick=()=>{el.planSidebar.classList.add('hidden');if(G){G.planMode=null;G.planPts=[];G.planPhase=null;G.planStartLine=null;}updateModeTip(G);};
+  document.getElementById('psClose').onclick=()=>{
+    el.planSidebar.classList.add('hidden');
+    el.btnPlan.classList.remove('on');
+    if(G){G.planMode=null;G.planPts=[];G.planPhase=null;G.planStartLine=null;}
+    updateModeTip(G);
+  };
   document.getElementById('psClear').onclick=()=>{
-    if(!G)return;
-    if(!confirm('清除所有计划？'))return;
-    G.plans=G.plans.filter(p=>p.side!==G.playerSide);
-    refreshPlanSidebar(G);toast(G,'已清除所有计划','good');
+    if(!G)return;if(!confirm('清除所有计划？'))return;
+    G.plans=G.plans.filter(p=>p.side!==G.playerSide);refreshPlanSidebar(G);toast(G,'已清除所有计划','good');
   };
   el.planSidebar.querySelectorAll('.draw-btn').forEach(b=>{
     b.onclick=()=>{
@@ -2546,18 +2670,13 @@ function setupRightPanel(){
         if(fronts.length===0){toast(G,'请先绘制一条前线作为基准','bad');b.classList.remove('active');return;}
         const latest=fronts[fronts.length-1];
         G.planMode='attack';G.planPts=[];G.planPhase='targetLine';G.planStartLine=latest.points.slice();
-        toast(G,'已选用最近的前线 · 请绘制目标线','good');
-        updateModeTip(G);return;
+        toast(G,'已选用最近的前线 · 请绘制目标线','good');updateModeTip(G);return;
       }
       G.planMode=d;G.planPts=[];G.planPhase=null;G.planStartLine=null;
-      G.mode=null;G.pendingDeploy=null;G.pendingSkill=null;
-      updateModeTip(G);
+      G.mode=null;G.pendingDeploy=null;G.pendingSkill=null;updateModeTip(G);
     };
   });
-  document.getElementById('rtMove').onclick=()=>{
-    if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}
-    toast(G,'点击地图指定移动目标','good');
-  };
+  document.getElementById('rtMove').onclick=()=>{if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}toast(G,'点击地图指定移动目标','good');};
   document.getElementById('rtAttack').onclick=()=>{
     if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}
     if(Net.role==='client'){Net.sendToHost({type:'cmd',cmd:'attack',ids:G.selection.map(u=>u.id)});toast(G,'攻击指令已下达','good');return;}
@@ -2577,474 +2696,831 @@ function setupRightPanel(){
   document.getElementById('rtStop').onclick=()=>{
     if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}
     if(Net.role==='client'){Net.sendToHost({type:'cmd',cmd:'stop',ids:G.selection.map(u=>u.id)});toast(G,'部队停止行动','good');return;}
-    for(const u of G.selection){u.order=null;u.path=null;u.tid=0;u.holdPost=0;}
-    toast(G,'部队停止行动','good');
+    for(const u of G.selection){u.order=null;u.path=null;u.tid=0;u.holdPost=0;}toast(G,'部队停止行动','good');
   };
   el.recycleBtn.onclick=()=>{
     if(!G||G.selection.length===0){toast(G,'未选中部队','bad');return;}
-    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步战场数据…','bad');return;}
+    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步…','bad');return;}
     if(!confirm('确认回收选中的 '+G.selection.length+' 支部队？'))return;
     if(Net.role==='client'){Net.sendToHost({type:'cmd',cmd:'recycle',ids:G.selection.map(u=>u.id)});return;}
-    let total=0;
-    for(const u of G.selection)total+=recycleUnit(G,u);
-    toast(G,'回收 '+G.selection.length+' 支部队 · 获得 '+total+' CP','good');
-    updateSelInfo(G);
+    let total=0;for(const u of G.selection)total+=recycleUnit(G,u);
+    toast(G,'回收 '+G.selection.length+' 支部队 · 获得 '+total+' CP','good');updateSelInfo(G);
   };
 }
 
-/* ============ 网络（修复版） ============ */
-const Net={
-  role:'none',backend:'peerjs',myId:null,peer:null,mqttClient:null,mqttTopic:null,
-  roomCode:null,isHost:false,connections:new Map(),clientConn:null,
-  playerList:[],mySide:'atk',
-  onCommand:null,onState:null,onAssign:null,onPlayers:null,onStart:null,onHostLeave:null,
-  _clientJoinResolve:null,
+/* ============================================================
+   ★ 传输层：MQTT 信令 + 原生 WebRTC
+   ============================================================ */
+const SIGNALING_SERVERS = [
+  { name: 'EMQX 主站',    url: 'wss://broker.emqx.io:8084/mqtt' },
+  { name: 'MQTTX 公共',   url: 'wss://broker.mqttx.io:8084/mqtt' },
+  { name: 'Eclipse Paho', url: 'wss://mqtt.eclipseprojects.io:8083/mqtt' },
+  { name: 'HiveMQ 备用',  url: 'wss://broker.hivemq.com:8884/mqtt' },
+];
+let serverRank = [];
+let probing = false;
 
-  genRoomCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';for(let i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];return code;},
-
-  /* ★ 核心修复：不再检查 conn.open，直接 try/catch */
-  _sendRaw(conn,msg){
-    try{conn.send(msg);return true;}catch(e){console.warn('send fail:',e);return false;}
-  },
-
-  _setupPeerConnection(conn,isHostSide){
-    // ★ 先注册所有监听，再触发 open 逻辑
-    conn.on('data',data=>{
-      let msg;
-      try{
-        if(typeof data==='string')msg=JSON.parse(data);
-        else msg=data;  // PeerJS json serialization 自动返回对象
-      }catch(e){console.warn('parse fail:',e);return;}
-      if(!msg||typeof msg!=='object')return;
-      this._onPeerMessage(conn,msg,isHostSide);
-    });
-    conn.on('close',()=>{
-      if(isHostSide)this._onClientDisconnected(conn);
-      else this._onHostDisconnected(conn);
-    });
-    conn.on('error',err=>{console.warn('Peer conn error:',err);});
-    // 最后处理 open
-    const doOpen=()=>{
-      if(isHostSide)this._onClientConnected(conn);
-      else this._onHostConnected(conn);
+async function probeServer(server, timeoutMs) {
+  timeoutMs = timeoutMs || 2500;
+  return new Promise((resolve) => {
+    const start = Date.now();
+    let done = false, c = null;
+    const finish = (ok) => {
+      if (done) return; done = true;
+      try { if (c) c.end(true); } catch (e) {}
+      resolve(ok ? { latency: Date.now() - start } : null);
     };
-    if(conn.open)doOpen();
-    else conn.once('open',doOpen);
+    const timer = setTimeout(() => finish(false), timeoutMs + 500);
+    try {
+      c = mqtt.connect(server.url, {
+        clean: true, connectTimeout: timeoutMs, reconnectPeriod: 0,
+        clientId: 'sf_probe_' + Math.random().toString(16).slice(2, 10)
+      });
+    } catch (e) { clearTimeout(timer); finish(false); return; }
+    c.on('connect', () => { clearTimeout(timer); finish(true); });
+    c.on('error', () => { clearTimeout(timer); finish(false); });
+  });
+}
+async function probeAllServers() {
+  if (probing) return serverRank;
+  probing = true;
+  const sigBadge = document.getElementById('sigBadge');
+  if (sigBadge) sigBadge.textContent = '探测中…';
+  const results = await Promise.all(SIGNALING_SERVERS.map((s, i) =>
+    probeServer(s).then(r => r ? { index: i, name: s.name, url: s.url, latency: r.latency } : null)
+  ));
+  const ok = results.filter(Boolean).sort((a, b) => a.latency - b.latency);
+  serverRank = ok.length ? ok : [{ index: 0, name: SIGNALING_SERVERS[0].name, url: SIGNALING_SERVERS[0].url, latency: -1 }];
+  probing = false;
+  if (sigBadge) {
+    const p = serverRank[0];
+    sigBadge.textContent = p.name + (p.latency >= 0 ? ' · ' + p.latency + 'ms' : '');
+    if (serverRank.length > 1) sigBadge.textContent += ' (+' + (serverRank.length - 1) + ')';
+  }
+  return serverRank;
+}
+function getPrimaryServer() {
+  return serverRank.length ? serverRank[0] : { index: 0, name: SIGNALING_SERVERS[0].name, url: SIGNALING_SERVERS[0].url, latency: -1 };
+}
+function getServerByIndex(idx) {
+  if (idx >= 0 && idx < SIGNALING_SERVERS.length) {
+    const s = SIGNALING_SERVERS[idx];
+    const r = serverRank.find(x => x.index === idx);
+    return { index: idx, name: s.name, url: s.url, latency: r ? r.latency : -1 };
+  }
+  return getPrimaryServer();
+}
+function generateRoomCode() {
+  const p = getPrimaryServer();
+  const idx = p.index % SIGNALING_SERVERS.length;
+  const num = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
+  return String(idx) + num;
+}
+function parseRoomCodeServer(code) {
+  if (!/^[0-9]{6}$/.test(code)) return -1;
+  const idx = parseInt(code[0], 10);
+  if (idx < 0 || idx >= SIGNALING_SERVERS.length) return -1;
+  return idx;
+}
+const TOPIC_PREFIX = 'steelfrontline/v21/';
+function roomTopic(room, side) { return TOPIC_PREFIX + room + '/' + side; }
+const RTC_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ]
+};
+
+const Net = {
+  role: 'none',
+  backend: 'mqtt',
+  myId: 'p' + Math.random().toString(36).slice(2, 10),
+  roomCode: null,
+  isHost: false,
+  pc: null,
+  dc: null,
+  mqttClient: null,
+  mqttTopic: null,
+  playerList: [],
+  mySide: 'atk',
+  pendingMapId: 'grand',
+  pendingDiff: 'normal',
+  onCommand: null,
+  onState: null,
+  onAssign: null,
+  onPlayers: null,
+  onStart: null,
+  onHostLeave: null,
+  _clientJoinResolve: null,
+  _hostBusy: false,
+  _pendingCandidates: [],
+
+  _sendRaw(conn, msg) {
+    try {
+      const str = typeof msg === 'string' ? msg : JSON.stringify(msg);
+      conn.send(str);
+      return true;
+    } catch (e) { console.warn('[Net] send fail:', e); return false; }
   },
 
-  /* ---------- PeerJS 房主 ---------- */
-  async hostCreatePeer(roomCode){
-    this.backend='peerjs';this.role='host';this.isHost=true;this.roomCode=roomCode;
-    this.playerList=[{id:'host',name:'房主',side:'atk'}];
-    return new Promise((resolve,reject)=>{
-      this.peer=new Peer('sf-v19-'+roomCode,{debug:1,config:{iceServers:[
-        {urls:'stun:stun.l.google.com:19302'},
-        {urls:'stun:stun1.l.google.com:19302'},
-        {urls:'stun:stun2.l.google.com:19302'},
-        {urls:'stun:global.stun.twilio.com:3478'}
-      ]}});
-      let resolved=false;
-      this.peer.on('open',id=>{this.myId=id;resolved=true;console.log('[Host] peer open:',id);resolve(id);});
-      this.peer.on('error',err=>{console.warn('[Host] peer error:',err);if(!resolved)reject(new Error('创建失败：'+(err.type||err.message)));});
-      this.peer.on('connection',conn=>{console.log('[Host] incoming conn from',conn.peer);this._setupPeerConnection(conn,true);});
-      setTimeout(()=>{if(!resolved)reject(new Error('服务器连接超时'));},15000);
-    });
-  },
-  _onClientConnected(conn){
-    const clientId=conn.peer;
-    if(this.connections.has(clientId))return;
-    const atkCount=this.playerList.filter(p=>p.side==='atk').length;
-    const defCount=this.playerList.filter(p=>p.side==='def').length;
-    const side=atkCount<=defCount?'atk':'def';
-    const name='玩家'+clientId.slice(-4);
-    this.connections.set(clientId,{conn,side,name,isMqtt:false});
-    this.playerList.push({id:clientId,name,side});
-    // ★ 直接发送 assign（不检查 open）
-    this._sendRaw(conn,{
-      type:'assign',side,roomCode:this.roomCode,players:this.playerList,
-      mapId:(window.G&&G.cfg)?G.cfg.mapId:'grand',diff:(window.G&&G.cfg)?G.cfg.diff:'normal'
-    });
-    this._broadcastPlayers();
-    if(this.onPlayers)this.onPlayers(this.playerList);
-    console.log('[Host] client assigned:',clientId,side);
-    // 若已开战，补发 start
-    if(window.G&&G.mp&&G.mp.isHost&&G.state==='playing'){
-      this._sendRaw(conn,{type:'start',mapId:G.cfg.mapId,diff:G.cfg.diff});
-      setTimeout(()=>{try{this.broadcastState(this._snapshot());}catch(e){}},300);
-    }
-  },
-  _onClientDisconnected(conn){
-    console.log('[Host] client disconnected:',conn.peer);
-    this.connections.delete(conn.peer);
-    this.playerList=this.playerList.filter(p=>p.id!==conn.peer);
-    this._broadcastPlayers();
-    if(this.onPlayers)this.onPlayers(this.playerList);
-  },
-  async clientJoinPeer(roomCode){
-    this.backend='peerjs';this.role='client';this.isHost=false;this.roomCode=roomCode;
-    return new Promise((resolve,reject)=>{
-      this.peer=new Peer({debug:1,config:{iceServers:[
-        {urls:'stun:stun.l.google.com:19302'},
-        {urls:'stun:stun1.l.google.com:19302'},
-        {urls:'stun:stun2.l.google.com:19302'},
-        {urls:'stun:global.stun.twilio.com:3478'}
-      ]}});
-      let resolved=false;
-      this.peer.on('open',id=>{
-        this.myId=id;
-        console.log('[Client] peer open, connecting to sf-v19-'+roomCode);
-        const conn=this.peer.connect('sf-v19-'+roomCode,{reliable:true,serialization:'json'});
-        this.clientConn=conn;
-        this._setupPeerConnection(conn,false);
-        this._clientJoinResolve=()=>{if(!resolved){resolved=true;resolve(conn);}};
-        setTimeout(()=>{if(!resolved)reject(new Error('连接房主超时'));},15000);
-      });
-      this.peer.on('error',err=>{
-        if(err.type==='peer-unavailable')reject(new Error('房间不存在或房主已离线'));
-        else if(!resolved)reject(new Error('连接失败：'+(err.type||err.message)));
-      });
-    });
-  },
-  _onHostConnected(conn){console.log('[Client] connected to host');},
-  _onHostDisconnected(conn){
-    console.log('[Client] host disconnected');
-    if(this.onHostLeave)this.onHostLeave();
-  },
-  _onPeerMessage(conn,msg,isHostSide){
-    if(isHostSide){
-      if(msg.type==='cmd'&&this.onCommand){
-        const info=this.connections.get(conn.peer);
-        if(info)this.onCommand(info.side,msg,conn.peer);
-      }
-    }else{
-      if(msg.type==='assign'){
-        this.mySide=msg.side;this.playerList=msg.players||[];
-        this.pendingMapId=msg.mapId||'grand';this.pendingDiff=msg.diff||'normal';
-        if(this.onPlayers)this.onPlayers(this.playerList);
-        if(this.onAssign)this.onAssign(msg);
-        if(this._clientJoinResolve)this._clientJoinResolve();
-      }else if(msg.type==='players'){
-        this.playerList=msg.list||[];
-        if(this.onPlayers)this.onPlayers(this.playerList);
-      }else if(msg.type==='state'&&this.onState){
-        this.onState(msg.s);
-      }else if(msg.type==='start'&&this.onStart){
-        this.onStart(msg);
-      }
-    }
-  },
-
-  /* ---------- EMQX (MQTT) ---------- */
-  async hostCreateEmqx(roomCode){
-    this.backend='emqx';this.role='host';this.isHost=true;this.roomCode=roomCode;
-    this.playerList=[{id:'host',name:'房主',side:'atk'}];
-    this.myId='host_'+Math.random().toString(36).slice(2,8);
-    return new Promise((resolve,reject)=>{
-      const clientId='sf_'+roomCode+'_'+Math.random().toString(36).slice(2,8);
-      this.mqttClient=mqtt.connect('wss://broker.emqx.io:8084/mqtt',{clientId,clean:true,connectTimeout:10000,reconnectPeriod:0});
-      let resolved=false;
-      this.mqttClient.on('connect',()=>{
-        const topic='steelfrontline/v19/room/'+roomCode;
-        this.mqttTopic=topic;
-        this.mqttClient.subscribe(topic,{qos:0});
-        resolved=true;console.log('[Host/EMQX] connected, topic:',topic);resolve(this.myId);
-      });
-      this.mqttClient.on('error',err=>{console.warn('[Host/EMQX] err:',err);if(!resolved)reject(new Error('EMQX 连接失败：'+(err.message||err)));});
-      this.mqttClient.on('message',(topic,payload)=>{
-        let msg;try{msg=JSON.parse(payload.toString());}catch(e){return;}
-        if(msg.from===this.myId)return;
-        if(!msg.to||msg.to==='host'||msg.to==='all')this._onMqttMessage(msg);
-      });
-      setTimeout(()=>{if(!resolved)reject(new Error('EMQX 连接超时'));},12000);
-    });
-  },
-  async clientJoinEmqx(roomCode){
-    this.backend='emqx';this.role='client';this.isHost=false;this.roomCode=roomCode;
-    this.myId='cli_'+Math.random().toString(36).slice(2,8);
-    return new Promise((resolve,reject)=>{
-      const clientId='sf_'+roomCode+'_'+Math.random().toString(36).slice(2,8);
-      this.mqttClient=mqtt.connect('wss://broker.emqx.io:8084/mqtt',{clientId,clean:true,connectTimeout:10000,reconnectPeriod:0});
-      let resolved=false,assignResolved=false;
-      this.mqttClient.on('connect',()=>{
-        const topic='steelfrontline/v19/room/'+roomCode;
-        this.mqttTopic=topic;
-        this.mqttClient.subscribe(topic,{qos:0},()=>{
-          this._mqttPublish({to:'host',type:'join',name:'玩家'+this.myId.slice(-4)});
+  async hostCreateMqtt(roomCode) {
+    this.backend = 'mqtt'; this.role = 'host'; this.isHost = true;
+    this.roomCode = roomCode;
+    this.playerList = [{ id: this.myId, name: '房主', side: 'atk' }];
+    const srv = getPrimaryServer();
+    return new Promise((resolve, reject) => {
+      if (typeof mqtt === 'undefined') { reject(new Error('MQTT 库未加载')); return; }
+      let resolved = false;
+      try {
+        this.mqttClient = mqtt.connect(srv.url, {
+          clean: true, connectTimeout: 10000, reconnectPeriod: 0,
+          clientId: 'sf_h_' + roomCode + '_' + Math.random().toString(16).slice(2, 10)
+        });
+      } catch (e) { reject(new Error('创建失败：' + e.message)); return; }
+      this.mqttTopic = roomTopic(roomCode, 'host');
+      this.mqttClient.on('connect', () => {
+        this.mqttClient.subscribe(this.mqttTopic, { qos: 1 }, (err) => {
+          if (err) { reject(new Error('订阅失败')); return; }
+          resolved = true;
+          resolve(this.myId);
         });
       });
-      this.mqttClient.on('message',(topic,payload)=>{
-        let msg;try{msg=JSON.parse(payload.toString());}catch(e){return;}
-        if(msg.from===this.myId)return;
-        if(msg.to&&msg.to!==this.myId&&msg.to!=='all')return;
-        if(msg.type==='assign'&&!assignResolved){
-          assignResolved=true;
-          this.mySide=msg.side;this.playerList=msg.players||[];
-          this.pendingMapId=msg.mapId||'grand';this.pendingDiff=msg.diff||'normal';
-          if(this.onPlayers)this.onPlayers(this.playerList);
-          if(this.onAssign)this.onAssign(msg);
-          if(!resolved){resolved=true;resolve();}
-        }else if(msg.type==='players'){
-          this.playerList=msg.list||[];
-          if(this.onPlayers)this.onPlayers(this.playerList);
-        }else if(msg.type==='state'&&this.onState){
-          this.onState(msg.s);
-        }else if(msg.type==='start'&&this.onStart){
-          this.onStart(msg);
+      this.mqttClient.on('message', (topic, payload) => {
+        let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
+        if (!msg || msg.from === this.myId) return;
+        if (msg.type === 'hello') this._handleHello(msg.from, msg.name);
+        else if (msg.type === 'answer') this._handleAnswer(msg);
+        else if (msg.type === 'ice') this._handleIce(msg);
+        else if (msg.type === 'cmd') {
+          const info = this.playerList.find(p => p.id === msg.from);
+          if (info && this.onCommand) this.onCommand(info.side, msg, msg.from);
         }
       });
-      this.mqttClient.on('error',err=>{if(!resolved)reject(new Error('EMQX 连接失败：'+(err.message||err)));});
-      setTimeout(()=>{if(!resolved)reject(new Error('加入超时，请确认房间码'));},15000);
+      this.mqttClient.on('error', (err) => {
+        if (!resolved) reject(new Error('EMQX 连接失败：' + (err.message || err)));
+      });
+      setTimeout(() => { if (!resolved) reject(new Error('连接超时')); }, 15000);
     });
   },
-  _onMqttMessage(msg){
-    if(this.role==='host'){
-      if(msg.type==='join'){
-        const clientId=msg.from;
-        if(this.connections.has(clientId))return;
-        const atkCount=this.playerList.filter(p=>p.side==='atk').length;
-        const defCount=this.playerList.filter(p=>p.side==='def').length;
-        const side=atkCount<=defCount?'atk':'def';
-        const name=msg.name||('玩家'+clientId.slice(-4));
-        this.connections.set(clientId,{side,name,isMqtt:true});
-        this.playerList.push({id:clientId,name,side});
-        this._mqttPublish({to:clientId,type:'assign',side,roomCode:this.roomCode,players:this.playerList,
-          mapId:(window.G&&G.cfg)?G.cfg.mapId:'grand',diff:(window.G&&G.cfg)?G.cfg.diff:'normal'});
-        this._mqttBroadcastPlayers();
-        if(this.onPlayers)this.onPlayers(this.playerList);
-        if(window.G&&G.mp&&G.mp.isHost&&G.state==='playing'){
-          this._mqttPublish({to:clientId,type:'start',mapId:G.cfg.mapId,diff:G.cfg.diff});
-          setTimeout(()=>{try{this.broadcastState(this._snapshot());}catch(e){}},300);
-        }
-      }else if(msg.type==='cmd'){
-        const info=this.connections.get(msg.from);
-        if(info&&this.onCommand)this.onCommand(info.side,msg,msg.from);
+
+  _handleHello(clientId, name) {
+    if (this._hostBusy) {
+      this._mqttPublish({ to: clientId, type: 'full' });
+      return;
+    }
+    this._hostBusy = true;
+    this._currentClient = clientId;
+    const atkCount = this.playerList.filter(p => p.side === 'atk').length;
+    const defCount = this.playerList.filter(p => p.side === 'def').length;
+    const side = atkCount <= defCount ? 'atk' : 'def';
+    const clientName = String(name || '玩家' + clientId.slice(-4)).slice(0, 16);
+    this.playerList.push({ id: clientId, name: clientName, side });
+    this._createHostOffer(clientId, side, clientName);
+  },
+
+  async _createHostOffer(clientId, side, clientName) {
+    if (this.pc) { try { this.pc.close(); } catch (e) {} this.pc = null; }
+    this._pendingCandidates = [];
+    const pc = new RTCPeerConnection(RTC_CONFIG);
+    this.pc = pc;
+    pc.onicecandidate = (e) => {
+      if (e.candidate) this._mqttPublish({ to: clientId, type: 'ice', candidate: e.candidate });
+    };
+    pc.onconnectionstatechange = () => {
+      const st = pc.connectionState;
+      if (st === 'failed' || st === 'closed') { this._hostBusy = false; }
+    };
+    const dc = pc.createDataChannel('game', { ordered: true });
+    this.dc = dc;
+    this._setupHostDataChannel(dc, pc, clientId, side, clientName);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    this._mqttPublish({
+      to: clientId, type: 'offer', sdp: offer,
+      side, name: clientName,
+      mapId: (typeof G !== 'undefined' && G && G.cfg) ? G.cfg.mapId : 'grand',
+      diff: (typeof G !== 'undefined' && G && G.cfg) ? G.cfg.diff : 'normal',
+    });
+  },
+
+  _handleAnswer(msg) {
+    const pc = this.pc;
+    if (!pc || pc.remoteDescription) return;
+    pc.setRemoteDescription(msg.sdp)
+      .then(() => {
+        for (const c of (this._pendingCandidates || [])) pc.addIceCandidate(c).catch(() => {});
+        this._pendingCandidates = [];
+      })
+      .catch(e => console.warn('[Host] setRemoteDescription failed:', e));
+  },
+
+  _handleIce(msg) {
+    const pc = this.pc;
+    if (!pc) return;
+    if (pc.remoteDescription) pc.addIceCandidate(msg.candidate).catch(() => {});
+    else { this._pendingCandidates = this._pendingCandidates || []; this._pendingCandidates.push(msg.candidate); }
+  },
+
+  _setupHostDataChannel(dc, pc, clientId, side, clientName) {
+    dc.onopen = () => {
+      this._hostBusy = false;
+      this._sendRaw(dc, {
+        type: 'assign', side,
+        mapId: (typeof G !== 'undefined' && G && G.cfg) ? G.cfg.mapId : 'grand',
+        diff: (typeof G !== 'undefined' && G && G.cfg) ? G.cfg.diff : 'normal',
+        players: this.playerList,
+      });
+      this._broadcastPlayers();
+      if (this.onPlayers) this.onPlayers(this.playerList);
+      const statusEl = document.getElementById('hostStatus');
+      if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ ' + clientName + ' 已连接（' + (side === 'atk' ? '攻方' : '守方') + '）'; }
+      const startBtn = document.getElementById('hostStart');
+      if (startBtn) startBtn.disabled = false;
+      if (typeof G !== 'undefined' && G && G.mp && G.mp.isHost && G.state === 'playing') {
+        this._sendRaw(dc, { type: 'start', mapId: G.cfg.mapId, diff: G.cfg.diff, season: G.season, dayTime: G.dayTime });
+        setTimeout(() => netBroadcastState(), 300);
       }
+    };
+    dc.onmessage = (e) => {
+      let msg; try { msg = JSON.parse(e.data); } catch (err) { return; }
+      if (!msg || typeof msg !== 'object') return;
+      if (msg.type === 'cmd' && this.onCommand) this.onCommand(side, msg, clientId);
+    };
+    dc.onclose = () => {
+      this._hostBusy = false;
+      this.playerList = this.playerList.filter(p => p.id !== clientId);
+      this._broadcastPlayers();
+      if (this.onPlayers) this.onPlayers(this.playerList);
+      const statusEl = document.getElementById('hostStatus');
+      if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '玩家已断开，等待新玩家…'; }
+      const startBtn = document.getElementById('hostStart');
+      if (startBtn) startBtn.disabled = true;
+      if (this.dc === dc) this.dc = null;
+      if (this.pc === pc) { try { pc.close(); } catch (e) {} this.pc = null; }
+    };
+    dc.onerror = (e) => console.warn('[Host] dc error:', e);
+  },
+
+  _mqttPublish(obj) {
+    if (!this.mqttClient || !this.mqttTopic) return;
+    obj.from = this.myId;
+    try { this.mqttClient.publish(this.mqttTopic, JSON.stringify(obj), { qos: 1 }); } catch (e) {}
+  },
+
+  _broadcastPlayers() {
+    if (this.role !== 'host') return;
+    const msg = JSON.stringify({ type: 'players', list: this.playerList, from: this.myId });
+    if (this.mqttClient && this.mqttTopic) {
+      try { this.mqttClient.publish(this.mqttTopic, msg, { qos: 1 }); } catch (e) {}
+    }
+    if (this.dc && this.dc.readyState === 'open') this._sendRaw(this.dc, { type: 'players', list: this.playerList });
+  },
+
+  async clientJoinMqtt(roomCode) {
+    this.backend = 'mqtt'; this.role = 'client'; this.isHost = false;
+    this.roomCode = roomCode;
+    const srvIdx = parseRoomCodeServer(roomCode);
+    const srv = srvIdx >= 0 ? getServerByIndex(srvIdx) : getPrimaryServer();
+    return new Promise((resolve, reject) => {
+      if (typeof mqtt === 'undefined') { reject(new Error('MQTT 库未加载')); return; }
+      let resolved = false;
+      try {
+        this.mqttClient = mqtt.connect(srv.url, {
+          clean: true, connectTimeout: 10000, reconnectPeriod: 0,
+          clientId: 'sf_c_' + roomCode + '_' + Math.random().toString(16).slice(2, 10)
+        });
+      } catch (e) { reject(new Error('加入失败：' + e.message)); return; }
+      this.pc = new RTCPeerConnection(RTC_CONFIG);
+      this._pendingCandidates = [];
+      this.pc.onicecandidate = (e) => {
+        if (e.candidate) this._mqttPublish({ to: 'host', type: 'ice', candidate: e.candidate });
+      };
+      this.pc.ondatachannel = (e) => { this._setupClientDataChannel(e.channel); };
+      this.pc.onconnectionstatechange = () => {
+        if (this.pc.connectionState === 'failed') {
+          if (this.onHostLeave) this.onHostLeave();
+        }
+      };
+      this.mqttTopic = roomTopic(roomCode, 'host');
+      this.mqttClient.on('connect', () => {
+        this.mqttClient.subscribe(this.mqttTopic, { qos: 1 }, (err) => {
+          if (err) { reject(new Error('订阅失败')); return; }
+          this._mqttPublish({ type: 'hello', name: '玩家' + this.myId.slice(-4) });
+        });
+      });
+      this.mqttClient.on('message', (topic, payload) => {
+        let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
+        if (!msg || typeof msg !== 'object') return;
+        if (msg.to && msg.to !== this.myId && msg.to !== 'all') return;
+        if (msg.type === 'offer') {
+          this.pc.setRemoteDescription(msg.sdp)
+            .then(() => {
+              for (const c of (this._pendingCandidates || [])) this.pc.addIceCandidate(c).catch(() => {});
+              this._pendingCandidates = [];
+              return this.pc.createAnswer();
+            })
+            .then(ans => this.pc.setLocalDescription(ans))
+            .then(() => {
+              this._mqttPublish({ to: 'host', type: 'answer', sdp: this.pc.localDescription });
+            })
+            .catch(e => console.warn('[Client] negotiate failed:', e));
+        } else if (msg.type === 'ice') {
+          if (this.pc.remoteDescription) this.pc.addIceCandidate(msg.candidate).catch(() => {});
+          else { this._pendingCandidates = this._pendingCandidates || []; this._pendingCandidates.push(msg.candidate); }
+        } else if (msg.type === 'full') {
+          reject(new Error('房间已满'));
+        }
+      });
+      this.mqttClient.on('error', (err) => {
+        if (!resolved) reject(new Error('EMQX 连接失败：' + (err.message || err)));
+      });
+      this._clientJoinResolve = () => { if (!resolved) { resolved = true; resolve(); } };
+      setTimeout(() => { if (!resolved) reject(new Error('连接超时')); }, 20000);
+    });
+  },
+
+  _setupClientDataChannel(dc) {
+    this.dc = dc;
+    dc.onopen = () => {
+      const statusEl = document.getElementById('joinStatus');
+      if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ 已连接房主，等待开始'; }
+      if (this._clientJoinResolve) this._clientJoinResolve();
+    };
+    dc.onmessage = (e) => {
+      let msg; try { msg = JSON.parse(e.data); } catch (err) { return; }
+      if (!msg || typeof msg !== 'object') return;
+      if (msg.type === 'assign') {
+        this.mySide = msg.side;
+        this.pendingMapId = msg.mapId || 'grand';
+        this.pendingDiff = msg.diff || 'normal';
+        this.playerList = msg.players || [];
+        if (this.onPlayers) this.onPlayers(this.playerList);
+        if (this.onAssign) this.onAssign(msg);
+      } else if (msg.type === 'players') {
+        this.playerList = msg.list || [];
+        if (this.onPlayers) this.onPlayers(this.playerList);
+      } else if (msg.type === 'state') {
+        if (this.onState) this.onState(msg.s);
+      } else if (msg.type === 'start') {
+        if (this.onStart) this.onStart(msg);
+      }
+    };
+    dc.onclose = () => {
+      if (this.onHostLeave) this.onHostLeave();
+    };
+    dc.onerror = (e) => console.warn('[Net] client dc error:', e);
+  },
+
+  broadcast(msg) {
+    const str = typeof msg === 'string' ? msg : JSON.stringify(msg);
+    if (this.dc && this.dc.readyState === 'open') {
+      try { this.dc.send(str); } catch (e) {}
     }
   },
-  _mqttPublish(obj){if(!this.mqttClient||!this.mqttTopic)return;obj.from=this.myId;try{this.mqttClient.publish(this.mqttTopic,JSON.stringify(obj));}catch(e){}},
-  _mqttBroadcastPlayers(){this._mqttPublish({to:'all',type:'players',list:this.playerList});},
-
-  async hostCreate(roomCode,backend){if(backend==='emqx')return this.hostCreateEmqx(roomCode);return this.hostCreatePeer(roomCode);},
-  async clientJoin(roomCode,backend){if(backend==='emqx')return this.clientJoinEmqx(roomCode);return this.clientJoinPeer(roomCode);},
-
-  /* ★ 广播不检查 conn.open */
-  broadcast(msg){
-    if(this.backend==='emqx'){this._mqttPublish({to:'all',...msg});return;}
-    for(const {conn} of this.connections.values())this._sendRaw(conn,msg);
+  broadcastState(s) {
+    if (this.role !== 'host') return;
+    const msg = JSON.stringify({ type: 'state', s, from: this.myId });
+    if (this.dc && this.dc.readyState === 'open') {
+      try { this.dc.send(msg); }
+      catch (e) { console.warn('[Net] state send failed', e); }
+    }
   },
-  broadcastState(s){
-    if(this.role!=='host')return;
-    if(this.backend==='emqx'){this._mqttPublish({to:'all',type:'state',s});return;}
-    const msg={type:'state',s};
-    for(const {conn} of this.connections.values())this._sendRaw(conn,msg);
+  sendToHost(cmd) {
+    if (this.dc && this.dc.readyState === 'open') {
+      try { this.dc.send(JSON.stringify(cmd)); } catch (e) {}
+    }
   },
-  _broadcastPlayers(){
-    if(this.role!=='host')return;
-    if(this.backend==='emqx'){this._mqttBroadcastPlayers();return;}
-    const msg={type:'players',list:this.playerList};
-    for(const {conn} of this.connections.values())this._sendRaw(conn,msg);
-  },
-  sendToHost(cmd){
-    if(this.backend==='emqx'){this._mqttPublish({to:'host',...cmd});return;}
-    if(this.clientConn)this._sendRaw(this.clientConn,cmd);
-  },
-  _snapshot(){
-    if(!G)return null;
-    return {
-      t:+G.time.toFixed(2),
-      cp:[G.cp.atk,G.cp.def],
-      cd:[Object.assign({},G.cd.atk),Object.assign({},G.cd.def)],
-      u:G.units.map(u=>[u.id,u.side==='atk'?0:1,u.type,Math.round(u.x),Math.round(u.y),Math.round(u.hp),Math.round(u.facing*100)]),
-      p:G.posts.map(p=>[p.owner==='atk'?0:(p.owner==='def'?1:2),Math.round(p.cap),+p.integrate.toFixed(2)]),
-      tr:G.turrets.map(t=>[t.type,Math.round(t.x),Math.round(t.y),Math.round(t.hp),Math.round(t.maxHp)]),
-      tren:G.trenches.map(t=>[Math.round(t.x),Math.round(t.y),t.side==='atk'?0:1]),
-    };
-  },
-  close(){
-    if(this.peer){try{this.peer.destroy();}catch(e){}}
-    if(this.mqttClient){try{this.mqttClient.end(true);}catch(e){}}
-    this.peer=null;this.mqttClient=null;this.mqttTopic=null;
-    this.connections.clear();this.clientConn=null;
-    this.role='none';this._clientJoinResolve=null;
+  close() {
+    if (this.pc) { try { this.pc.close(); } catch (e) {} }
+    if (this.dc) { try { this.dc.close(); } catch (e) {} }
+    if (this.mqttClient) { try { this.mqttClient.end(true); } catch (e) {} }
+    this.pc = null; this.dc = null; this.mqttClient = null; this.mqttTopic = null;
+    this.role = 'none'; this.roomCode = null; this._hostBusy = false;
+    this.playerList = []; this._pendingCandidates = [];
+    this._clientJoinResolve = null;
   },
 };
 
-function netBroadcastState(){
-  if(!G||Net.role!=='host')return;
-  const s=Net._snapshot();
-  if(s)Net.broadcastState(s);
+function netBroadcastState() {
+  if (!G || Net.role !== 'host') return;
+  const s = {
+    t: +G.time.toFixed(2),
+    cp: [G.cp.atk, G.cp.def],
+    cd: [Object.assign({}, G.cd.atk), Object.assign({}, G.cd.def)],
+    u: G.units.map(u => [u.id, u.side === 'atk' ? 0 : 1, u.type, Math.round(u.x), Math.round(u.y), Math.round(u.hp), Math.round(u.facing * 100)]),
+    p: G.posts.map(p => [p.owner === 'atk' ? 0 : (p.owner === 'def' ? 1 : 2), Math.round(p.cap), +p.integrate.toFixed(2)]),
+    tr: G.turrets.map(t => [t.type, Math.round(t.x), Math.round(t.y), Math.round(t.hp), Math.round(t.maxHp), t.discovered?1:0]),
+    tren: G.trenches.map(t => [Math.round(t.x), Math.round(t.y), t.side === 'atk' ? 0 : 1]),
+    env: { season: G.season, dayTime: +G.dayTime.toFixed(3) },
+    dep: G.deploying.filter(d=>!d._client).map(d=>[d.side==='atk'?0:1, d.type, Math.round(d.x), Math.round(d.y), +d.timeLeft.toFixed(2), +d.total.toFixed(2)]),
+  };
+  Net.broadcastState(s);
 }
-function netApplyState(s){
-  if(!G||!s)return;
-  G.time=s.t;G.cp.atk=s.cp[0];G.cp.def=s.cp[1];
-  if(s.cd){G.cd.atk=Object.assign({},s.cd[0]);G.cd.def=Object.assign({},s.cd[1]);}
-  const existing=new Map();
-  for(const u of G.units)existing.set(u.id,u);
-  const alive=new Set();
-  const newUnits=[];
-  for(const a of s.u){
-    const [id,sideBit,type,x,y,hp,facing]=a;
+
+function netApplyState(s) {
+  if (!G || !s) return;
+  G.time = s.t; G.cp.atk = s.cp[0]; G.cp.def = s.cp[1];
+  if (s.cd) { G.cd.atk = Object.assign({}, s.cd[0]); G.cd.def = Object.assign({}, s.cd[1]); }
+  if (s.env) {
+    G.season=s.env.season||G.season;
+    G.dayTime=s.env.dayTime!==undefined?s.env.dayTime:G.dayTime;
+    updateEnv(G,0);
+  }
+  const existing = new Map();
+  for (const u of G.units) existing.set(u.id, u);
+  const alive = new Set();
+  const newUnits = [];
+  for (const a of s.u) {
+    const [id, sideBit, type, x, y, hp, facing] = a;
     alive.add(id);
-    let u=existing.get(id);
-    if(!u){
-      u={id,side:sideBit===0?'atk':'def',type,x,y,_netTarget:{x,y},hp,maxHp:UNITS[type].hp,cd:0,order:null,tid:0,alive:true,facing:facing/100,holdPost:0,observedTime:0,path:null,pathI:0,stuck:0,lastX:x,lastY:y,trenchTimer:0,aimTimer:0,aimTarget:null};
-    }else{
-      u._netTarget={x,y};u.hp=hp;u.facing=facing/100;
+    let u = existing.get(id);
+    if (!u) {
+      u = { id, side: sideBit === 0 ? 'atk' : 'def', type, x, y, _netTarget: { x, y },
+            hp, maxHp: UNITS[type].hp, cd: 0, order: null, tid: 0, alive: true,
+            facing: facing / 100, holdPost: 0, observedTime: 0,
+            path: null, pathI: 0, stuck: 0, lastX: x, lastY: y,
+            trenchTimer: 0, aimTimer: 0, aimTarget: null };
+    } else {
+      u._netTarget = { x, y };
+      u.hp = hp;
+      u.facing = facing / 100;
     }
     newUnits.push(u);
   }
-  G.units=newUnits;
-  G.selection=G.selection.filter(u=>alive.has(u.id));
-  if(G.radialTargets)G.radialTargets=G.radialTargets.filter(u=>alive.has(u.id));
-  if(G._hoverUnit&&!alive.has(G._hoverUnit.id))G._hoverUnit=null;
-  for(let i=0;i<G.posts.length&&i<s.p.length;i++){
-    const p=G.posts[i],a=s.p[i];
-    p.owner=a[0]===0?'atk':(a[0]===1?'def':'neutral');p.cap=a[1];p.integrate=a[2];
+  G.units = newUnits;
+  // 用 id 重新映射，保持 selection / radialTargets / _hoverUnit 指向同一对象
+  const unitById = new Map(newUnits.map(u => [u.id, u]));
+  const remap = (arr) => arr.map(u => unitById.get(u.id)).filter(Boolean);
+  if (G.selection) G.selection = remap(G.selection);
+  if (G.radialTargets) G.radialTargets = remap(G.radialTargets);
+  if (G._hoverUnit) G._hoverUnit = unitById.get(G._hoverUnit.id) || null;
+
+  for (let i = 0; i < G.posts.length && i < s.p.length; i++) {
+    const p = G.posts[i], a = s.p[i];
+    p.owner = a[0] === 0 ? 'atk' : (a[0] === 1 ? 'def' : 'neutral');
+    p.cap = a[1]; p.integrate = a[2];
   }
-  const turretMap=new Map();
-  for(const t of G.turrets)turretMap.set(t.id,t);
-  const newTurrets=[];
-  for(const t of s.tr){
-    const tid=t[0]+'_'+t[1]+'_'+t[2];
-    let et=turretMap.get(tid);
-    if(!et)et={id:tid,side:'def',type:t[0],x:t[1],y:t[2],hp:t[3],maxHp:t[4],cd:0,r:TURRETS[t[0]].r};
-    else et.hp=t[3];
+  const turretMap = new Map();
+  for (const t of G.turrets) turretMap.set(t.id, t);
+  const newTurrets = [];
+  for (const t of s.tr) {
+    const tid = t[0] + '_' + t[1] + '_' + t[2];
+    let et = turretMap.get(tid);
+    if (!et) et = { id: tid, side: 'def', type: t[0], x: t[1], y: t[2], hp: t[3], maxHp: t[4], cd: 0, r: TURRETS[t[0]].r, discovered: !!t[5] };
+    else { et.hp = t[3]; et.discovered = !!t[5]; }
     newTurrets.push(et);
   }
-  G.turrets=newTurrets;
-  G.trenches=s.tren.map(t=>({x:t[0],y:t[1],r:34,side:t[2]===0?'atk':'def'}));
-  if(G.playerSide)recomputeVis(G,G.playerSide);
+  G.turrets = newTurrets;
+  G.trenches = s.tren.map(t => ({ x: t[0], y: t[1], r: 34, side: t[2] === 0 ? 'atk' : 'def' }));
+  // 部署进度（房主侧）
+  if (s.dep){
+    // 移除旧的房主部署
+    G.deploying = G.deploying.filter(d=>d._client);
+    for (const d of s.dep){
+      G.deploying.push({side:d[0]===0?'atk':'def',type:d[1],x:d[2],y:d[3],timeLeft:d[4],total:d[5],order:null,maxDist:150});
+    }
+  }
+  if (G.playerSide) recomputeVis(G, G.playerSide);
   updateDeployPoints(G);
   G.tick++;
-  if(!G._clientReady){
-    G._clientReady=true;
-    show(document.getElementById('syncOverlay'),false);
-    toast(G,'战场同步完成','good');
-    console.log('[Client] first state received, sync done');
+  if (!G._clientReady) {
+    G._clientReady = true;
+    show(document.getElementById('syncOverlay'), false);
+    toast(G, '战场同步完成', 'good');
   }
   refreshHUD(G);
+  updateSelInfo(G);
 }
 
-/* ============ 多人 UI ============ */
-let multiBackend='peerjs';
-function buildBackendOpts(){
-  const bo=document.getElementById('backendOpts');
-  bo.innerHTML='';
+/* ---- 手动 P2P ---- */
+function encodeManualCode(obj) {
+  try {
+    const json = JSON.stringify(obj);
+    const bytes = new TextEncoder().encode(json);
+    let bin = '';
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    return btoa(bin);
+  } catch (e) { return ''; }
+}
+function decodeManualCode(str) {
+  try {
+    const clean = String(str).replace(/\s+/g, '');
+    const bin = atob(clean);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch (e) { return null; }
+}
+function waitForIce(pc, ms) {
+  return new Promise(resolve => {
+    if (!pc || pc.iceGatheringState === 'complete') return resolve();
+    let done = false;
+    const finish = () => { if (done) return; done = true; try { pc.removeEventListener('icegatheringstatechange', onChange); } catch (e) {} resolve(); };
+    const onChange = () => { if (pc.iceGatheringState === 'complete') finish(); };
+    try { pc.addEventListener('icegatheringstatechange', onChange); } catch (e) {}
+    setTimeout(finish, ms || 2500);
+  });
+}
+
+async function manualGenOffer() {
+  Net.close();
+  Net.backend = 'manual'; Net.role = 'host'; Net.isHost = true;
+  const offerEl = document.getElementById('offerCode');
+  const statusEl = document.getElementById('manualHostStatus');
+  if (statusEl) { statusEl.className = 'status-bar wait'; statusEl.textContent = '正在生成邀请码…'; }
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  Net.pc = pc;
+  Net._pendingCandidates = [];
+  pc.onicecandidate = (e) => { if (e.candidate) Net._pendingCandidates.push(e.candidate); };
+  const dc = pc.createDataChannel('game', { ordered: true });
+  Net.dc = dc;
+  pc.onconnectionstatechange = () => {
+    if (statusEl) {
+      if (pc.connectionState === 'connected') { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ P2P 通道已连接'; }
+      else if (pc.connectionState === 'failed') { statusEl.className = 'status-bar'; statusEl.textContent = '连接失败，请重新生成'; }
+    }
+  };
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await waitForIce(pc, 2500);
+  const packed = { v: 1, type: 'offer', sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, name: '房主' };
+  if (offerEl) offerEl.value = encodeManualCode(packed);
+  Net._setupHostDataChannel(dc, pc, 'manual-peer', 'atk', '对手');
+  if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ 邀请码已生成，请复制发给朋友'; }
+}
+
+async function manualAcceptAnswer() {
+  const inputEl = document.getElementById('answerCode');
+  const statusEl = document.getElementById('manualHostStatus');
+  const pc = Net.pc;
+  if (!inputEl || !pc) { if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '请先点击「生成邀请码」'; } return; }
+  const code = inputEl.value.trim();
+  if (!code) { if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '请粘贴应答码'; } return; }
+  const data = decodeManualCode(code);
+  if (!data || data.type !== 'answer') { if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '应答码无效'; } return; }
+  if (statusEl) { statusEl.className = 'status-bar wait'; statusEl.textContent = '正在建立连接…'; }
+  try {
+    await pc.setRemoteDescription(data.sdp);
+    for (const c of (data.cand || [])) { try { await pc.addIceCandidate(c); } catch (e) {} }
+    for (const c of (Net._pendingCandidates || [])) { try { await pc.addIceCandidate(c); } catch (e) {} }
+    if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ 应答已接受，等待通道打开…'; }
+  } catch (e) { if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '连接失败：' + (e.message || e); } }
+}
+
+async function manualGenAnswer() {
+  Net.close();
+  Net.backend = 'manual'; Net.role = 'client'; Net.isHost = false;
+  const inputEl = document.getElementById('offerInput');
+  const answerEl = document.getElementById('myAnswerCode');
+  const statusEl = document.getElementById('manualClientStatus');
+  if (!inputEl) return;
+  const code = inputEl.value.trim();
+  if (!code) { if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '请粘贴邀请码'; } return; }
+  const data = decodeManualCode(code);
+  if (!data || data.type !== 'offer') { if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '邀请码无效'; } return; }
+  if (statusEl) { statusEl.className = 'status-bar wait'; statusEl.textContent = '正在生成应答码…'; }
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  Net.pc = pc;
+  Net._pendingCandidates = [];
+  pc.onicecandidate = (e) => { if (e.candidate) Net._pendingCandidates.push(e.candidate); };
+  pc.ondatachannel = (e) => { Net._setupClientDataChannel(e.channel); };
+  pc.onconnectionstatechange = () => {
+    if (statusEl) {
+      if (pc.connectionState === 'connected') { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ P2P 通道已连接'; }
+      else if (pc.connectionState === 'failed') { statusEl.className = 'status-bar'; statusEl.textContent = '连接失败'; }
+    }
+  };
+  try {
+    await pc.setRemoteDescription(data.sdp);
+    for (const c of (data.cand || [])) { try { await pc.addIceCandidate(c); } catch (e) {} }
+    const ans = await pc.createAnswer();
+    await pc.setLocalDescription(ans);
+    await waitForIce(pc, 2500);
+    const packed = { v: 1, type: 'answer', sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, cand: [], name: '玩家' };
+    if (answerEl) answerEl.value = encodeManualCode(packed);
+    if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ 应答码已生成，请复制发回给房主'; }
+  } catch (e) { if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '生成失败：' + (e.message || e); } }
+}
+
+/* ============================================================
+   ★ 多人 UI
+   ============================================================ */
+let multiBackend = 'mqtt';
+function buildBackendOpts() {
+  const bo = document.getElementById('backendOpts');
+  if (!bo) return;
+  bo.innerHTML = '';
   [
-    {k:'peerjs',n:'PeerJS',d:'P2P WebRTC 直连；本地测试推荐用 HTTP 服务器'},
-    {k:'emqx',n:'EMQX (MQTT)',d:'通过公共 MQTT broker 中转，兼容性最好，file:// 也能用'},
-  ].forEach(b=>{
-    const d=document.createElement('div');
-    d.className='opt'+(multiBackend===b.k?' active':'');
-    d.innerHTML='<div class="on">'+b.n+'</div><div class="od">'+b.d+'</div>';
-    d.onclick=()=>{multiBackend=b.k;buildBackendOpts();};
+    { k: 'mqtt', n: '公共服务器', d: '通过公共 MQTT 中转信令，自动选延迟最低的服务器' },
+    { k: 'manual', n: '手动 P2P', d: '微信/QQ 交换邀请码，无需信令服务器' },
+  ].forEach(b => {
+    const d = document.createElement('div');
+    d.className = 'opt' + (multiBackend === b.k ? ' active' : '');
+    d.innerHTML = '<div class="on">' + b.n + '</div><div class="od">' + b.d + '</div>';
+    d.onclick = () => { multiBackend = b.k; buildBackendOpts(); };
     bo.appendChild(d);
   });
 }
-function showMultiHome(){show(document.getElementById('multiHome'),true);show(document.getElementById('multiHost'),false);show(document.getElementById('multiJoin'),false);}
-document.getElementById('mMulti').onclick=()=>{
-  show(el.menu,false);show(el.multi,true);showMultiHome();buildBackendOpts();
-  if(location.protocol==='file:')show(document.getElementById('fileWarn'),true);
-};
-document.getElementById('mmBack').onclick=()=>{Net.close();show(el.multi,false);show(el.menu,true);};
-document.getElementById('mmHost').onclick=async()=>{
-  show(document.getElementById('multiHome'),false);show(document.getElementById('multiHost'),true);
-  const code=Net.genRoomCode();
-  document.getElementById('hostRoomCode').textContent=code;
-  try{
-    await Net.hostCreate(code,multiBackend);
-    toast(null,'房间已创建：'+code+'（'+(multiBackend==='emqx'?'EMQX':'PeerJS')+'）','good');
-  }catch(e){alert(e.message||'创建失败');showMultiHome();}
-};
-document.getElementById('copyRoomCode').onclick=()=>{
-  const code=document.getElementById('hostRoomCode').textContent;
-  if(navigator.clipboard)navigator.clipboard.writeText(code).then(()=>alert('房间码已复制：'+code));
-};
-document.getElementById('hostStart').onclick=()=>{
-  if(Net.connections.size===0&&!confirm('还没有其他玩家连接，确定开始吗？'))return;
-  const mapId='grand';const diff='normal';
-  G=makeGame({mapId,side:'atk',diff});
-  G.mp={isHost:true};G.playerSide='atk';G._clientReady=true;
-  Net.broadcast({type:'start',mapId,diff});
-  setTimeout(()=>netBroadcastState(),150);
-  show(el.multi,false);startPlaying();
-};
-document.getElementById('hostBack').onclick=()=>{Net.close();show(document.getElementById('multiHost'),false);showMultiHome();};
-document.getElementById('mmJoin').onclick=()=>{show(document.getElementById('multiHome'),false);show(document.getElementById('multiJoin'),true);document.getElementById('joinRoomCode').focus();};
-document.getElementById('doJoin').onclick=async()=>{
-  const code=document.getElementById('joinRoomCode').value.trim().toUpperCase();
-  if(code.length!==6){alert('请输入 6 位房间码');return;}
-  const status=document.getElementById('joinStatus');
-  status.textContent='正在连接 '+code+'（'+(multiBackend==='emqx'?'EMQX':'PeerJS')+'）…';
-  try{await Net.clientJoin(code,multiBackend);status.textContent='已连接！等待房主开始…';}
-  catch(e){status.textContent='';alert(e.message||'连接失败');}
-};
-document.getElementById('joinBack').onclick=()=>{Net.close();show(document.getElementById('multiJoin'),false);showMultiHome();};
 
-Net.onAssign=(msg)=>{
-  const status=document.getElementById('joinStatus');
-  if(status)status.textContent='已连接！你是'+(msg.side==='atk'?'攻方':'守方')+' · 等待房主开始…';
-  console.log('[Client] assigned as',msg.side);
+function showMultiView(view) {
+  ['multiHome', 'multiHost', 'multiJoin', 'multiManual'].forEach(v => {
+    const e = document.getElementById(v);
+    if (e) e.classList.toggle('hidden', v !== view);
+  });
+}
+
+document.getElementById('mMulti').onclick = () => {
+  show(el.menu, false);
+  show(el.multi, true);
+  showMultiView('multiHome');
+  buildBackendOpts();
+  if (location.protocol === 'file:') {
+    const fw = document.getElementById('fileWarn');
+    if (fw) fw.classList.remove('hidden');
+  }
 };
-Net.onStart=(msg)=>{
-  if(!Net.mySide)return;
-  G=makeGame({mapId:msg.mapId||Net.pendingMapId||'grand',side:Net.mySide,diff:msg.diff||Net.pendingDiff||'normal'});
-  G.mp={isHost:false};G.playerSide=Net.mySide;
-  G.units=[];G.turrets=[];G.trenches=[];G.deploying=[];G.projectiles=[];
-  G._clientReady=false;
-  recomputeVis(G,G.playerSide);
-  show(el.multi,false);startPlaying();
-  toast(G,'游戏开始 · 你是'+(Net.mySide==='atk'?'攻方':'守方')+' · 等待同步…','good');
+
+document.getElementById('mmBack').onclick = () => { Net.close(); show(el.multi, false); show(el.menu, true); };
+
+document.getElementById('mmHost').onclick = async () => {
+  if (multiBackend === 'manual') {
+    showMultiView('multiManual');
+    return;
+  }
+  showMultiView('multiHost');
+  const code = generateRoomCode();
+  const codeEl = document.getElementById('hostRoomCode');
+  if (codeEl) codeEl.textContent = code;
+  const statusEl = document.getElementById('hostStatus');
+  if (statusEl) { statusEl.className = 'status-bar wait'; statusEl.textContent = '正在连接信令服务器…'; }
+  try {
+    await Net.hostCreateMqtt(code);
+    if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ 房间已创建，等待玩家加入…'; }
+  } catch (e) {
+    if (statusEl) { statusEl.className = 'status-bar'; statusEl.textContent = '创建失败：' + (e.message || e); }
+    alert(e.message || '创建失败');
+  }
 };
-Net.onHostLeave=()=>{if(G&&G.mp&&!G.mp.isHost)toast(G,'房主已离线','bad');};
-Net.onPlayers=(list)=>{
-  const el_=document.getElementById('hostPlayers');
-  if(!el_)return;
-  if(!list||list.length<=1){el_.innerHTML='<div style="color:#4d5c6b;font-size:12px;">等待玩家加入…</div>';return;}
-  el_.innerHTML=list.map(p=>'<div style="background:#131b24;border:1px solid #223040;border-radius:6px;padding:6px 10px;margin-bottom:6px;font-size:12px;color:#cfe2f5;display:flex;justify-content:space-between;align-items:center;"><span>'+p.name+'</span><span class="player-badge '+(p.side==='atk'?'atk':'def')+'">'+(p.side==='atk'?'攻方':'守方')+'</span></div>').join('');
+
+document.getElementById('mmJoin').onclick = () => {
+  showMultiView('multiJoin');
+  const inp = document.getElementById('joinRoomCode');
+  if (inp) { inp.value = ''; inp.focus(); }
+  const st = document.getElementById('joinStatus');
+  if (st) { st.className = 'status-bar'; st.textContent = '等待输入房间号'; }
 };
-Net.onCommand=(side,msg)=>{
-  if(!G)return;
-  if(msg.cmd==='deploy')startDeploy(G,side,msg.unit,msg.x,msg.y,150);
-  else if(msg.cmd==='move'){const units=G.units.filter(u=>u.side===side&&msg.ids.includes(u.id));if(units.length)orderMove(G,units,msg.x,msg.y);}
-  else if(msg.cmd==='skill')useSkill(G,side,msg.key,msg.x,msg.y);
-  else if(msg.cmd==='attack'){
-    const units=G.units.filter(u=>u.side===side&&msg.ids.includes(u.id)&&u.alive);
-    for(const u of units){
-      let best=null,bd=Infinity;
-      for(const e of G.units){
-        if(e.side===u.side||!e.alive)continue;
-        if(!visible(G,u.side,e.x,e.y))continue;
-        const d=dist(u.x,u.y,e.x,e.y);
-        if(d<bd){bd=d;best=e;}
-      }
-      if(best){u.tid=best.id;u.holdPost=0;}
+
+document.getElementById('mmManual').onclick = () => { showMultiView('multiManual'); };
+document.getElementById('manualBack').onclick = () => { Net.close(); showMultiView('multiHome'); };
+
+document.getElementById('hostRoomCode').onclick = () => {
+  const code = document.getElementById('hostRoomCode').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => alert('房间码已复制：' + code));
+  else alert('房间码：' + code);
+};
+
+document.getElementById('hostStart').onclick = () => {
+  G = makeGame({ mapId: 'grand', side: 'atk', diff: 'normal' });
+  G.mp = { isHost: true };
+  G.playerSide = 'atk';
+  G._clientReady = true;
+
+  Net.broadcast({ type: 'start', mapId: 'grand', diff: 'normal', season: G.season, dayTime: G.dayTime });
+  setTimeout(() => netBroadcastState(), 200);
+  show(el.multi, false);
+  startPlaying();
+};
+
+document.getElementById('hostBack').onclick = () => { Net.close(); showMultiView('multiHome'); };
+
+document.getElementById('doJoin').onclick = async () => {
+  const code = document.getElementById('joinRoomCode').value.trim().toUpperCase();
+  if (code.length !== 6) { alert('请输入 6 位房间码'); return; }
+  const st = document.getElementById('joinStatus');
+  if (st) { st.className = 'status-bar wait'; st.textContent = '正在连接 ' + code + ' …'; }
+  try {
+    await Net.clientJoinMqtt(code);
+  } catch (e) {
+    if (st) { st.className = 'status-bar'; st.textContent = '连接失败：' + (e.message || e); }
+    alert(e.message || '连接失败');
+  }
+};
+document.getElementById('joinBack').onclick = () => { Net.close(); showMultiView('multiHome'); };
+
+Net.onAssign = (msg) => {
+  const st = document.getElementById('joinStatus');
+  if (st) { st.className = 'status-bar ok'; st.textContent = '已连接！你是' + (msg.side === 'atk' ? '攻方' : '守方') + ' · 等待房主开始…'; }
+};
+Net.onState = (s) => netApplyState(s);
+
+Net.onStart = (msg) => {
+  if (!Net.mySide) return;
+  G = makeGame({ mapId: msg.mapId || 'grand', side: Net.mySide, diff: msg.diff || 'normal', season: msg.season, dayTime: msg.dayTime });
+  G.mp = { isHost: false };
+  G.playerSide = Net.mySide;
+  G.units = []; G.turrets = []; G.trenches = []; G.deploying = []; G.projectiles = [];
+  G._clientReady = false;
+  recomputeVis(G, G.playerSide);
+
+  Net.sendToHost({ type: 'cmd', cmd: 'reqState' });
+
+  show(el.multi, false);
+  startPlaying();
+  toast(G, '游戏开始 · 你是' + (Net.mySide === 'atk' ? '攻方' : '守方'), 'good');
+
+  setTimeout(() => {
+    if (G && !G._clientReady) {
+      G._clientReady = true;
+      show(document.getElementById('syncOverlay'), false);
+      toast(G, '未收到房主状态，已进入半同步模式', 'bad');
     }
+  }, 3000);
+};
+
+Net.onHostLeave = () => {
+  if (G && G.mp && !G.mp.isHost) toast(G, '房主已离线', 'bad');
+};
+
+Net.onPlayers = (list) => {
+  const el_ = document.getElementById('hostPlayers');
+  if (!el_) return;
+  if (!list || list.length <= 1) {
+    el_.innerHTML = '<div style="color:#4d5c6b;font-size:12px;text-align:center;padding:8px;">等待玩家加入…</div>';
+    return;
   }
-  else if(msg.cmd==='defend'){
-    const units=G.units.filter(u=>u.side===side&&msg.ids.includes(u.id)&&u.alive);
-    for(const u of units){u.holdPost=1;u.order=null;u.path=null;}
-  }
-  else if(msg.cmd==='stop'){
-    const units=G.units.filter(u=>u.side===side&&msg.ids.includes(u.id)&&u.alive);
-    for(const u of units){u.order=null;u.path=null;u.tid=0;u.holdPost=0;}
-  }
-  else if(msg.cmd==='trench'){
-    const units=G.units.filter(u=>u.side===side&&msg.ids.includes(u.id)&&u.alive&&u.type==='eng');
-    if(units.length){G.cp[side]=Math.max(0,G.cp[side]-5);for(const u of units)u.order={type:'trench'};}
-  }
-  else if(msg.cmd==='recycle'){
-    const units=G.units.filter(u=>u.side===side&&msg.ids.includes(u.id)&&u.alive);
-    for(const u of units)recycleUnit(G,u);
+  el_.innerHTML = list.map(p =>
+    '<div style="background:#131b24;border:1px solid #223040;border-radius:6px;padding:6px 10px;margin-bottom:6px;font-size:12px;color:#cfe2f5;display:flex;justify-content:space-between;align-items:center;">' +
+    '<span>' + p.name + '</span>' +
+    '<span class="player-badge ' + (p.side === 'atk' ? 'atk' : 'def') + '">' + (p.side === 'atk' ? '攻方' : '守方') + '</span>' +
+    '</div>'
+  ).join('');
+};
+
+Net.onCommand = (side, msg) => {
+  if (!G) return;
+  if (msg.cmd === 'reqState') { netBroadcastState(); return; }
+  if (msg.cmd === 'deploy') startDeploy(G, side, msg.unit, msg.x, msg.y, 150);
+  if (msg.cmd === 'move') {
+    const units = G.units.filter(u => u.side === side && msg.ids.includes(u.id));
+    if (units.length) orderMove(G, units, msg.x, msg.y);
+  } else if (msg.cmd === 'skill') useSkill(G, side, msg.key, msg.x, msg.y);
+  else if (msg.cmd === 'attack') {
+    const units = G.units.filter(u => u.side === side && msg.ids.includes(u.id) && u.alive);
+    for (const u of units) {
+      let best = null, bd = Infinity;
+      for (const e of G.units) {
+        if (e.side === u.side || !e.alive) continue;
+        if (!visible(G, u.side, e.x, e.y)) continue;
+        const d = dist(u.x, u.y, e.x, e.y);
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (best) { u.tid = best.id; u.holdPost = 0; }
+    }
+  } else if (msg.cmd === 'defend') {
+    const units = G.units.filter(u => u.side === side && msg.ids.includes(u.id) && u.alive);
+    for (const u of units) { u.holdPost = 1; u.order = null; u.path = null; }
+  } else if (msg.cmd === 'stop') {
+    const units = G.units.filter(u => u.side === side && msg.ids.includes(u.id) && u.alive);
+    for (const u of units) { u.order = null; u.path = null; u.tid = 0; u.holdPost = 0; }
+  } else if (msg.cmd === 'trench') {
+    const units = G.units.filter(u => u.side === side && msg.ids.includes(u.id) && u.alive && u.type === 'eng');
+    if (units.length) { G.cp[side] = Math.max(0, G.cp[side] - 5); for (const u of units) u.order = { type: 'trench' }; }
+  } else if (msg.cmd === 'recycle') {
+    const units = G.units.filter(u => u.side === side && msg.ids.includes(u.id) && u.alive);
+    for (const u of units) recycleUnit(G, u);
   }
 };
 
-/* ============ 教程 ============ */
-const TUT_STEPS=[
-  {title:'1 / 6 · 移动视角',text:'单指拖动地图；双指捏合缩放。\n先把视角拖到中间的中立支部。',hint:'拖动地图',check(g,ev){if(ev.type!=='cam')return false;const post=g.posts.find(p=>p.name==='中立支部');if(!post)return false;return dist(g.cam.x,g.cam.y,post.x,post.y)<180;}},
+document.getElementById('genOffer').onclick = manualGenOffer;
+document.getElementById('acceptAnswer').onclick = manualAcceptAnswer;
+document.getElementById('genAnswer').onclick = manualGenAnswer;
+document.getElementById('copyOffer').onclick = () => {
+  const el_ = document.getElementById('offerCode'); el_.select(); document.execCommand('copy');
+  const st = document.getElementById('manualHostStatus'); if (st) { st.textContent = '✓ 已复制'; setTimeout(() => st.textContent = '等待玩家接受应答', 1500); }
+};
+document.getElementById('copyAnswer').onclick = () => {
+  const el_ = document.getElementById('myAnswerCode'); el_.select(); document.execCommand('copy');
+  const st = document.getElementById('manualClientStatus'); if (st) { st.textContent = '✓ 已复制'; setTimeout(() => st.textContent = '等待通道打开…', 1500); }
+};
+document.getElementById('manualTabs').querySelectorAll('[data-mtab]').forEach(t => {
+  t.onclick = () => {
+    document.getElementById('manualTabs').querySelectorAll('[data-mtab]').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const isHost = t.dataset.mtab === 'host';
+    document.getElementById('manualHost').style.display = isHost ? 'block' : 'none';
+    document.getElementById('manualClient').style.display = isHost ? 'none' : 'block';
+  };
+});
+
+/* ============================================================
+   教程 / 存档 / 设置 / 事件
+   ============================================================ */
+const TUT_STEPS = [
+  {title:'1 / 6 · 移动视角',text:'单指拖动；双指捏合。\n先把视角拖到中间的中立支部。',hint:'拖动地图',check(g,ev){if(ev.type!=='cam')return false;const post=g.posts.find(p=>p.name==='中立支部');if(!post)return false;return dist(g.cam.x,g.cam.y,post.x,post.y)<180;}},
   {title:'2 / 6 · 选中单位',text:'点击己方单位选中。\n选中你的一名步兵。',hint:'点击单位',check(g,ev){return ev.type==='sel'&&g.selection.length>0;}},
   {title:'3 / 6 · 移动与占领',text:'点击地图任意位置命令部队移动。\n把部队移动到中立支部附近即可占领。',hint:'移动至中立支部',check(g){const post=g.posts.find(p=>p.name==='中立支部');return post&&post.owner===g.playerSide&&post.cap>=100;}},
-  {title:'4 / 6 · 部署部队',text:'点击下方兵种卡片，再点击地图上的橙色部署点圈内任意位置。\n试着部署一名步兵。',hint:'部署步兵',check(g,ev){return ev.type==='deploy'||g.deploying.some(d=>d.side===g.playerSide);}},
+  {title:'4 / 6 · 部署部队',text:'点击兵种卡片，再点击地图上的橙色部署点圈内。\n试着部署一名步兵。',hint:'部署步兵',check(g,ev){return ev.type==='deploy'||g.deploying.some(d=>d.side===g.playerSide&&!d._client);}},
   {title:'5 / 6 · 交战',text:'敌人进入射程后自动开火。\n靠近敌方支部，清掉守军。',hint:'击溃敌军',check(g){const foe=g.units.filter(u=>u.side!=='atk'&&u.alive).length;if(g._tut_fox_ini===undefined)g._tut_fox_ini=foe+2;return foe<g._tut_fox_ini;}},
   {title:'6 / 6 · 拿下指挥部',text:'占领敌方支部后，继续推进攻下敌方指挥部即可获胜。',hint:'占领敌方指挥部',check(g){const hq=g.posts.find(p=>p.type==='hq'&&p.name==='敌方指挥部');return hq&&hq.owner===g.playerSide;}},
 ];
@@ -3074,38 +3550,27 @@ function tutStep(dt){
     toast(G,'✓ 完成 '+G.tutorial.idx+'/'+TUT_STEPS.length,'good');showTutHint();
   }
 }
-
-/* ============ 存档 ============ */
-const SAVE_KEY='steel_frontline_v19_saves';
+const SAVE_KEY='steel_frontline_v21_saves';
 function readSaves(){try{return JSON.parse(localStorage.getItem(SAVE_KEY)||'[]');}catch(e){return[];}}
 function writeSaves(a){try{localStorage.setItem(SAVE_KEY,JSON.stringify(a));}catch(e){}}
-function serialize(g){
-  return{v:19,cfg:g.cfg,time:g.time,cp:{atk:Math.floor(g.cp.atk),def:Math.floor(g.cp.def)},
-    units:g.units.map(u=>({side:u.side,type:u.type,x:Math.round(u.x),y:Math.round(u.y),hp:Math.round(u.hp),hold:u.holdPost?1:0,order:u.order&&u.order.type==='move'?{type:'move',x:Math.round(u.order.x),y:Math.round(u.order.y)}:null})),
-    posts:g.posts.map(p=>({owner:p.owner,cap:Math.round(p.cap),integrate:p.integrate})),
-    turrets:g.turrets.map(t=>({type:t.type,x:t.x,y:t.y,hp:Math.round(t.hp)})),
-    trenches:g.trenches.map(t=>({x:t.x,y:t.y,side:t.side})),
-    cd:g.cd,mp:g.mp||null};
-}
+function serialize(g){return{v:21,cfg:g.cfg,time:g.time,cp:{atk:Math.floor(g.cp.atk),def:Math.floor(g.cp.def)},season:g.season,dayTime:g.dayTime,units:g.units.map(u=>({side:u.side,type:u.type,x:Math.round(u.x),y:Math.round(u.y),hp:Math.round(u.hp),hold:u.holdPost?1:0,order:u.order&&u.order.type==='move'?{type:'move',x:Math.round(u.order.x),y:Math.round(u.order.y)}:null})),posts:g.posts.map(p=>({owner:p.owner,cap:Math.round(p.cap),integrate:p.integrate})),turrets:g.turrets.map(t=>({type:t.type,x:t.x,y:t.y,hp:Math.round(t.hp),discovered:t.discovered?1:0})),trenches:g.trenches.map(t=>({x:t.x,y:t.y,side:t.side})),cd:g.cd,mp:g.mp||null};}
 function deserialize(data){
   const mapDef=MAPS.find(m=>m.id===data.cfg.mapId)||MAPS[0];
   const gen=mapDef.gen();
   if(gen.mapW){MAP_W=gen.mapW;MAP_H=gen.mapH;}else if(mapDef.id==='grand'){MAP_W=128;MAP_H=80;}else{MAP_W=80;MAP_H=56;}
-  const g=makeGame(data.cfg);
+  const g=makeGame({...data.cfg,season:data.season,dayTime:data.dayTime});
   g.time=data.time;g.cp.atk=data.cp.atk;g.cp.def=data.cp.def;
   g.units=[];
   for(const u of data.units){const nu=spawnUnit(g,u.side,u.type,u.x,u.y);nu.hp=u.hp;if(u.order)nu.order=u.order;if(u.hold)nu.holdPost=1;}
   for(let i=0;i<g.posts.length&&i<data.posts.length;i++){g.posts[i].owner=data.posts[i].owner;g.posts[i].cap=data.posts[i].cap;g.posts[i].integrate=data.posts[i].integrate;}
   g.turrets=[];
-  for(const t of data.turrets){const d=TURRETS[t.type];g.turrets.push({id:uid(),side:'def',type:t.type,x:t.x,y:t.y,hp:t.hp,maxHp:d.hp,cd:0,r:d.r});}
+  for(const t of data.turrets){const d=TURRETS[t.type];g.turrets.push({id:uid(),side:'def',type:t.type,x:t.x,y:t.y,hp:t.hp,maxHp:d.hp,cd:0,r:d.r,discovered:!!t.discovered});}
   g.trenches=data.trenches.map(t=>({x:t.x,y:t.y,r:34,side:t.side}));
   g.cd=data.cd||{atk:{},def:{}};
   g.mp=null;g._clientReady=true;
   computeForbiddenRadius(g);recomputeVis(g,'atk');recomputeVis(g,'def');updateDeployPoints(g);
   return g;
 }
-
-/* ============ 菜单 ============ */
 let setupCfg={mapId:'island',side:'atk',diff:'normal'};
 function buildSetup(){
   const mo=document.getElementById('mapOpts');mo.innerHTML='';
@@ -3116,7 +3581,7 @@ function buildSetup(){
     d.onclick=()=>{setupCfg.mapId=m.id;buildSetup();};mo.appendChild(d);
   });
   const so=document.getElementById('sideOpts');so.innerHTML='';
-  [{k:'atk',n:'攻方 · 进攻军',d:'指挥值随时间提升，击杀与占领获得额外CP。部署2秒。'},{k:'def',n:'守方 · 卫戍军',d:'指挥值恒定略高，丢支部降恢复。部署4秒，费用+15%。击杀+10%奖励。'}].forEach(s=>{
+  [{k:'atk',n:'攻方 · 进攻军',d:'部署容量28。指挥值随时间提升，击杀与占领获得额外CP。部署2秒。'},{k:'def',n:'守方 · 卫戍军',d:'部署容量20。指挥值恒定略高，丢支部降恢复。部署4秒，费用+15%。击杀+10%奖励。'}].forEach(s=>{
     const d=document.createElement('div');d.className='opt'+(setupCfg.side===s.k?' active':'');
     d.innerHTML='<div class="on">'+s.n+'</div><div class="od">'+s.d+'</div>';
     d.onclick=()=>{setupCfg.side=s.k;buildSetup();};so.appendChild(d);
@@ -3130,7 +3595,7 @@ function buildSaveList(){
   saves.forEach((s,i)=>{
     const d=document.createElement('div');d.className='save-item';
     const mapName=(MAPS.find(m=>m.id===s.data.cfg.mapId)||MAPS[0]).n;
-    const mpTag = s.data.mp ? '<span style="color:#7fc0ff;font-size:10px;margin-left:6px;">[多人]</span>' : '';
+    const mpTag=s.data.mp?'<span style="color:#7fc0ff;font-size:10px;margin-left:6px;">[多人]</span>':'';
     d.innerHTML='<div class="si-main"><div class="si-t">'+s.name+mpTag+'</div><div class="si-s">'+mapName+' · '+(s.data.cfg.side==='atk'?'攻方':'守方')+' · '+DIFFS[s.data.cfg.diff].n+' · 已进行 '+fmtTime(s.data.time)+'</div></div>';
     const b1=document.createElement('button');b1.className='btn primary';b1.textContent='载入';
     b1.onclick=()=>{G=deserialize(saves[i].data);startPlaying();};
@@ -3145,12 +3610,15 @@ function startPlaying(){
   show(el.help,false);show(el.tutorial,false);show(el.settings,false);
   show(el.result,false);show(el.pause,false);show(el.hud,true);
   el.planSidebar.classList.add('hidden');
+  el.btnPlan.classList.remove('on');
   refreshDeployRow(G);refreshSkillRow(G);refreshLeftPanel(G);
   refreshHUD(G);updateSelInfo(G);updateModeTip(G);
   if(G.playerSide==='atk'){G.cam.x=G.spawnPoint.x;G.cam.y=G.spawnPoint.y;}
   else{const hq=G.posts.find(p=>p.type==='hq');if(hq){G.cam.x=hq.x;G.cam.y=hq.y;}}
   G.cam.zoom=(Math.min(W,H)<700)?.62:.85;
   if(G.tutorial) showTutHint();
+  const s=SEASONS[G.season];
+  toast(G,'战场环境：'+s.icon+s.n+' · '+s.desc,'good');
 }
 function buildSettings(){
   const qg=document.getElementById('qgrp');[...qg.children].forEach(c=>c.classList.toggle('active',c.dataset.q===CFG.quality));
@@ -3160,7 +3628,6 @@ function buildSettings(){
 document.getElementById('qgrp').onclick=e=>{if(e.target.dataset.q){CFG.quality=e.target.dataset.q;saveCfg();buildSettings();if(G)buildTerrainCanvas(G);}};
 document.getElementById('fgrp').onclick=e=>{if(e.target.dataset.f){CFG.fps=parseInt(e.target.dataset.f,10);saveCfg();buildSettings();}};
 document.getElementById('fxgrp').onclick=e=>{if(e.target.dataset.fx){CFG.fx=e.target.dataset.fx==='1';saveCfg();buildSettings();}};
-
 let tutIdx=0;
 function showTut(){
   const step=TUT_STEPS[tutIdx];
@@ -3170,7 +3637,6 @@ function showTut(){
 }
 document.getElementById('tPrev').onclick=()=>{if(tutIdx>0){tutIdx--;showTut();}};
 document.getElementById('tNext').onclick=()=>{if(tutIdx>=TUT_STEPS.length-1){show(el.tutorial,false);show(el.menu,true);tutIdx=0;}else{tutIdx++;showTut();}};
-
 document.getElementById('mNew').onclick=()=>{show(el.menu,false);show(el.setup,true);buildSetup();};
 document.getElementById('mTut').onclick=()=>{show(el.menu,false);startTutorial();};
 document.getElementById('mLoad').onclick=()=>{show(el.menu,false);show(el.saves,true);buildSaveList();};
@@ -3218,7 +3684,7 @@ window.addEventListener('keydown',e=>{
   if(k>='1'&&k<='9'){
     const i=parseInt(k,10);
     if(e.shiftKey||e.ctrlKey){
-      if(G.selection.length>0){G.squads[i]=G.selection.filter(u=>u.alive).map(u=>u.id);toast(G,'编队 '+i+' 已编入','good');}
+      if(G.selection.length>0){G.squads[i]=G.selection.filter(u=>u.alive).map(u=>u.id);toast(G,'编队 '+i+' 已编入','good');refreshLeftPanel(G);}
       else toast(G,'请先选中部队','bad');
     }else{
       const sq=G.squads[i];
@@ -3227,15 +3693,16 @@ window.addEventListener('keydown',e=>{
         for(const id of sq){const u=findUnitById(G,id);if(u&&u.alive)sel.push(u);}
         G.selection=sel;G.hotSquad=i;
         if(sel.length>0)toast(G,'调用编队 '+i,'good');
-        else{G.squads[i]=[];toast(G,'编队 '+i+' 已失效','bad');}
+        else{G.squads[i]=[];toast(G,'编队 '+i+' 已失效','bad');refreshLeftPanel(G);}
       }else toast(G,'编队 '+i+' 为空','bad');
     }
+    updateSelInfo(G);
     return;
   }
   if(e.ctrlKey&&k==='a'){e.preventDefault();G.selection=G.units.filter(u=>u.side===G.playerSide&&u.alive);updateSelInfo(G);toast(G,'选中 '+G.selection.length+' 支部队','good');return;}
   if(k===' '){e.preventDefault();if(G.selection.length>0){let cx=0,cy=0;for(const u of G.selection){cx+=u.x;cy+=u.y;}G.cam.x=cx/G.selection.length;G.cam.y=cy/G.selection.length;}return;}
   if(k==='q'){
-    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步战场数据…','bad');return;}
+    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步…','bad');return;}
     const keys=Object.keys(SKILLS);const cur=G.pendingSkill;let idx=cur?keys.indexOf(cur)+1:0;
     if(idx>=keys.length)idx=0;const key=keys[idx];const s=SKILLS[key];
     if((G.cd[G.playerSide][key]||0)>0){toast(G,s.n+' 冷却中','bad');return;}
@@ -3253,8 +3720,9 @@ window.addEventListener('keydown',e=>{
     for(const u of G.selection){u.order=null;u.path=null;u.tid=0;u.holdPost=0;}toast(G,'部队停止行动','good');
   }
   if(k==='p'){
-    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步战场数据…','bad');return;}
+    if(Net.role==='client'&&!G._clientReady){toast(G,'正在同步…','bad');return;}
     el.planSidebar.classList.toggle('hidden');
+    el.btnPlan.classList.toggle('on',!el.planSidebar.classList.contains('hidden'));
     if(!el.planSidebar.classList.contains('hidden'))refreshPlanSidebar(G);
   }
   clampCam(G);
@@ -3263,6 +3731,7 @@ window.addEventListener('keydown',e=>{
 resize();
 setupRightPanel();
 buildSettings();
+setTimeout(probeAllServers,400);
 requestAnimationFrame(loop);
 </script>
 </body>
