@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0041)https://yricotf.github.io/SteelFrontline/ -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>钢铁前线 · STEEL FRONTLINE V24</title>
 <style>
@@ -176,7 +176,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 </style>
 </head>
 <body>
-<canvas id="game"></canvas>
+<canvas id="game" width="1042" height="436"></canvas>
 
 <div id="menu" class="overlay">
   <h1 class="title">钢铁前线</h1>
@@ -195,11 +195,11 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
   <div class="panel">
     <h2>战 役 设 置</h2>
     <div class="rowlabel">选择战场</div>
-    <div class="opt-grid" id="mapOpts"></div>
+    <div class="opt-grid" id="mapOpts"><div class="opt"><div class="on">翡翠群岛 <span style="color:#6b7f94;font-weight:400;font-size:11px">[海岛]</span></div><div class="od">中央山脉，山中有小道。</div></div><div class="opt"><div class="on">赤石山谷 <span style="color:#6b7f94;font-weight:400;font-size:11px">[山谷]</span></div><div class="od">两侧绝壁，山外平原进攻山口。</div></div><div class="opt"><div class="on">黑森林平原 <span style="color:#6b7f94;font-weight:400;font-size:11px">[平原+森林]</span></div><div class="od">60%密林+横贯河流。</div></div><div class="opt active"><div class="on">断壁残城 <span style="color:#6b7f94;font-weight:400;font-size:11px">[城市]</span></div><div class="od">多中心城区+广场+大道，工业区有油罐。</div></div><div class="opt"><div class="on">怒涛渡口 <span style="color:#6b7f94;font-weight:400;font-size:11px">[河流]</span></div><div class="od">横贯东西的大河。</div></div><div class="opt"><div class="on">大陆战场 <span style="color:#6b7f94;font-weight:400;font-size:11px">[大战场]</span></div><div class="od">开阔大陆，3个分散部署点。</div></div></div>
     <div class="rowlabel">选择阵营</div>
-    <div class="opt-grid" id="sideOpts"></div>
+    <div class="opt-grid" id="sideOpts"><div class="opt active"><div class="on">攻方 · 进攻军</div><div class="od">单位上限80。指挥值随时间提升。部署2.5秒。攻方CP涨幅-15%。</div></div><div class="opt"><div class="on">守方 · 卫戍军</div><div class="od">单位上限80。指挥值恒定略高，丢支部降恢复。部署4秒，费用+15%。击杀+10%奖励。</div></div></div>
     <div class="rowlabel">AI 难度</div>
-    <div class="opt-grid" id="diffOpts"></div>
+    <div class="opt-grid" id="diffOpts"><div class="opt"><div class="on">新兵</div><div class="od">AI数值×1</div></div><div class="opt active"><div class="on">老兵</div><div class="od">AI数值×1.2</div></div><div class="opt"><div class="on">王牌</div><div class="od">AI数值×1.5</div></div></div>
     <div style="display:flex;gap:8px;margin-top:16px;">
       <button class="btn ghost" id="sBack" style="flex:0 0 auto;">返回</button>
       <button class="btn primary" id="sGo" style="flex:1;">出 击</button>
@@ -209,7 +209,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 
 <div id="multi" class="overlay hidden">
   <div class="panel">
-    <h2>多 人 对 战 <span class="sig-badge" id="sigBadge">探测中…</span></h2>
+    <h2>多 人 对 战 <span class="sig-badge" id="sigBadge">EMQX 主站 · 901ms</span></h2>
     <div id="multiHome">
       <div id="fileWarn" class="warn-box hidden">
         ⚠ 检测到 <b>file:// 协议</b>。建议用 HTTP 服务器打开（如 <b>python -m http.server 8000</b>），否则浏览器会限制 WebRTC。
@@ -232,7 +232,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
       <div class="opt-grid" id="hostMapOpts" style="grid-template-columns:repeat(3,1fr);"></div>
       <div class="rowlabel">玩家分配</div>
       <div id="hostPlayers" style="min-height:40px;"></div>
-      <button class="btn primary" id="hostStart" style="width:100%;margin-top:14px;" disabled>开 始 战 斗</button>
+      <button class="btn primary" id="hostStart" style="width:100%;margin-top:14px;" disabled="">开 始 战 斗</button>
       <button class="btn ghost" id="hostBack" style="width:100%;margin-top:8px;">关闭房间</button>
     </div>
     <div id="multiJoin" class="hidden">
@@ -251,7 +251,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
       <div id="manualHost" style="display:block;">
         <div class="rowlabel">步骤① · 生成邀请码</div>
         <button class="btn" id="genOffer" style="width:100%;">生成邀请码</button>
-        <textarea id="offerCode" readonly style="width:100%;height:80px;margin-top:6px;background:#0d141c;color:#9fd8ff;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
+        <textarea id="offerCode" readonly="" style="width:100%;height:80px;margin-top:6px;background:#0d141c;color:#9fd8ff;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
         <button class="btn small" id="copyOffer" style="width:100%;margin-top:6px;">复制邀请码</button>
         <div class="rowlabel" style="margin-top:10px;">步骤② · 粘贴朋友的应答码</div>
         <textarea id="answerCode" placeholder="粘贴应答码…" style="width:100%;height:80px;background:#0d141c;color:#cfe2f5;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
@@ -263,7 +263,7 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
         <textarea id="offerInput" placeholder="粘贴邀请码…" style="width:100%;height:80px;background:#0d141c;color:#cfe2f5;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
         <button class="btn" id="genAnswer" style="width:100%;margin-top:6px;">生成应答码</button>
         <div class="rowlabel" style="margin-top:10px;">步骤② · 把应答码发回给房主</div>
-        <textarea id="myAnswerCode" readonly style="width:100%;height:80px;background:#0d141c;color:#9fd8ff;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
+        <textarea id="myAnswerCode" readonly="" style="width:100%;height:80px;background:#0d141c;color:#9fd8ff;border:1px solid #26333f;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;resize:none;word-break:break-all;"></textarea>
         <button class="btn small" id="copyAnswer" style="width:100%;margin-top:6px;">复制应答码</button>
         <div class="status-bar" id="manualClientStatus" style="margin-top:8px;">等待输入邀请码</div>
       </div>
@@ -300,15 +300,15 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
   <div class="panel">
     <h2>设 置</h2>
     <div class="settings-sub">画 面</div>
-    <div class="settings-row"><span class="lbl">画质</span><div class="grp" id="qgrp"><div class="chip" data-q="low">低</div><div class="chip" data-q="mid">中</div><div class="chip" data-q="high">高</div></div></div>
-    <div class="settings-row"><span class="lbl">帧率上限</span><div class="grp" id="fgrp"><div class="chip" data-f="30">30</div><div class="chip" data-f="45">45</div><div class="chip" data-f="60">60</div></div></div>
+    <div class="settings-row"><span class="lbl">画质</span><div class="grp" id="qgrp"><div class="chip active" data-q="low">低</div><div class="chip" data-q="mid">中</div><div class="chip" data-q="high">高</div></div></div>
+    <div class="settings-row"><span class="lbl">帧率上限</span><div class="grp" id="fgrp"><div class="chip" data-f="30">30</div><div class="chip" data-f="45">45</div><div class="chip active" data-f="60">60</div></div></div>
     <div class="settings-sub">特 效</div>
-    <div class="settings-row"><span class="lbl">战斗特效</span><div class="grp" id="fxgrp"><div class="chip" data-fx="1">开</div><div class="chip" data-fx="0">关</div></div></div>
-    <div class="settings-row"><span class="lbl">屏幕震动</span><div class="grp" id="shgrp"><div class="chip" data-sh="1">开</div><div class="chip" data-sh="0">关</div></div></div>
+    <div class="settings-row"><span class="lbl">战斗特效</span><div class="grp" id="fxgrp"><div class="chip active" data-fx="1">开</div><div class="chip" data-fx="0">关</div></div></div>
+    <div class="settings-row"><span class="lbl">屏幕震动</span><div class="grp" id="shgrp"><div class="chip active" data-sh="1">开</div><div class="chip" data-sh="0">关</div></div></div>
     <div class="settings-sub">音 效</div>
-    <div class="settings-row"><span class="lbl">总音效</span><div class="grp" id="sndgrp"><div class="chip" data-snd="1">开</div><div class="chip" data-snd="0">关</div></div></div>
-    <div class="settings-row"><span class="lbl">界面/点击音</span><div class="grp" id="uigrp"><div class="chip" data-snd="1">开</div><div class="chip" data-snd="0">关</div></div></div>
-    <div class="settings-row"><span class="lbl">战斗音效</span><div class="grp" id="sndbgrp"><div class="chip" data-snd="1">开</div><div class="chip" data-snd="0">关</div></div></div>
+    <div class="settings-row"><span class="lbl">总音效</span><div class="grp" id="sndgrp"><div class="chip" data-snd="1">开</div><div class="chip active" data-snd="0">关</div></div></div>
+    <div class="settings-row"><span class="lbl">界面/点击音</span><div class="grp" id="uigrp"><div class="chip active" data-snd="1">开</div><div class="chip" data-snd="0">关</div></div></div>
+    <div class="settings-row"><span class="lbl">战斗音效</span><div class="grp" id="sndbgrp"><div class="chip active" data-snd="1">开</div><div class="chip" data-snd="0">关</div></div></div>
     <button class="btn primary" id="setBack" style="width:100%;margin-top:16px;">完 成</button>
   </div>
 </div>
@@ -359,17 +359,17 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
 
 <div id="hud" class="hidden">
   <div id="topBar">
-    <div class="stat cp"><span class="lbl">指挥值</span><span class="val" id="cpVal">0</span></div>
-    <div class="stat" id="timeStat"><span class="lbl">剩余</span><span class="val" id="timeVal">25:00</span></div>
-    <div class="stat"><span class="lbl">据点</span><span class="val" id="postVal">0/4</span></div>
-    <div class="stat"><span class="lbl">部队</span><span class="val" id="unitVal">0</span></div>
-    <div class="stat env"><span class="lbl">环境</span><span class="val" id="envVal">—</span></div>
+    <div class="stat cp"><span class="lbl">指挥值</span><span class="val" id="cpVal">26</span></div>
+    <div class="stat" id="timeStat"><span class="lbl">剩余</span><span class="val" id="timeVal">23:12</span></div>
+    <div class="stat"><span class="lbl">据点</span><span class="val" id="postVal">1/5</span></div>
+    <div class="stat"><span class="lbl">部队</span><span class="val" id="unitVal">14/80</span></div>
+    <div class="stat env"><span class="lbl">环境</span><span class="val" id="envVal">🌸春·白天</span></div>
     <div class="tb-spacer"></div>
     <button class="tbtn" id="btnPlan"><span>⌘</span>计划</button>
     <button class="tbtn" id="btnPause">❚❚</button>
   </div>
   <div id="skillStatus"></div>
-  <div id="leftPanel"></div>
+  <div id="leftPanel"><div class="sqbtn" data-k="1"><span class="color-dot" style="background:#ff6b6b"></span>1<span class="cnt"></span></div><div class="sqbtn" data-k="2"><span class="color-dot" style="background:#ffb84d"></span>2<span class="cnt"></span></div><div class="sqbtn" data-k="3"><span class="color-dot" style="background:#ffe066"></span>3<span class="cnt"></span></div><div class="sqbtn" data-k="4"><span class="color-dot" style="background:#7dff8a"></span>4<span class="cnt"></span></div><div class="sqbtn" data-k="5"><span class="color-dot" style="background:#66e0ff"></span>5<span class="cnt"></span></div><div class="sqbtn" data-k="6"><span class="color-dot" style="background:#6b8aff"></span>6<span class="cnt"></span></div><div class="sqbtn" data-k="7"><span class="color-dot" style="background:#a76bff"></span>7<span class="cnt"></span></div><div class="sqbtn" data-k="8"><span class="color-dot" style="background:#ff6bde"></span>8<span class="cnt"></span></div><div class="sqbtn" data-k="9"><span class="color-dot" style="background:#ffffff"></span>9<span class="cnt"></span></div></div>
   <div id="rightPanel">
     <button class="rtbtn" id="rtMove"><span class="ic">➤</span>移动</button>
     <button class="rtbtn" id="rtAttack"><span class="ic">✶</span>攻击</button>
@@ -391,16 +391,16 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
   </div>
   <div id="bottomBar">
     <button id="deployToggle">▲ 部署</button>
-    <div class="unit-row" id="deployRow"></div>
-    <div class="unit-row" id="skillRow"></div>
+    <div class="unit-row" id="deployRow"><div class="ucard" style="pointer-events: none; min-width: 64px;"><div class="un" style="font-size:10px;color:#9fd8ff;">部署中</div><div class="uc" style="color:#7fc0ff;">0/16</div></div><div class="ucard"><span class="slot">2格</span><span class="key">Z</span><div class="un">步兵班</div><div class="uc">8 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">廉价主力</div></div><div class="ucard"><span class="slot">2格</span><span class="key">X</span><div class="un">侦察班</div><div class="uc">6 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">视野穿透森林</div></div><div class="ucard"><span class="slot">2格</span><span class="key">C</span><div class="un">工兵班</div><div class="uc">10 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">挖壕/修塔</div></div><div class="ucard dis"><span class="slot">4格</span><span class="key">V</span><div class="un">装甲连</div><div class="uc">30 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">高机动</div></div><div class="ucard dis"><span class="slot">5格</span><span class="key">B</span><div class="un">炮兵连</div><div class="uc">32 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">远程压制</div></div><div class="ucard"><span class="key">N</span><div class="un">挖掘壕沟</div><div class="uc">5 CP</div></div></div>
+    <div class="unit-row" id="skillRow"><div class="ucard skill"><div class="un">侦察机</div><div class="uc">12 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">基地1000内</div></div><div class="ucard skill dis"><div class="un">炮火覆盖</div><div class="uc">39 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">需友军420内</div></div><div class="ucard skill dis"><div class="un">空中打击</div><div class="uc">59 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">中立</div></div><div class="ucard skill dis"><div class="un">紧急部署</div><div class="uc">90 CP</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">25s内速度容量×1.5</div></div><div class="ucard skill dis"><div class="un">急行军</div><div class="uc">未选中</div><div style="font-size:9px;color:#5f7285;margin-top:1px;">30s移速+50%</div></div></div>
   </div>
-  <div id="selInfo" class="hidden"></div>
+  <div id="selInfo" class="hidden"><div class="sn">步兵班</div><div class="sr">生命 95/110 · 射程 78</div><div class="sr"></div></div>
   <button id="cancelSelBtn" class="hidden">✕ 取消选择</button>
-  <div id="modeTip" class="hidden"></div>
+  <div id="modeTip" class="hidden">点击己方部署点圈内任意位置 · ESC取消<span class="key">ESC</span></div>
   <div id="syncOverlay" class="hidden"><span class="spin"></span>正在同步战场数据…<div class="txt">若长时间无响应，请检查网络或改用 HTTP 服务器</div></div>
   <div id="toast"></div>
 </div>
-<div id="hoverTip" class="hidden"></div>
+<div id="hoverTip" class="hidden" style="left: 534px; top: 276px;"><div class="ht-name ">工兵班</div><div class="ht-row"><span class="ht-label">生命</span><span class="ht-val">100/100</span></div><div class="ht-row"><span class="ht-label">射程</span><span class="ht-val">46</span></div></div>
 <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
 <script>
 "use strict";
@@ -1480,19 +1480,24 @@ function updateCP(g,dt){
   };
   add('atk');add('def');
 }
-function awardCP(g,attackerSide,victimType){
-  if(!attackerSide||!UNITS[victimType])return;
-  const cost=UNITS[victimType].cost;
-  let amount=Math.max(3,Math.round(cost*0.64));
-  if(attackerSide==='def')amount=Math.round(amount*1.1);
-  g.cp[attackerSide]=Math.min(CP_MAX,g.cp[attackerSide]+amount);
+/* ============================================================
+ * 占领奖励 —— 修复数值过低
+ * 据点 30 CP / 支部 50 CP / 大本营 90 CP
+ * ============================================================ */
+ function awardCaptureCP(g, side, postType){
+  let value = 0;
+  if(postType === 'hq')          value = 90;
+  else if(postType === 'branch') value = 50;
+  else if(postType === 'point')  value = 30;
+  if(value <= 0) return;
+
+  g.cp[side] = Math.min(CP_MAX, g.cp[side] + value);
+  if(side === g.playerSide){
+    const def = POST_TYPES[postType];
+    toast(g, '占领 ' + (def ? def.n : '据点') + ' · +' + value + ' CP', 'good');
+  }
 }
-function awardCaptureCP(g,side,postType){
-  const value=POST_TYPES[postType]?.value||0;
-  if(value<=0)return;
-  g.cp[side]=Math.min(CP_MAX,g.cp[side]+value*4);
-  if(side===g.playerSide)toast(g,'占领奖励 +'+(value*4)+' CP','good');
-}
+
 
 /* ============ 单位逻辑 ============ */
 function updateUnit(g,u,dt){
@@ -1764,31 +1769,90 @@ function updateProjectiles(g,dt){
   }
 }
 
-/* ============ 据点占领 ============ */
-function updatePosts(g,dt){
+/* ============================================================
+ * 据点占领 —— 修复进度条卡死
+ *
+ * 核心改动：
+ *  · cap 统一表示「当前 owner 的控制度」(0 ~ def.cap)
+ *  · 攻方占领后 cap 从 30% 平滑推进到 100%（整合过程）
+ *  · 守方推回时 cap 从当前值下降到 0% 再翻转所有权
+ *  · 大本营/支部/据点各自的整合时长由 POST_TYPES 决定
+ * ============================================================ */
+ function updatePosts(g,dt){
   for(const p of g.posts){
     if(p._disabled) continue;
-    const def=POST_TYPES[p.type];
-    const R=def.radius;
+    const def = POST_TYPES[p.type];
+    const R   = def.radius;
 
+    /* --- 统计据点半径内双方部署容量 --- */
     let atkP=0, defP=0;
     for(const u of g.units){
       if(!u.alive) continue;
-      if(dist(u.x,u.y,p.x,p.y)>R) continue;
-      const w=UNIT_SLOTS[u.type]||2;
-      if(u.side==='atk') atkP+=w; else defP+=w;
+      if(dist(u.x, u.y, p.x, p.y) > R) continue;
+      const w = UNIT_SLOTS[u.type] || 2;
+      if(u.side==='atk') atkP += w; else defP += w;
     }
+    /* 供渲染层显示颜色用 */
+    p._atkP = atkP;
+    p._defP = defP;
 
-    const BASE_RATE=5;
-    const total=atkP+defP;
+    const BASE_RATE = 5;           /* 无对抗时 5/s */
+    const total     = atkP + defP;
+    const atkRatio  = total > 0 ? atkP/total : 0;
+    const defRatio  = total > 0 ? defP/total : 0;
+    const netFlow   = atkRatio - defRatio;   /* >0 攻方推进；<0 守方推进 */
 
-    if(atkP>0 && defP===0){
-      if(p.owner!=='atk'){
-        p.cap=Math.max(0, p.cap - BASE_RATE*dt);
-        if(p.cap<=0){
+    /* ============================================================
+     * 攻方拥有
+     * ============================================================ */
+    if(p.owner === 'atk'){
+      if(netFlow < 0){
+        /* 守方推回：攻方控制度下降 */
+        const rate = -netFlow * BASE_RATE;
+        p.cap = Math.max(0, p.cap - rate*dt);
+        if(p.cap <= 0){
+          p.owner='def';
+          p.cap=def.cap;
+          p.integrate=1;
+          p._fullyIntegrated=false;
+          toast(g,'守方夺回了 '+p.name, g.playerSide==='def'?'good':'bad');
+          addEffect(g,{type:'ring',x:p.x,y:p.y,r:80,life:.8,max:.8,col:'#4c9cff'});
+          awardCaptureCP(g,'def',p.type);
+          updateDeployPoints(g);
+          if(CFG.sndBattle) Snd.capture();
+        }
+      } else if(total > 0){
+        /* 整合推进：控制度从 30% 涨到 100% */
+        const myRatio = atkP/total;
+        if(myRatio >= 0.8){
+          p.integrate = Math.min(1, p.integrate + dt/def.integrate);
+        } else {
+          p.integrate = Math.max(0, p.integrate - dt*0.15);
+        }
+        /* ★ 关键：同步 cap，让进度条随整合推进 */
+        p.cap = def.cap * (0.3 + 0.7 * p.integrate);
+
+        if(p.integrate >= 1 && !p._fullyIntegrated){
+          p._fullyIntegrated = true;
+          toast(g, p.name+' 整合完成，可部署部队', g.playerSide==='atk'?'good':'bad');
+          updateDeployPoints(g);
+        }
+      }
+      /* total===0 时不做任何事（无单位在场，保持现状） */
+    }
+    /* ============================================================
+     * 守方 / 中立拥有
+     * ============================================================ */
+    else {
+      if(netFlow > 0){
+        /* 攻方推回：守方控制度下降 */
+        const rate = netFlow * BASE_RATE;
+        p.cap = Math.max(0, p.cap - rate*dt);
+        if(p.cap <= 0){
           p.owner='atk';
-          p.cap=def.cap*0.3;
-          p.integrate=0;
+          p.cap = def.cap * 0.3;
+          p.integrate = 0;
+          p._fullyIntegrated = false;
           toast(g,'攻方占领了 '+p.name, g.playerSide==='atk'?'good':'bad');
           addEffect(g,{type:'ring',x:p.x,y:p.y,r:80,life:.8,max:.8,col:'#ff7a4c'});
           awardCaptureCP(g,'atk',p.type);
@@ -1796,55 +1860,7 @@ function updatePosts(g,dt){
           if(CFG.sndBattle) Snd.capture();
         }
       }
-    }
-    else if(defP>0 && atkP===0){
-      if(p.owner!=='def'){
-        p.cap=Math.min(def.cap, p.cap + BASE_RATE*dt);
-        if(p.cap>=def.cap){
-          p.owner='def';
-          p.integrate=1;
-          toast(g,'守方夺回了 '+p.name, g.playerSide==='def'?'good':'bad');
-          addEffect(g,{type:'ring',x:p.x,y:p.y,r:80,life:.8,max:.8,col:'#4c9cff'});
-          awardCaptureCP(g,'def',p.type);
-          updateDeployPoints(g);
-          if(CFG.sndBattle) Snd.capture();
-        }
-      }
-    }
-    else if(total>0){
-      const atkRatio=atkP/total;
-      const defRatio=defP/total;
-      const weighted=(atkRatio-defRatio)*BASE_RATE;
-      if(weighted>0){
-        p.cap=Math.max(0, p.cap - weighted*dt);
-        if(p.cap<=0 && p.owner!=='atk'){
-          p.owner='atk'; p.cap=def.cap*0.3; p.integrate=0;
-          toast(g,'攻方占领了 '+p.name, g.playerSide==='atk'?'good':'bad');
-          awardCaptureCP(g,'atk',p.type);
-          updateDeployPoints(g);
-        }
-      } else if(weighted<0){
-        p.cap=Math.min(def.cap, p.cap + (-weighted)*dt);
-        if(p.cap>=def.cap && p.owner!=='def'){
-          p.owner='def'; p.integrate=1;
-          toast(g,'守方夺回了 '+p.name, g.playerSide==='def'?'good':'bad');
-          awardCaptureCP(g,'def',p.type);
-          updateDeployPoints(g);
-        }
-      }
-    }
-
-    if(p.owner==='atk' && p.integrate<1){
-      const myRatio = total>0 ? atkP/total : 0;
-      if(myRatio>=0.8){
-        p.integrate=Math.min(1, p.integrate + dt/def.integrate);
-      } else {
-        p.integrate=Math.max(0, p.integrate - dt*0.15);
-      }
-      if(p.integrate>=1){
-        toast(g, p.name+' 整合完成，可部署部队', g.playerSide==='atk'?'good':'bad');
-        updateDeployPoints(g);
-      }
+      /* 否则守方保持 */
     }
   }
 }
@@ -3175,45 +3191,70 @@ function drawTerrainLive(g){
 }
 
 function drawPost(g,p){
-  const col=p.owner==='atk'?'#ff6b42':(p.owner==='def'?'#4c9cff':'#8899aa');
-  const def=POST_TYPES[p.type]||POST_TYPES.branch;
-  const R=p.type==='hq'?50:(p.type==='branch'?36:30);
-  ctx.beginPath();ctx.arc(p.x,p.y,def.radius,0,6.284);
-  ctx.fillStyle=p.owner==='atk'?'rgba(255,90,50,.055)':(p.owner==='def'?'rgba(70,150,255,.055)':'rgba(140,150,160,.03)');ctx.fill();
-  ctx.strokeStyle=p.owner==='atk'?'rgba(255,90,50,.22)':(p.owner==='def'?'rgba(70,150,255,.22)':'rgba(140,150,160,.14)');
-  ctx.lineWidth=1.5;ctx.setLineDash([8,8]);ctx.stroke();ctx.setLineDash([]);
-  ctx.beginPath();ctx.arc(p.x,p.y,R,0,6.284);
-  ctx.fillStyle='rgba(8,14,22,.85)';ctx.fill();
-  ctx.lineWidth=3;ctx.strokeStyle=p._disabled?'#666':col;ctx.stroke();
-  ctx.beginPath();ctx.arc(p.x,p.y,R*.55,0,6.284);
-  ctx.fillStyle=p._disabled?'#444':col;ctx.globalAlpha=.75;ctx.fill();ctx.globalAlpha=1;
+  const col = p.owner==='atk' ? '#ff6b42' : (p.owner==='def' ? '#4c9cff' : '#8899aa');
+  const def = POST_TYPES[p.type] || POST_TYPES.branch;
+  const R   = p.type==='hq' ? 50 : (p.type==='branch' ? 36 : 30);
+
+  /* --- 控制范围虚线圈 --- */
+  ctx.beginPath();ctx.arc(p.x, p.y, def.radius, 0, 6.284);
+  ctx.fillStyle = p.owner==='atk' ? 'rgba(255,90,50,.055)'
+                : p.owner==='def' ? 'rgba(70,150,255,.055)'
+                : 'rgba(140,150,160,.03)';
+  ctx.fill();
+  ctx.strokeStyle = p.owner==='atk' ? 'rgba(255,90,50,.22)'
+                  : p.owner==='def' ? 'rgba(70,150,255,.22)'
+                  : 'rgba(140,150,160,.14)';
+  ctx.lineWidth=1.5; ctx.setLineDash([8,8]); ctx.stroke(); ctx.setLineDash([]);
+
+  /* --- 据点圆形图标 --- */
+  ctx.beginPath();ctx.arc(p.x, p.y, R, 0, 6.284);
+  ctx.fillStyle='rgba(8,14,22,.85)'; ctx.fill();
+  ctx.lineWidth=3; ctx.strokeStyle = p._disabled ? '#666' : col; ctx.stroke();
+
+  ctx.beginPath();ctx.arc(p.x, p.y, R*.55, 0, 6.284);
+  ctx.fillStyle = p._disabled ? '#444' : col;
+  ctx.globalAlpha=.75; ctx.fill(); ctx.globalAlpha=1;
+
   ctx.fillStyle='#eaf4ff';
-  ctx.font='bold '+(p.type==='hq'?18:(p.type==='branch'?14:12))+'px sans-serif';
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(p.type==='hq'?'★':(p.type==='branch'?'◆':'●'),p.x,p.y+1);
+  ctx.font = 'bold '+(p.type==='hq'?18:(p.type==='branch'?14:12))+'px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(p.type==='hq'?'★':(p.type==='branch'?'◆':'●'), p.x, p.y+1);
+
   ctx.font='bold 11px sans-serif';
   ctx.fillStyle='rgba(220,235,250,.9)';
-  ctx.fillText(p.name,p.x,p.y-R-13);
+  ctx.fillText(p.name, p.x, p.y-R-13);
+
+  /* --- 进度条 --- */
   if(p._disabled){
     ctx.fillStyle='rgba(180,80,80,.9)';
     ctx.font='bold 10px sans-serif';
-    ctx.fillText('[失效]',p.x,p.y+R+18);
-  } else if(p.owner!=='def'||p.cap<def.cap){
-    const w=R*2;
-    ctx.fillStyle='rgba(0,0,0,.6)';
-    ctx.fillRect(p.x-w/2,p.y+R+6,w,5);
-    ctx.fillStyle=p.owner==='atk'?'#ff6b42':'#4c9cff';
-    ctx.fillRect(p.x-w/2,p.y+R+6,w*(p.cap/def.cap),5);
+    ctx.fillText('[失效]', p.x, p.y+R+18);
+    return;
   }
-  if(p.owner==='atk'&&p.integrate<1){
-    const w=R*2;
-    ctx.fillStyle='rgba(0,0,0,.6)';
-    ctx.fillRect(p.x-w/2,p.y+R+14,w,4);
-    ctx.fillStyle='#ffce6b';
-    ctx.fillRect(p.x-w/2,p.y+R+14,w*p.integrate,4);
+
+  const w = R*2;
+  /* 背景槽 */
+  ctx.fillStyle='rgba(0,0,0,.6)';
+  ctx.fillRect(p.x-w/2, p.y+R+6, w, 5);
+
+  /* 填充颜色：谁在推进用谁的颜色 */
+  const atkP = p._atkP || 0;
+  const defP = p._defP || 0;
+  let advColor = col;
+  if(atkP > defP)      advColor = '#ff6b42';
+  else if(defP > atkP) advColor = '#4c9cff';
+
+  const prog = clamp(p.cap / def.cap, 0, 1);
+  ctx.fillStyle = advColor;
+  ctx.fillRect(p.x-w/2, p.y+R+6, w*prog, 5);
+
+  /* 攻方拥有时，显示整合百分比文字 */
+  if(p.owner==='atk' && p.integrate < 1){
     ctx.font='9px sans-serif';
     ctx.fillStyle='#ffce6b';
-    ctx.fillText('整合中',p.x,p.y+R+28);
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText('整合中 '+Math.round(p.integrate*100)+'%', p.x, p.y+R+22);
   }
 }
 function drawTurret(g,t,showHp){
@@ -4891,7 +4932,11 @@ function serialize(g){
     v:24,cfg:g.cfg,time:g.time,cp:{atk:Math.floor(g.cp.atk),def:Math.floor(g.cp.def)},
     season:g.season,dayTime:g.dayTime,
     units:g.units.map(u=>({side:u.side,type:u.type,x:Math.round(u.x),y:Math.round(u.y),hp:Math.round(u.hp),hold:u.holdPost?1:0,order:u.order&&u.order.type==='move'?{type:'move',x:Math.round(u.order.x),y:Math.round(u.order.y)}:null,planId:u.planId||null})),
-    posts:g.posts.map(p=>({owner:p.owner,cap:Math.round(p.cap),integrate:p.integrate,disabled:p._disabled?1:0})),
+    posts:g.posts.map(p=>({
+    owner:p.owner, cap:Math.round(p.cap),
+    integrate:p.integrate, disabled:p._disabled?1:0,
+    fi:p._fullyIntegrated?1:0
+    })),
     turrets:g.turrets.map(t=>({type:t.type,x:t.x,y:t.y,hp:Math.round(t.hp),discovered:t.discovered?1:0,owner:t.owner,ruin:t.ruin?1:0})),
     trenches:g.trenches.map(t=>({x:t.x,y:t.y,side:t.side})),
     cd:g.cd,squads:g.squads,plans:g.plans,
@@ -4906,8 +4951,13 @@ function deserialize(data){
   g.time=data.time;g.cp.atk=data.cp.atk;g.cp.def=data.cp.def;
   g.units=[];
   for(const u of data.units){const nu=spawnUnit(g,u.side,u.type,u.x,u.y);nu.hp=u.hp;if(u.order)nu.order=u.order;if(u.hold)nu.holdPost=1;if(u.planId)nu.planId=u.planId;}
-  for(let i=0;i<g.posts.length&&i<data.posts.length;i++){g.posts[i].owner=data.posts[i].owner;g.posts[i].cap=data.posts[i].cap;g.posts[i].integrate=data.posts[i].integrate;if(data.posts[i].disabled)g.posts[i]._disabled=true;}
-  g.turrets=[];
+  for(let i=0;i<g.posts.length && i<data.posts.length;i++){
+  g.posts[i].owner = data.posts[i].owner;
+  g.posts[i].cap   = data.posts[i].cap;
+  g.posts[i].integrate = data.posts[i].integrate;
+  g.posts[i]._fullyIntegrated = !!data.posts[i].fi;
+  if(data.posts[i].disabled) g.posts[i]._disabled = true;
+  }
   for(const t of data.turrets){const d=TURRETS[t.type];g.turrets.push({id:uid()+100000,owner:t.owner||'def',side:t.owner||'def',type:t.type,x:t.x,y:t.y,hp:t.hp,maxHp:d.hp,cd:0,r:d.r,discovered:!!t.discovered,ruin:!!t.ruin});}
   g.trenches=data.trenches.map(t=>({x:t.x,y:t.y,r:34,side:t.side}));
   g.cd=data.cd||{atk:{},def:{}};
@@ -5126,5 +5176,5 @@ Snd.init();
 setTimeout(probeAllServers,400);
 requestAnimationFrame(loop);
 </script>
-</body>
-</html>
+
+</body></html>
