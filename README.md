@@ -1,2 +1,2 @@
 # -STEEL-FRONTLINE
-rls game
+rts game
