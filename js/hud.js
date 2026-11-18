@@ -92,9 +92,11 @@ function renderCard(row, key, title, value, options = {}) {
     (options.disabled ? ' dis' : '') + (options.active ? ' active' : '') +
     (options.activate ? '' : ' card-status');
   if (options.targeted) card.dataset.targeted = '';
+  const icon = options.unit
+    ? '<img class="unit-card-icon" alt="" src="' + unitCardIcon(options.unit.type, options.unit.side) + '">' : '';
   card.innerHTML = (options.key ? '<span class="key">' + options.key + '</span>' : '') +
     (options.slot ? '<span class="slot">' + options.slot + '格</span>' : '') +
-    '<span class="un">' + title + '</span><span class="uc">' + value + '</span>' +
+    '<span class="un">' + icon + title + '</span><span class="uc">' + value + '</span>' +
     (options.note ? '<span class="card-note">' + options.note + '</span>' : '');
   if (options.activate) {
     card.onclick = options.activate;
@@ -117,6 +119,7 @@ function refreshDeployRow(g) {
       key: key.toUpperCase(),
       slot: UNIT_SLOTS[type],
       note: descriptions[type],
+      unit: { type, side },
       active: g.mode === 'deploy' && g.pendingDeploy === type,
       disabled: g.cp[side] < cost || slots + UNIT_SLOTS[type] > maximum,
       activate: () => tryDeployHotkey(g, key),
@@ -264,7 +267,7 @@ function updateSelInfo(g){
   show(el.selInfo,true);el.recycleBtn.classList.remove('dis');if(el.cancelSelBtn)show(el.cancelSelBtn,true);
   if(sel.length===1){
     const u=sel[0],d=UNITS[u.type];
-    const status = u._resupplying ? '补给中' : (u.holdPost ? '驻守' : (u._engaged ? '交战' : ''));
+    const status = unitCombatStatus(u) || (u._resupplying ? '补给中' : (u.holdPost ? '驻守' : ''));
     el.selInfo.innerHTML='<div class="sn">'+d.n+'</div><div class="sr">生命 '+Math.ceil(u.hp)+'/'+u.maxHp+' · 射程 '+Math.round(effectiveRange(g,u,d))+'</div>' +
       (status ? '<div class="sr">' + status + '</div>' : '');
   }else{
@@ -274,7 +277,7 @@ function updateSelInfo(g){
   }
   if (g.frontline) {
     const supply = sel.reduce((sum, unit) => sum + unit.supply, 0) / sel.length;
-    const suppressed = sel.filter(unit => unit.suppression >= 0.32).length;
+    const suppressed = sel.filter(unit => unit.suppression >= UNIT_WARNING.suppression).length;
     const line = document.createElement('div');
     line.className = 'sr';
     line.textContent = (sel.length > 1 ? '平均补给 ' : '补给 ') + Math.round(supply * 100) + '%' +
@@ -309,6 +312,21 @@ function refreshSkillStatus(g){
     return '<div class="skill-banner '+it.cls+'"><span>'+it.name+'</span><div class="bar"><i style="width:'+(pct*100)+'%"></i></div><span>'+Math.ceil(it.left)+'s</span></div>';
   }).join('');
 }
+function refreshEventNotice(g) {
+  const event = g.battlefieldEvent;
+  const shown = event?.phase === 'warning' || event?.phase === 'active';
+  const notice = document.getElementById('eventNotice');
+  show(notice, shown);
+  if (!shown) return;
+  const profile = BATTLEFIELD_EVENTS[event.kind];
+  const warning = event.phase === 'warning';
+  const time = Math.max(0, Math.ceil((warning ? event.startsAt : event.endsAt) - g.time));
+  notice.style.setProperty('--event-accent', profile.color);
+  document.getElementById('eventName').textContent = profile.name + (warning ? '预警' : '进行中') + ' · ' + event.name;
+  document.getElementById('eventTime').textContent = time + ' 秒';
+  document.getElementById('eventImpact').textContent = profile.hint + ' · 点此定位';
+}
+
 function refreshHUD(g) {
   el.cpVal.textContent = Math.floor(g.cp[g.playerSide]);
   const left = Math.max(0, Math.ceil(g.duration - g.time));
@@ -332,6 +350,7 @@ function refreshHUD(g) {
     : g.playerSide === 'atk'
       ? '大本营' + (hq?.owner === 'atk' ? '已夺取' : '待夺取') + ' · 外围据点 ' + own + '/' + Math.ceil(branches.length / 2)
       : '坚守至倒计时结束 · 大本营' + (hq?.owner === 'def' ? '守住' : '失守');
+  refreshEventNotice(g);
   refreshSkillStatus(g);
 }
 

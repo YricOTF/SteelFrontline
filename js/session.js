@@ -67,7 +67,7 @@ function writeSaves(saves) {
 }
 function serialize(g) {
   return {
-    v: 25, cfg: g.cfg, time: g.time,
+    v: 26, cfg: g.cfg, time: g.time,
     cp: g.cp, cpFrac: g.cpFrac, stats: g.stats,
     season: g.season, dayTime: g.dayTime,
     terrain: encodeCells(g.terrain),
@@ -76,6 +76,8 @@ function serialize(g) {
       id: unit.id, side: unit.side, type: unit.type,
       x: unit.x, y: unit.y, hp: unit.hp, maxHp: unit.maxHp, facing: unit.facing,
       hold: unit.holdPost, tid: unit.tid, cd: unit.cd, trenchTimer: unit.trenchTimer,
+      combatTarget: unit._combatTarget, combatTime: unit._combatTime, combatLost: unit._combatLost,
+      aimTarget: unit.aimTarget, aimTimer: unit.aimTimer, engaged: unit._engaged,
       order: unit.order, planId: unit.planId,
       supply: unit.supply, suppression: unit.suppression, resupplying: unit._resupplying,
     })),
@@ -94,13 +96,16 @@ function serialize(g) {
     emergency: g._emergency, march: [...g._marchUnits],
     tutorial: g.tutorial?.idx,
     mp: g.mp || null,
-    events: g._events, eventType: g._eventType,
+    battlefieldEvent: g.battlefieldEvent, legacyFire: g.legacyFire,
     oilTanks: g._oilTanks,
   };
 }
 
 function deserialize(data) {
-  const g = makeGame({ ...data.cfg, season: data.season, dayTime: data.dayTime, multiplayer: false });
+  const g = makeGame({
+    ...data.cfg, mapRevision: data.cfg.mapRevision ?? 1,
+    season: data.season, dayTime: data.dayTime, multiplayer: false,
+  });
   g.time = data.time;
   g.cp = { ...data.cp };
   if (data.cpFrac) g.cpFrac = { ...data.cpFrac };
@@ -137,6 +142,12 @@ function deserialize(data) {
     unit.trenchTimer = saved.trenchTimer || 0;
     unit.cd = saved.cd || 0;
     unit.tid = saved.tid || 0;
+    unit._combatTarget = saved.combatTarget || 0;
+    unit._combatTime = saved.combatTime || 0;
+    unit._combatLost = saved.combatLost || 0;
+    unit._engaged = Boolean(saved.engaged);
+    unit.aimTarget = saved.aimTarget || 0;
+    unit.aimTimer = saved.aimTimer || 0;
   }
   for (let i = 0; i < Math.min(g.posts.length, data.posts.length); i++) {
     const post = g.posts[i];
@@ -157,6 +168,14 @@ function deserialize(data) {
   });
   for (const unit of g.units) {
     unit.tid = idMap.get(unit.tid) || 0;
+    unit._combatTarget = idMap.get(unit._combatTarget) || 0;
+    unit.aimTarget = idMap.get(unit.aimTarget) || 0;
+    if (!unit.aimTarget) unit.aimTimer = 0;
+    if (!unit._combatTarget) {
+      unit._combatTime = 0;
+      unit._combatLost = 0;
+      unit._engaged = false;
+    }
     if (unit.order?.attack) unit.order.attack = idMap.get(unit.order.attack) || 0;
   }
 
@@ -182,8 +201,9 @@ function deserialize(data) {
     }
   }
   if (Number.isInteger(data.tutorial)) g.tutorial = { idx: data.tutorial, lastEv: null };
-  g._events = data.events || g._events;
-  g._eventType = data.eventType ?? g._eventType;
+  g.battlefieldEvent = normalizeBattlefieldEvent(data.battlefieldEvent) ?? g.battlefieldEvent;
+  g.legacyFire = readLegacyFire(g, data.legacyFire ?? data.events?.burnZones);
+  syncBattlefieldEventArea(g);
   if (data.oilTanks) g._oilTanks = data.oilTanks.map(tank => ({ ...tank, alive: Boolean(tank.alive) }));
   g._clientReady = true;
   recomputeVis(g, 'atk');
@@ -219,6 +239,10 @@ function buildSetup() {
     const map = MAPS.find(map => map.id === setupCfg.mapId);
     drawMapPreview(document.getElementById('mapPreview'), map);
     document.getElementById('previewMap').textContent = map.n + ' · ' + map.tag;
+    document.getElementById('briefingRoutes').textContent = map.routes;
+    const event = BATTLEFIELD_EVENTS[map.event];
+    document.getElementById('briefingEvent').textContent = event.name;
+    document.getElementById('briefingImpact').textContent = event.brief;
   };
   for (const [id, setting, records] of options) {
     const group = document.getElementById(id);

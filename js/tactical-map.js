@@ -4,14 +4,15 @@ const minimap = document.getElementById('minimap');
 const miniCtx = minimap.getContext('2d', { alpha: false });
 const mapControl = document.getElementById('minimapControl');
 
-function terrainOverview(terrain, width, height) {
+function terrainOverview(terrain, width, height, mapDef) {
   const image = document.createElement('canvas');
   image.width = width;
   image.height = height;
   const painter = image.getContext('2d');
+  const palettes = terrainPalettes(mapDef);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      painter.fillStyle = terrainColor(terrain[y * width + x], x, y);
+      painter.fillStyle = terrainColor(terrain[y * width + x], x, y, palettes);
       painter.fillRect(x, y, 1, 1);
     }
   }
@@ -53,7 +54,7 @@ function drawTacticalMap(g) {
   if (g.overview?.revision !== g.terrainRevision) {
     g.overview = {
       revision: g.terrainRevision,
-      canvas: terrainOverview(g.terrain, MAP_W, MAP_H),
+      canvas: terrainOverview(g.terrain, MAP_W, MAP_H, g.cfg.mapRevision === MAP_REVISION ? g.mapDef : null),
     };
   }
   const worldWidth = MAP_W * CELL;
@@ -63,6 +64,7 @@ function drawTacticalMap(g) {
 
   miniCtx.drawImage(g.overview.canvas, 0, 0, dw, dh);
   miniCtx.drawImage(fogLayer(g), 0, 0, dw, dh);
+  drawTacticalEvent(g, sx, sy);
   for (const post of g.posts) {
     const x = post.x * sx;
     const y = post.y * sy;
@@ -93,8 +95,36 @@ function drawTacticalMap(g) {
   miniCtx.strokeRect(x - boxWidth / 2, y - boxHeight / 2, boxWidth, boxHeight);
 }
 
+function drawTacticalEvent(g, sx, sy) {
+  const event = g.battlefieldEvent;
+  const warning = event?.phase === 'warning';
+  const area = warning ? battlefieldEventArea(event, g.time) : g.eventArea;
+  if (!area) return;
+  miniCtx.save();
+  miniCtx.strokeStyle = area.profile.color;
+  miniCtx.fillStyle = area.profile.color;
+  if (warning && event.destination) {
+    miniCtx.lineCap = 'round';
+    miniCtx.globalAlpha = .24;
+    miniCtx.lineWidth = area.r * 2 * sy;
+    miniCtx.beginPath();
+    miniCtx.moveTo(area.x * sx, area.y * sy);
+    miniCtx.lineTo(event.destination.x * sx, event.destination.y * sy);
+    miniCtx.stroke();
+  }
+  miniCtx.beginPath();
+  miniCtx.ellipse(area.x * sx, area.y * sy, area.r * sx, area.r * sy, 0, 0, Math.PI * 2);
+  miniCtx.globalAlpha = .28;
+  miniCtx.fill();
+  miniCtx.globalAlpha = .94;
+  miniCtx.lineWidth = Math.max(1.3, 1.2 * DPR);
+  miniCtx.setLineDash(warning ? [3 * DPR, 2 * DPR] : []);
+  miniCtx.stroke();
+  miniCtx.restore();
+}
+
 function focusBattleStart(g) {
-  const point = g.playerSide === 'atk' ? g.atkSpawnPoints[0] :
+  const point = g.playerSide === 'atk' ? g.spawnPoint :
     g.posts.find(post => post.type === 'hq' && post.owner === 'def');
   if (!point) return;
   g.cam.x = point.x;
@@ -137,6 +167,15 @@ function setupTacticalMap() {
     G.showSupply = !G.showSupply;
     event.currentTarget.setAttribute('aria-pressed', String(G.showSupply));
   });
+  document.getElementById('eventLocate').addEventListener('click', () => {
+    if (G?.state !== 'playing') return;
+    const event = G.battlefieldEvent;
+    if (!event || !['warning', 'active'].includes(event.phase)) return;
+    const area = battlefieldEventArea(event, G.time);
+    G.cam.x = area.x;
+    G.cam.y = area.y;
+    clampCam(G);
+  });
   document.getElementById('rtSupply').addEventListener('click', () => {
     if (G) requestResupply(G);
   });
@@ -145,21 +184,45 @@ function setupTacticalMap() {
 function drawMapPreview(canvas, mapDef) {
   const map = generateMap(mapDef, 2417);
   const painter = canvas.getContext('2d', { alpha: false });
-  const terrain = terrainOverview(map.terrain, map.mapW, map.mapH);
+  const terrain = terrainOverview(map.terrain, map.mapW, map.mapH, mapDef);
   const width = canvas.width;
   const height = canvas.height;
+  const scale = Math.min((width - 12) / map.mapW, (height - 12) / map.mapH);
+  const offsetX = (width - map.mapW * scale) / 2;
+  const offsetY = (height - map.mapH * scale) / 2;
   painter.imageSmoothingEnabled = false;
-  painter.drawImage(terrain, 0, 0, width, height);
-  for (const point of [...map.posts, ...map.spawns]) {
-    const x = (point.x + 0.5) * width / map.mapW;
-    const y = (point.y + 0.5) * height / map.mapH;
-    const radius = point.type === 'hq' ? 10 : 5;
-    painter.fillStyle = point.type ? TEAM_COLORS.def : TEAM_COLORS.atk;
-    painter.strokeStyle = '#161b17';
+  painter.fillStyle = '#1a241e';
+  painter.fillRect(0, 0, width, height);
+  painter.drawImage(terrain, offsetX, offsetY, map.mapW * scale, map.mapH * scale);
+  const center = point => [offsetX + (point.x + 0.5) * scale, offsetY + (point.y + 0.5) * scale];
+  for (const mark of map.landmarks || []) {
+    if (mark.kind !== 'bridge' && mark.kind !== 'ford') continue;
+    const [x, y] = center(mark);
+    painter.strokeStyle = mark.kind === 'bridge' ? '#efcd94' : '#b3d4d3';
     painter.lineWidth = 2;
     painter.beginPath();
-    painter.rect(x - radius, y - radius, radius * 2, radius * 2);
-    painter.fill();
+    painter.moveTo(x - 4, y);
+    painter.lineTo(x + 4, y);
     painter.stroke();
+  }
+  for (const point of [...map.posts, ...map.spawns]) {
+    const [x, y] = center(point);
+    const radius = point.type === 'hq' ? 6 : 4;
+    painter.fillStyle = point.type ? TEAM_COLORS.def : TEAM_COLORS.atk;
+    painter.strokeStyle = '#161b17';
+    painter.lineWidth = 1.6;
+    if (point.type === 'hq') {
+      painter.beginPath();
+      painter.moveTo(x, y - radius - 1);
+      painter.lineTo(x + radius, y);
+      painter.lineTo(x, y + radius + 1);
+      painter.lineTo(x - radius, y);
+      painter.closePath();
+      painter.fill();
+      painter.stroke();
+    } else {
+      painter.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      painter.strokeRect(x - radius, y - radius, radius * 2, radius * 2);
+    }
   }
 }

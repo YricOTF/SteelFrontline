@@ -194,7 +194,7 @@ const Net = {
       const startBtn = document.getElementById('hostStart');
       if (startBtn) startBtn.disabled = false;
       document.getElementById('manualStart').disabled = false;
-      if (G?.mp?.isHost && G.state === 'playing') {
+      if (G?.mp?.isHost && G.state === 'playing' && G.cfg.mapRevision === 1) {
         const peer = this.playerList.find(player => player.id === clientId);
         this._sendRaw(dc, multiplayerStartMessage(G, peer?.side || side));
         netBroadcastState(true);
@@ -204,7 +204,15 @@ const Net = {
       let msg; try { msg = JSON.parse(e.data); } catch (err) { return; }
       if (!msg || typeof msg !== 'object') return;
       const player = this.playerList.find(entry => entry.id === clientId);
-      if (msg.type === 'cmd' && player) this.onCommand?.(player.side, msg, clientId);
+      if (!player) return;
+      if (msg.type === 'map-revision') {
+        player.mapRevision = msg.revision === MAP_REVISION ? MAP_REVISION : 1;
+        if (G?.mp?.isHost && G.state === 'playing' &&
+            G.cfg.mapRevision === MAP_REVISION && player.mapRevision === MAP_REVISION) {
+          this._sendRaw(dc, multiplayerStartMessage(G, player.side));
+          netBroadcastState(true);
+        }
+      } else if (msg.type === 'cmd') this.onCommand?.(player.side, msg, clientId);
     };
     dc.onclose = () => {
       this._hostBusy = false;
@@ -283,6 +291,7 @@ const Net = {
     dc.onopen = () => {
       const statusEl = document.getElementById('joinStatus');
       if (statusEl) { statusEl.className = 'status-bar ok'; statusEl.textContent = '✓ 已连接房主，等待开始'; }
+      this._sendRaw(dc, { type: 'map-revision', revision: MAP_REVISION });
       if (this._clientJoinResolve) this._clientJoinResolve();
     };
     dc.onmessage = (e) => {
@@ -342,6 +351,7 @@ function netBroadcastState(force = false) {
     u: g.units.filter(unit => unit.alive).map(unit => [
       unit.id, sideBit(unit.side), unit.type, Math.round(unit.x), Math.round(unit.y),
       Math.round(unit.hp), Math.round(unit.facing * 100), unit.holdPost, unit._engaged ? 1 : 0,
+      unitCombatCue(unit),
     ]),
     p: g.posts.map(post => [
       sideBit(post.owner), Math.round(post.cap), +post.integrate.toFixed(2), post._disabled ? 1 : 0,
@@ -360,10 +370,9 @@ function netBroadcastState(force = false) {
     emg: [g._emergency.atk, g._emergency.def],
     march: [...g._marchUnits.keys()],
     marchUntil: [...g._marchUnits],
-    oil: g._events.oilBoom ? [g._events.oilBoom.x, g._events.oilBoom.y, g._events.oilBoom.life] : null,
     tank: g._oilTanks.map(tank => [Math.round(tank.x), Math.round(tank.y), tank.alive ? 1 : 0]),
-    burn: g._events.burnZones.map(zone => [zone.x, zone.y, zone.r, zone.born, zone.dps]),
-    volcano: g._events.volcanoZone,
+    event: g.battlefieldEvent,
+    burn: g.legacyFire.map(zone => [zone.x, zone.y, zone.r, g.time, zone.dps]),
     recon: g.recon, strikes: g.strikes, shots: g.projectiles,
     fx: g.effects.filter(effect => effect.netId).slice(-38),
   };
@@ -399,31 +408,35 @@ function netApplyState(state) {
     invalidateTerrain(g);
     buildTerrainCanvas(g);
   }
-  if (state.oil) {
-    const [x, y, life = 2.4] = state.oil;
-    g._events.oilBoom = { x, y, life, max: 2.4 };
-  } else g._events.oilBoom = null;
   if (state.tank) {
     for (const [i, saved] of state.tank.entries()) {
       const tank = g._oilTanks[i];
       if (tank) { [tank.x, tank.y] = saved; tank.alive = Boolean(saved[2]); }
     }
   }
-  if (state.burn) {
-    g._events.burnZones = state.burn.map(([x, y, r, born = g.time, dps = 18]) =>
-      ({ x, y, r, born, life: 1e9, max: 1e9, dps }));
+  if (Object.hasOwn(state, 'event')) {
+    const lastPhase = g.battlefieldEvent?.phase;
+    g.battlefieldEvent = normalizeBattlefieldEvent(state.event);
+    syncBattlefieldEventArea(g);
+    if (g.battlefieldEvent?.phase !== lastPhase && g.battlefieldEvent?.phase !== 'scheduled') {
+      announceBattlefieldEvent(g);
+    }
   }
-  g._events.volcanoZone = state.volcano || null;
+  if (Array.isArray(state.burn)) {
+    g.legacyFire = readLegacyFire(g, state.burn.map(([x, y, r, , dps = 3]) =>
+      ({ x, y, r, dps, until: g.time + 2 })));
+  }
 
   const existing = new Map(g.units.map(unit => [unit.id, unit]));
   g.units = state.u.filter(entry => Object.hasOwn(UNITS, entry[2])).map(entry => {
-    const [id, sideBit, type, x, y, hp, facing, hold, fighting] = entry;
+    const [id, sideBit, type, x, y, hp, facing, hold, fighting, combatCue = 0] = entry;
     const unit = existing.get(id) || { id, side: sideFromBit(sideBit), type, x, y, maxHp: UNITS[type].hp, alive: true };
     unit._netTarget = { x, y };
     unit.hp = hp;
     unit.facing = facing / 100;
     unit.holdPost = hold;
     unit._engaged = Boolean(fighting);
+    unit._netCombatCue = Number.isFinite(combatCue) ? clamp(combatCue, -100, 100) : 0;
     return unit;
   });
   const units = new Map(g.units.map(unit => [unit.id, unit]));
@@ -462,7 +475,7 @@ function netApplyState(state) {
     g._lastNetEffect = effect.netId;
     g.effects.push(effect);
     if (effect.type === 'tracer') Snd.fire(g, effect.x1, effect.y1, effect.munition, effect.side);
-    if (effect.type === 'boom') Snd.boom(g, effect.x, effect.y, effect.r > 32, effect.side);
+    if (effect.type === 'boom') Snd.boom(g, effect.x, effect.y, effect.r > 32, effect.public ? g.playerSide : effect.side);
   }
   g.tick++;
   if (!g._clientReady) {
@@ -696,7 +709,7 @@ document.getElementById('hostRoomCode').onclick = () => {
 function multiplayerStartMessage(g, side) {
   return {
     type: 'start', mapId: g.cfg.mapId, diff: g.cfg.diff, side,
-    season: g.season, dayTime: g.dayTime, seed: g.cfg.seed,
+    season: g.season, dayTime: g.dayTime, seed: g.cfg.seed, mapRevision: g.cfg.mapRevision,
   };
 }
 
@@ -706,12 +719,14 @@ function startMultiplayerBattle() {
   const host = Net.playerList.find(player => player.id === Net.myId);
   const peer = Net.playerList.find(player => player.id !== Net.myId);
   Snd.ensure();
-  G = makeGame({ mapId, side: host?.side || 'atk', diff: 'normal', multiplayer: true });
+  const mapRevision = peer?.mapRevision === MAP_REVISION ? MAP_REVISION : 1;
+  G = makeGame({ mapId, side: host?.side || 'atk', diff: 'normal', multiplayer: true, mapRevision });
   G.mp = { isHost: true };
   G._clientReady = true;
   Net.broadcast(multiplayerStartMessage(G, peer?.side || 'def'));
   netBroadcastState(true);
   startPlaying();
+  if (mapRevision === 1) toast(G, '已使用旧版战场布局，以兼容联机玩家', 'good');
 }
 document.getElementById('hostStart').onclick = startMultiplayerBattle;
 document.getElementById('manualStart').onclick = startMultiplayerBattle;
@@ -745,7 +760,7 @@ Net.onStart = msg => {
   G = makeGame({
     mapId: msg.mapId || Net.hostMapId || 'grand', side: Net.mySide,
     diff: DIFFS[msg.diff] ? msg.diff : 'normal', season: msg.season, dayTime: msg.dayTime,
-    seed: msg.seed, multiplayer: true,
+    seed: msg.seed, multiplayer: true, mapRevision: msg.mapRevision ?? 1,
   });
   G.mp = { isHost: false };
   G.units = [];

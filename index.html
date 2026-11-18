@@ -54,6 +54,10 @@
             <div class="map-legend"><span class="atk-key">登陆场</span><span class="def-key">防御据点</span></div>
           </div>
         </div>
+        <dl class="map-briefing">
+          <dt>主要通路</dt><dd id="briefingRoutes"></dd>
+          <dt>地图大事件</dt><dd><strong id="briefingEvent"></strong><p id="briefingImpact"></p></dd>
+        </dl>
         <label class="form-row" for="rulesOpts">战场规则
           <select id="rulesOpts">
             <option value="frontline">前线模拟</option>
@@ -208,11 +212,11 @@
     <p><b>技能</b> — 侦察机、炮火覆盖、空中打击、紧急部署、急行军。技能持续时顶部显示计时条。</p>
     <p><b>据点压制</b> — 敌军进入据点周围 300 范围时降低部署速度 25%，进入占领圈时降低 60%。</p>
     <p><b>隐蔽</b> — 森林、山地和建筑限制视野。侦察班能看进较近的林地，侦察机可以揭开指定区域的迷雾。</p>
-    <p><b>渡河</b> — 需要从桥梁通过。步兵和侦察班过桥减速 40%，装甲和炮兵减速 80%。</p>
+    <p><b>渡河</b> — 桥梁适合装甲快速通行。浅滩也能过河，装甲和炮兵在浅滩速度较慢。</p>
     <p><b>索敌</b> — 持续看到敌人 0.8 秒后进入交战状态并持续攻击；若目标短暂脱离视野，1 秒内可续上进度。</p>
     <p><b>计划</b> — 计划持续执行。执行中途被打断也会恢复。加成随时间提高（至多 +30%）。</p>
     <p><b>占领</b> — 大本营/支部/据点分类。双方部署容量决定争夺进度。攻方完成整合后可在该点部署和补给。</p>
-    <p><b>地图大事件</b> — 海岛火山、森林山火、城市油罐爆炸会在特定时间随机发生。城市工业区存在真实油罐实体，被炮火命中后连锁爆炸并在地面留下大弹坑与持续燃烧区。</p>
+    <p><b>地图大事件</b> — 新战场的大事件会先预警，再限时影响局部地形、视野或部队。斜线标出影响区，内圈标出伤害区。点击战场提示可定位，储油区被爆炸波及会提前预警。</p>
     <p><b>胜负</b> — 攻方需控制大本营及至少一半可用的外围据点。守方撑到倒计时结束即胜。</p>
     <p><b>前线模拟</b> — 行军和射击消耗补给。可用登陆场及己方据点会补给部队，道路和桥梁可扩大补给范围。选中部队后按 R 或点击右侧补给按钮后撤。</p>
     <p><b>压制与天气</b> — 受击和近距离爆炸会暂时降低移速、射击频率和占领能力。掩体与驻守加快恢复。低雾缩短视野，阵雨还会降低越野速度。烟幕支援能暂时阻挡直接射击。</p>
@@ -258,6 +262,12 @@
   <div id="mission" class="mission">
     <span id="missionMap"></span><span id="missionGoal"></span>
   </div>
+  <div id="eventNotice" class="hidden">
+    <button id="eventLocate" type="button">
+      <span class="event-heading"><strong id="eventName"></strong><span id="eventTime"></span></span>
+      <span id="eventImpact"></span>
+    </button>
+  </div>
   <div id="skillStatus"></div>
   <div id="leftPanel"></div>
   <div id="rightPanel">
@@ -295,7 +305,7 @@
   </div>
   <div id="selInfo" class="hidden"></div>
   <button id="cancelSelBtn" class="hidden">✕ 取消选择</button>
-  <div id="modeTip" class="hidden"</div>
+  <div id="modeTip" class="hidden"></div>
   <div id="syncOverlay" class="hidden"><span class="spin"></span>正在同步战场数据…<div class="txt">若长时间无响应，请检查网络或改用 HTTP 服务器</div></div>
   <div id="toast" role="status" aria-live="polite"></div>
 </div>
@@ -303,15 +313,18 @@
 
 <!-- Defer in dependency order to support both static hosting and local file play. -->
 <script defer src="./js/core.js"></script>
+<script defer src="./js/legacy-maps.js"></script>
 <script defer src="./js/maps.js"></script>
 <script defer src="./js/audio.js"></script>
 <script defer src="./js/frontline.js"></script>
+<script defer src="./js/events.js"></script>
 <script defer src="./js/pathfinding.js"></script>
 <script defer src="./js/terrain.js"></script>
 <script defer src="./js/simulation.js"></script>
 <script defer src="./js/ai.js"></script>
 <script defer src="./js/plans.js"></script>
 <script defer src="./js/tactical-map.js"></script>
+<script defer src="./js/unit-icons.js"></script>
 <script defer src="./js/render.js"></script>
 <script defer src="./js/input.js"></script>
 <script defer src="./js/hud.js"></script>

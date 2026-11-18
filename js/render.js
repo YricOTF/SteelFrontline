@@ -181,23 +181,10 @@ function render(){
     drawTerrainLive(g);
   }
 
-  drawBurningZones(g);
   drawOilTanks(g);
-
-  const ev=g._events;
-  if(ev.volcanoZone){
-    ctx.beginPath();ctx.arc(ev.volcanoZone.x,ev.volcanoZone.y,ev.volcanoZone.r,0,6.284);
-    const grd=ctx.createRadialGradient(ev.volcanoZone.x,ev.volcanoZone.y,0,ev.volcanoZone.x,ev.volcanoZone.y,ev.volcanoZone.r);
-    grd.addColorStop(0,'rgba(255,90,30,.35)');grd.addColorStop(0.6,'rgba(180,40,20,.2)');grd.addColorStop(1,'rgba(80,20,10,0)');
-    ctx.fillStyle=grd;ctx.fill();
-  }
-  if(ev.oilBoom){
-    const a=clamp(ev.oilBoom.life/ev.oilBoom.max,0,1);
-    ctx.beginPath();ctx.arc(ev.oilBoom.x,ev.oilBoom.y,480*(1.15-a*0.15),0,6.284);
-    ctx.fillStyle='rgba(255,90,30,'+(0.10*a)+')';ctx.fill();
-  }
-
   drawFieldLighting(g);
+  drawBattlefieldEvent(g);
+  drawLandmarks(g);
   drawSmoke(g);
   drawSupplyRanges(g);
 
@@ -254,8 +241,8 @@ function render(){
       for(let i=0;i<pts.length;i++){ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,5/cam.zoom,0,6.284);ctx.fillStyle=col;ctx.fill();}
     }
   }
-  if(g.spawnPoint){
-    ctx.beginPath();ctx.arc(g.spawnPoint.x,g.spawnPoint.y,g.forbiddenRadius||DEF_FORBIDDEN_RADIUS,0,6.284);
+  for (const sp of g.forbiddenCenters) {
+    ctx.beginPath();ctx.arc(sp.x,sp.y,g.forbiddenRadius||DEF_FORBIDDEN_RADIUS,0,6.284);
     ctx.strokeStyle='rgba(232,83,63,.20)';ctx.lineWidth=1.5/cam.zoom;
     ctx.setLineDash([10,10]);ctx.stroke();ctx.setLineDash([]);
   }
@@ -304,15 +291,17 @@ function render(){
     ctx.strokeStyle='rgba(0,0,0,.55)';ctx.lineWidth=4;ctx.stroke();
     ctx.beginPath();ctx.arc(dep.x,dep.y,26,-Math.PI/2,-Math.PI/2+6.284*prog);
     ctx.strokeStyle=col;ctx.lineWidth=4;ctx.stroke();
-    ctx.fillStyle=col;ctx.font='bold 11px sans-serif';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(UNITS[dep.type].n[0],dep.x,dep.y);
+    ctx.save();
+    ctx.translate(dep.x, dep.y);
+    paintUnitSilhouette(ctx, dep.type, 1 / cam.zoom, -Math.PI / 2, TEAM_COLORS[dep.side], true);
+    ctx.restore();
   }
   drawCommandPaths(g);
+  const selected = new Set(g.selection.map(unit => unit.id));
   for(const u of g.units){
     if(!u.alive || !onCamera(g, u.x, u.y))continue;
     if(u.side!==g.playerSide&&!visible(g,g.playerSide,u.x,u.y))continue;
-    drawUnit(g,u);
+    drawUnit(g, u, selected.has(u.id));
   }
   for(const p of g.projectiles){
     if (!CFG.fx) continue;
@@ -335,7 +324,7 @@ function render(){
   const pulse = reduceMotion.matches ? 1 : 0.5 + 0.5 * Math.sin(performance.now() / 240);
   for(const u of g.selection){
     if(!u.alive)continue;
-    const r = Math.max(UNITS[u.type].r + 8, 13 / cam.zoom);
+    const r = unitMarkerRadius(u.type, cam.zoom);
     ctx.beginPath();ctx.arc(u.x,u.y,r,0,6.284);
     ctx.strokeStyle='rgba(125,255,176,'+(0.6+pulse*0.4)+')';
     ctx.lineWidth=2.2/cam.zoom;ctx.stroke();
@@ -348,7 +337,7 @@ function render(){
       const u=findUnitById(g,id);
       if(!u||!u.alive||u.side!==g.playerSide)continue;
       if(!visible(g,g.playerSide,u.x,u.y))continue;
-      const r=UNITS[u.type].r+3;
+      const r=unitMarkerRadius(u.type, cam.zoom) - 2 / cam.zoom;
       ctx.beginPath();ctx.arc(u.x,u.y,r,0,6.284);
       ctx.strokeStyle=color;ctx.globalAlpha=0.7;ctx.lineWidth=2/cam.zoom;ctx.stroke();
       ctx.globalAlpha=1;
@@ -358,7 +347,7 @@ function render(){
     const pl=0.5+0.5*Math.sin(performance.now()/180);
     for(const u of g.radialTargets){
       if(!u.alive)continue;
-      const r=UNITS[u.type].r+12;
+      const r=unitMarkerRadius(u.type, cam.zoom) + 4 / cam.zoom;
       ctx.beginPath();ctx.arc(u.x,u.y,r,0,6.284);
       ctx.strokeStyle='rgba(255,206,107,'+(0.5+pl*0.5)+')';
       ctx.lineWidth=2.5/cam.zoom;ctx.setLineDash([7,5]);
@@ -393,79 +382,130 @@ function render(){
   drawRain(g);
 }
 
-function drawBurningZones(g){
-  const bzs=g._events.burnZones;
-  if(!bzs||bzs.length===0)return;
-  const cam=g.cam;
-  const halfW=(W/2)/cam.zoom+240;
-  const halfH=(H/2)/cam.zoom+240;
-  const tNow = reduceMotion.matches ? 0 : g.time;
-  const lowQ=CFG.quality==='low' || !CFG.fx;
-  for(const bz of bzs){
-    if(Math.abs(bz.x-cam.x)>halfW+bz.r)continue;
-    if(Math.abs(bz.y-cam.y)>halfH+bz.r)continue;
+function drawBattlefieldEvent(g) {
+  const event = g.battlefieldEvent;
+  const warning = event?.phase === 'warning';
+  const area = warning ? battlefieldEventArea(event, g.time) : g.eventArea;
+  const px = 1 / g.cam.zoom;
+  for (const zone of g.legacyFire) {
+    if (!onCamera(g, zone.x, zone.y, zone.r)) continue;
+    ctx.beginPath();
+    ctx.arc(zone.x, zone.y, zone.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(239,148,91,.16)';
+    ctx.fill();
+    ctx.strokeStyle = '#e3966c';
+    ctx.lineWidth = px;
+    ctx.stroke();
+  }
+  if (!area) return;
+  const { x, y, r, profile } = area;
+  ctx.save();
+  if (warning && event.destination) {
+    const end = event.destination;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(end.x, end.y);
+    ctx.strokeStyle = profile.color;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = .09;
+    ctx.lineWidth = r * 2;
+    ctx.stroke();
+    ctx.globalAlpha = .72;
+    ctx.lineWidth = px * 1.6;
+    ctx.setLineDash([8 * px, 6 * px]);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(end.x, end.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  if (!onCamera(g, x, y, r + 24 * px)) {
+    ctx.restore();
+    return;
+  }
 
-    ctx.beginPath();ctx.arc(bz.x,bz.y,bz.r,0,6.284);
-    ctx.fillStyle='rgba(28,13,7,0.52)';ctx.fill();
-    ctx.beginPath();ctx.arc(bz.x,bz.y,bz.r*0.62,0,6.284);
-    ctx.fillStyle='rgba(78,30,12,0.42)';ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = profile.color;
+  ctx.globalAlpha = warning ? .095 : .14;
+  ctx.fill();
+  ctx.save();
+  ctx.clip();
+  ctx.strokeStyle = profile.color;
+  ctx.globalAlpha = warning ? .20 : .16;
+  ctx.lineWidth = px;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  for (let offset = -r * 2; offset < r * 2; offset += Math.max(16, 17 * px)) {
+    ctx.moveTo(x + offset - r, y + r);
+    ctx.lineTo(x + offset + r, y - r);
+  }
+  ctx.stroke();
+  ctx.restore();
+  ctx.globalAlpha = .88;
+  ctx.lineWidth = px * 1.8;
+  ctx.strokeStyle = profile.color;
+  ctx.setLineDash(warning ? [8 * px, 6 * px] : []);
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  if (profile.dps) {
+    ctx.setLineDash([4 * px, 4 * px]);
+    ctx.beginPath();
+    ctx.arc(x, y, r * profile.core, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
 
-    const nFlame = lowQ
-      ? Math.min(6,Math.max(3,Math.round(bz.r/26)))
-      : Math.min(20,Math.max(5,Math.round(bz.r/11)));
-
-    for(let i=0;i<nFlame;i++){
-      const s1=hash2(i*7+1,(bz.x|0)&0x7fff,11);
-      const s2=hash2(i*13+3,(bz.y|0)&0x7fff,23);
-      const s3=hash2(i*3+5,((bz.x+bz.y)|0)&0x7fff,37);
-      const a=s1*6.283;
-      const rr=Math.sqrt(s2)*bz.r*0.84;
-      const fx=bz.x+Math.cos(a)*rr;
-      const fy=bz.y+Math.sin(a)*rr;
-      const ph=tNow*(2.0+s3*1.9)+s3*6.283;
-      const flick=0.5+0.5*Math.sin(ph);
-      const hh=(bz.r*0.18+13)*(0.62+0.75*flick);
-      const ww=hh*0.42;
-
-      ctx.globalAlpha=0.55+0.35*flick;
-      ctx.beginPath();
-      ctx.moveTo(fx-ww, fy);
-      ctx.quadraticCurveTo(fx-ww*0.5, fy-hh*0.55, fx, fy-hh);
-      ctx.quadraticCurveTo(fx+ww*0.5, fy-hh*0.55, fx+ww, fy);
-      ctx.closePath();
-      ctx.fillStyle='#ff6a14';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(fx-ww*0.42, fy);
-      ctx.quadraticCurveTo(fx, fy-hh*0.70, fx+ww*0.42, fy);
-      ctx.closePath();
-      ctx.fillStyle='#ffd46a';
-      ctx.fill();
-      ctx.globalAlpha=1;
-    }
-
-    const glowR=bz.r*0.55;
-    const gr=ctx.createRadialGradient(bz.x,bz.y,0,bz.x,bz.y,glowR);
-    const pulse=0.5+0.5*Math.sin(tNow*3+bz.x*0.01);
-    gr.addColorStop(0,'rgba(255,150,50,'+(0.18+pulse*0.10)+')');
-    gr.addColorStop(1,'rgba(255,80,20,0)');
-    ctx.beginPath();ctx.arc(bz.x,bz.y,glowR,0,6.284);
-    ctx.fillStyle=gr;ctx.fill();
-
-    if(!lowQ){
-      for(let i=0;i<4;i++){
-        const s4=hash2(i*17+9,(bz.x|0)&0x3ff,61);
-        const s5=hash2(i*23+11,(bz.y|0)&0x3ff,71);
-        const ph2=(tNow*0.7+s4)%1;
-        const px=bz.x+(s4-0.5)*bz.r*1.2;
-        const py=bz.y-ph2*bz.r*1.5+(s5-0.5)*20;
-        ctx.globalAlpha=(1-ph2)*0.8;
-        ctx.fillStyle='#ffb45a';
-        ctx.beginPath();ctx.arc(px,py,1.6+ (1-ph2)*1.4,0,6.284);ctx.fill();
-        ctx.globalAlpha=1;
-      }
+  if (!warning && CFG.fx && profile.smoke && CFG.quality !== 'low') {
+    const motion = reduceMotion.matches ? 0 : g.time * .38;
+    const puffCount = CFG.quality === 'high' ? 9 : 6;
+    for (let i = 0; i < puffCount; i++) {
+      const angle = i * 2.4 + motion;
+      const px1 = x + Math.cos(angle) * r * .57;
+      const py1 = y + Math.sin(angle) * r * .50;
+      const size = r * (.17 + hash2(i, 9, 292) * .18);
+      const haze = ctx.createRadialGradient(px1, py1, 0, px1, py1, size);
+      haze.addColorStop(0, profile.color);
+      haze.addColorStop(1, 'transparent');
+      ctx.globalAlpha = .25;
+      ctx.fillStyle = haze;
+      ctx.fillRect(px1 - size, py1 - size, size * 2, size * 2);
     }
   }
+
+  ctx.globalAlpha = 1;
+  const label = profile.name + (warning ? '预警' : '影响区');
+  const labelY = y - r - 13 * px;
+  ctx.font = '700 ' + 11 * px + 'px sans-serif';
+  const labelWidth = ctx.measureText(label).width + 14 * px;
+  ctx.fillStyle = 'rgba(20,25,23,.9)';
+  ctx.fillRect(x - labelWidth / 2, labelY - 7 * px, labelWidth, 15 * px);
+  ctx.fillStyle = profile.color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x, labelY);
+  ctx.restore();
+}
+
+function drawLandmarks(g) {
+  const zoom = g.cam.zoom;
+  if (zoom < .54) return;
+  const px = 1 / zoom;
+  ctx.save();
+  ctx.font = '600 ' + 11 * px + 'px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const mark of g.landmarks) {
+    if (!onCamera(g, mark.x, mark.y, 25)) continue;
+    const width = ctx.measureText(mark.name).width + 10 * px;
+    const y = mark.y - 15 * px;
+    ctx.fillStyle = 'rgba(16,24,22,.82)';
+    ctx.fillRect(mark.x - width / 2, y - 7 * px, width, 15 * px);
+    ctx.fillStyle = mark.kind === 'bridge' || mark.kind === 'ford' ? '#b6dbdf' : '#d7d3b2';
+    ctx.fillText(mark.name, mark.x, y);
+  }
+  ctx.restore();
 }
 
 function drawOilTanks(g){
@@ -507,9 +547,10 @@ function drawTerrainLive(g){
   const x1=Math.min(MAP_W-1, Math.ceil((cam.x+halfW)/CELL));
   const y0=Math.max(0, Math.floor((cam.y-halfH)/CELL));
   const y1=Math.min(MAP_H-1, Math.ceil((cam.y+halfH)/CELL));
+  const palettes = terrainPalettes(g.cfg.mapRevision === MAP_REVISION ? g.mapDef : null);
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
-      ctx.fillStyle = terrainColor(g.terrain[y * MAP_W + x], x, y);
+      ctx.fillStyle = terrainColor(g.terrain[y * MAP_W + x], x, y, palettes);
       ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
     }
   }
@@ -622,80 +663,60 @@ function drawTurret(g,t,showHp){
     ctx.fillRect(t.x-hw/2,t.y-t.r-11,hw*(t.hp/t.maxHp),4);
   }
 }
-function drawUnit(g, unit) {
-  const type = UNITS[unit.type];
-  const scale = 1 / g.cam.zoom;
-  const halfWidth = Math.max(type.r + 2, 9 * scale);
-  const halfHeight = halfWidth * 0.66;
+function drawUnit(g, unit, selected) {
+  const zoom = g.cam.zoom;
+  const px = 1 / zoom;
+  const scale = Math.max(zoom, 0.88) * px;
   const color = TEAM_COLORS[unit.side];
+  const own = unit.side === g.playerSide;
+  const radius = unitMarkerRadius(unit.type, zoom);
+  const barWidth = Math.min(24 * px, radius * 1.7);
   ctx.save();
   ctx.translate(unit.x, unit.y);
+  paintUnitSilhouette(ctx, unit.type, scale, unit.facing || 0, color, zoom >= .9);
 
-  ctx.fillStyle = 'rgba(7,15,11,.52)';
-  ctx.fillRect(-halfWidth + 2, -halfHeight + 3, halfWidth * 2, halfHeight * 2);
-  ctx.fillStyle = inConcealment(g, unit.x, unit.y) ? '#1b2720' : '#19211b';
-  ctx.fillRect(-halfWidth, -halfHeight, halfWidth * 2, halfHeight * 2);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5 * scale;
-  ctx.strokeRect(-halfWidth, -halfHeight, halfWidth * 2, halfHeight * 2);
-  const x = halfWidth * 0.52;
-  const y = halfHeight * 0.56;
-  ctx.beginPath();
-  switch (unit.type) {
-    case 'inf':
-      ctx.moveTo(-x, -y); ctx.lineTo(x, y);
-      ctx.moveTo(x, -y); ctx.lineTo(-x, y);
-      ctx.stroke();
-      break;
-    case 'scout':
-      ctx.moveTo(-x, y); ctx.lineTo(x, -y);
-      ctx.stroke();
-      break;
-    case 'eng':
-      ctx.moveTo(-x, y); ctx.lineTo(0, -y); ctx.lineTo(x, y);
-      ctx.stroke();
-      break;
-    case 'arm':
-      ctx.ellipse(0, 0, x, y * 0.8, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      break;
-    case 'art':
-      ctx.arc(0, 0, Math.max(2 * scale, y * 0.65), 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-      break;
-  }
-  if (unit.order?.type === 'move' || unit._engaged) {
-    const length = halfWidth + 4 * scale;
-    const tipX = Math.cos(unit.facing) * length;
-    const tipY = Math.sin(unit.facing) * length;
-    ctx.beginPath();
-    ctx.moveTo(tipX * 0.82, tipY * 0.82);
-    ctx.lineTo(tipX, tipY);
-    ctx.stroke();
-  }
   if (unit.hp < unit.maxHp) {
-    ctx.fillStyle = '#25241e';
-    ctx.fillRect(-halfWidth, -halfHeight - 5 * scale, halfWidth * 2, 3 * scale);
+    const top = -9 * scale - 5 * px;
+    ctx.fillStyle = '#14201b';
+    ctx.fillRect(-barWidth / 2, top, barWidth, 3 * px);
     const health = clamp(unit.hp / unit.maxHp, 0, 1);
-    ctx.fillStyle = health > 0.55 ? '#98cb8a' : (health > 0.25 ? '#e6c177' : '#ef8b72');
-    ctx.fillRect(-halfWidth, -halfHeight - 5 * scale, halfWidth * 2 * health, 3 * scale);
+    ctx.fillStyle = health > .55 ? '#a9d291' : (health > .25 ? '#e6c177' : '#ef8b72');
+    ctx.fillRect(-barWidth / 2, top, barWidth * health, 3 * px);
   }
-  if (g.frontline && unit.side === g.playerSide) {
-    if (unit.supply < 0.65) {
-      ctx.fillStyle = '#161a13';
-      ctx.fillRect(-halfWidth, halfHeight + 2 * scale, halfWidth * 2, 3 * scale);
-      ctx.fillStyle = '#c4d89e';
-      ctx.fillRect(-halfWidth, halfHeight + 2 * scale, halfWidth * 2 * unit.supply, 3 * scale);
+
+  if (own) {
+    const cue = unitCombatCue(unit);
+    if (cue && (selected || zoom >= 1.05)) {
+      const ring = radius + 3.5 * px;
+      const start = Math.PI * .58;
+      const sweep = Math.PI * .84;
+      ctx.beginPath();
+      ctx.arc(0, 0, ring, start, start + sweep);
+      ctx.strokeStyle = '#15231f';
+      ctx.lineWidth = 3.4 * px;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, ring, start, start + sweep * Math.abs(cue) / 100);
+      ctx.strokeStyle = cue > 0 ? '#ffd283' : '#a8d4f0';
+      ctx.lineWidth = 2.1 * px;
+      ctx.stroke();
     }
-    if (unit.suppression >= 0.32) {
-      ctx.fillStyle = '#edb667';
-      ctx.fillRect(halfWidth + 2 * scale, -halfHeight, 2 * scale, halfHeight * 2 * unit.suppression);
+    if (g.frontline) {
+      let offset = 0;
+      if (unit.supply < UNIT_WARNING.supply) {
+        ctx.fillStyle = '#dce698';
+        ctx.fillRect(radius, -6 * px, 3.4 * px, 3.4 * px);
+        offset = 5 * px;
+      }
+      if (unit.suppression >= UNIT_WARNING.suppression) {
+        ctx.fillStyle = '#f1a36c';
+        ctx.fillRect(radius, -6 * px + offset, 3.4 * px, 3.4 * px);
+      }
     }
-  }
-  if (g._marchUnits.has(unit.id) || unit.holdPost) {
-    ctx.fillStyle = g._marchUnits.has(unit.id) ? '#edc37b' : color;
-    ctx.fillRect(-1.6 * scale, halfHeight + 7 * scale, 3.2 * scale, 2 * scale);
+    if (g._marchUnits.has(unit.id)) {
+      ctx.fillStyle = '#f4c47f';
+      ctx.fillRect(-1.6 * px, 11 * scale, 3.2 * px, 2 * px);
+    }
   }
   ctx.restore();
 }
@@ -706,7 +727,7 @@ function drawEffects(g){
     const x = e.x ?? e.x1;
     const y = e.y ?? e.y1;
     if (!onCamera(g, x, y, e.r || 165)) continue;
-    if (e.side !== g.playerSide && !visible(g, g.playerSide, x, y) &&
+    if (!e.public && e.side !== g.playerSide && !visible(g, g.playerSide, x, y) &&
         !(e.type === 'tracer' && visible(g, g.playerSide, e.x2, e.y2))) continue;
     if(e.type==='tracer'){
       const gradient = ctx.createLinearGradient(e.x1, e.y1, e.x2, e.y2);

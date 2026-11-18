@@ -198,7 +198,8 @@ h1.title{font-size:clamp(28px,7vw,52px);letter-spacing:.22em;font-weight:900;bac
   --defend: #85c3df;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --hud-tools: calc(100px + var(--safe-top));
+  --hud-start: calc(100px + var(--safe-top));
+  --hud-tools: var(--hud-start);
   --deck-offset: calc(146px + var(--safe-bottom));
 }
 
@@ -604,7 +605,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 #result .rt { letter-spacing: .04em; }
 
 @media (max-width: 700px) {
-  :root { --hud-tools: calc(121px + var(--safe-top)); --deck-offset: calc(137px + var(--safe-bottom)); }
+  :root { --hud-start: calc(121px + var(--safe-top)); --deck-offset: calc(137px + var(--safe-bottom)); }
   .menu {
     padding-inline: 26px;
     background-position: 60% center;
@@ -664,4 +665,58 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 @media (max-height: 700px) {
   .card-note { display: none; }
   .tactical-map { width: clamp(116px, 17vw, 172px); }
+}
+
+.map-briefing {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 10px;
+  margin-bottom: 14px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.map-briefing dt { color: var(--accent-light); }
+.map-briefing dd { color: #c7cdbb; }
+.map-briefing dd strong { color: var(--ink); }
+.map-briefing dd p { color: #adb7a7; }
+
+.ucard:has(.unit-card-icon) .un {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding-top: 4px;
+}
+.unit-card-icon { width: 22px; height: 16px; object-fit: contain; }
+.combat-cue { color: #ebc987; }
+
+#hud:has(#eventNotice:not(.hidden)) { --hud-tools: calc(var(--hud-start) + 52px); }
+#eventNotice {
+  position: absolute;
+  left: 12px;
+  top: calc(var(--hud-start) - 5px);
+  width: min(420px, calc(100% - 24px));
+  z-index: 21;
+  pointer-events: auto;
+}
+#eventLocate {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  text-align: left;
+  border: 1px solid #526056;
+  border-left: 3px solid var(--event-accent);
+  border-radius: 4px;
+  background: rgba(23, 31, 26, .96);
+  color: var(--ink);
+  cursor: pointer;
+}
+#eventLocate:hover { background: #27372c; }
+.event-heading { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; }
+#eventName { color: var(--event-accent); font-size: 12px; line-height: 1.35; }
+#eventTime { flex-shrink: 0; color: var(--ink); font-size: 11px; font-variant-numeric: tabular-nums; }
+#eventImpact { display: block; margin-top: 2px; color: #c3cbbd; line-height: 1.35; font-size: 10px; }
+
+@media (max-width: 700px) {
+  #eventNotice { left: 7px; width: min(420px, calc(100% - 14px)); }
 }

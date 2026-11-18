@@ -22,7 +22,7 @@ const UNIT_SLOTS={inf:2,scout:2,eng:2,arm:4,art:5};
 const DEPLOY_RADIUS=100;
 /* 防压家圈半径：固定 200 */
 const DEF_FORBIDDEN_RADIUS=200;
-const T_PLAIN=0,T_FOREST=1,T_MOUNT=2,T_WATER=3,T_ROAD=4,T_SAND=5,T_BUILDING=6,T_BRIDGE=7,T_RUBBLE=8,T_CRATER=9;
+const T_PLAIN=0,T_FOREST=1,T_MOUNT=2,T_WATER=3,T_ROAD=4,T_SAND=5,T_BUILDING=6,T_BRIDGE=7,T_RUBBLE=8,T_CRATER=9,T_FORD=10;
 const TERRAIN=[
   {n:'平原',pass:1,spd:1.00,cover:0.00,c1:'#555f41',c2:'#717751'},
   {n:'森林',pass:1,spd:0.60,cover:0.30,c1:'#263e32',c2:'#3c5240'},
@@ -34,6 +34,7 @@ const TERRAIN=[
   {n:'桥梁',pass:1,spd:1.20,cover:0.00,c1:'#756852',c2:'#a29374'},
   {n:'瓦砾',pass:1,spd:0.55,cover:0.15,c1:'#514b41',c2:'#675e50'},
   {n:'弹坑',pass:1,spd:0.72,cover:0.22,c1:'#322d26',c2:'#484035'},
+  {n:'浅滩',pass:1,spd:0.58,cover:0.00,c1:'#467276',c2:'#7b9890'},
 ];
 const UNITS={
   inf:  {n:'步兵班',cost:8, hp:110,spd:16.5,dmg:10,range:78, cd:0.85,vis:142,r:6, cap:1.0},

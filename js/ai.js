@@ -23,7 +23,9 @@ function aiTick(g, dt, ai) {
         .slice(0, Math.max(0, Math.floor(units.length / 4) - returning));
       resupplyUnits(g, empty);
     }
-    const ready = units.filter(unit => !unit._resupplying);
+    const event = g.battlefieldEvent;
+    const danger = g.eventArea || (event?.phase === 'warning' ? battlefieldEventArea(event, g.time) : null);
+    const ready = units.filter(unit => !unit._resupplying && !retreatFromEvent(g, unit, danger));
     if (ai === 'atk') aiAtkCommand(g, ready);
     else aiDefCommand(g, ready);
   }
@@ -33,7 +35,8 @@ function aiTick(g, dt, ai) {
   const myUnits = g.units.filter(unit => unit.side === ai && unit.alive);
   const deploying = g.deploying.filter(deployment => deployment.side === ai).length;
   if (myUnits.length + deploying >= UNIT_CAP[ai]) return;
-  const spawns = getSpawnPoints(g, ai);
+  const spawns = getSpawnPoints(g, ai).filter(point =>
+    eventDamageAt(g.eventArea, point.x, point.y, terrainAt(g, point.x, point.y)) === 0);
   if (!spawns.length) return;
   let type='inf';
   const cp=g.cp[ai];
@@ -65,6 +68,25 @@ function aiTick(g, dt, ai) {
     if (startDeploy(g, ai, type, x, y)) break;
   }
 }
+function retreatFromEvent(g, unit, area) {
+  if (unit.order?.eventRetreat && area?.profile.dps) return true;
+  if (!eventDamageAt(area, unit.x, unit.y, terrainAt(g, unit.x, unit.y))) return false;
+  const outward = Math.atan2(unit.y - area.y, unit.x - area.x);
+  const radius = area.r * area.profile.core + CELL * 1.4;
+  for (const turn of [0, .55, -.55, 1.1, -1.1, 1.8, -1.8, Math.PI]) {
+    const x = area.x + Math.cos(outward + turn) * radius;
+    const y = area.y + Math.sin(outward + turn) * radius;
+    if (!canWalk(g, x, y, unit.type) || (unit.side === 'def' && isDefForbiddenArea(g, x, y))) continue;
+    unit.order = { type: 'move', x, y, eventRetreat: true };
+    unit.path = null;
+    unit.pathI = 0;
+    unit.holdPost = 0;
+    unit.tid = 0;
+    return true;
+  }
+  return false;
+}
+
 function aiAtkCommand(g, units){
   if(units.length===0)return;
   const enemyPosts=g.posts.filter(p=>p.owner!=='atk'&&!p._disabled);

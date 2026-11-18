@@ -76,7 +76,7 @@ function movementCost(g, x, y, type) {
   let speed = speedAt(g, wx, wy, type);
   if (type === 'arm' && terrain === T_FOREST) speed *= 0.5;
   if (terrain !== T_ROAD && terrain !== T_BRIDGE) speed *= g.weather.offRoadSpeed;
-  return 1 / speed;
+  return battlefieldRoutePenalty(g, wx, wy, terrain) / speed;
 }
 
 function findPath(g, sx, sy, tx, ty, type, side) {
@@ -188,19 +188,26 @@ function smoothPath(g, path, sx, sy, type, side) {
   for (let i = 0; i < path.length;) {
     let last = i;
     const terrain = terrainAt(g, path[i].x, path[i].y);
+    const routePenalty = battlefieldRoutePenalty(g,
+      (Math.floor(path[i].x / CELL) + 0.5) * CELL,
+      (Math.floor(path[i].y / CELL) + 0.5) * CELL, terrain);
     for (let j = i + 1; j < Math.min(path.length, i + 14); j++) {
       const point = path[j];
       if (terrainAt(g, point.x, point.y) !== terrain) break;
       const clear = traceCells(x, y, point.x, point.y, (cx, cy) =>
-        cellWalkable(g, cx, cy, type) && g.terrain[cy * MAP_W + cx] === terrain
+        cellWalkable(g, cx, cy, type) && g.terrain[cy * MAP_W + cx] === terrain &&
+          battlefieldRoutePenalty(g, (cx + 0.5) * CELL, (cy + 0.5) * CELL, terrain) === routePenalty
       );
       if (!clear) continue;
       if (side === 'def') {
         const dx = point.x - x;
         const dy = point.y - y;
-        const t = clamp(((g.spawnPoint.x - x) * dx + (g.spawnPoint.y - y) * dy) /
-          Math.max(dx * dx + dy * dy, 1), 0, 1);
-        if (isDefForbiddenArea(g, x + t * dx, y + t * dy)) continue;
+        const protectedPath = g.forbiddenCenters.some(center => {
+          const t = clamp(((center.x - x) * dx + (center.y - y) * dy) / Math.max(dx * dx + dy * dy, 1), 0, 1);
+          const radius = g.forbiddenRadius || DEF_FORBIDDEN_RADIUS;
+          return dist2(x + t * dx, y + t * dy, center.x, center.y) < radius ** 2;
+        });
+        if (protectedPath) continue;
       }
       last = j;
     }

@@ -1,326 +1,338 @@
 "use strict";
 
-/* ============ 地图辅助 ============ */
-function isLand(t,x,y){const v=t[y*MAP_W+x];return v!==T_WATER&&v!==T_MOUNT&&v!==T_BUILDING;}
-function placeOnLand(t,x,y){x=clamp(Math.round(x),1,MAP_W-2);y=clamp(Math.round(y),1,MAP_H-2);if(isLand(t,x,y))return{x,y};for(let r=1;r<24;r++){for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;if(isLand(t,nx,ny))return{x:nx,y:ny};}}return{x,y};}
-function flatten(t,x,y,r){for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;if(dx*dx+dy*dy>r*r)continue;const v=t[ny*MAP_W+nx];if(v===T_MOUNT||v===T_WATER||v===T_BUILDING)t[ny*MAP_W+nx]=T_PLAIN;}}
-function carveRoad(t,x1,y1,x2,y2,w){w=w||0;const steps=Math.ceil(dist(x1,y1,x2,y2)*2);for(let i=0;i<=steps;i++){const p=i/steps;const cx=Math.round(lerp(x1,x2,p)),cy=Math.round(lerp(y1,y2,p));for(let dy=-w;dy<=w;dy++)for(let dx=-w;dx<=w;dx++){const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;const v=t[ny*MAP_W+nx];if(v===T_MOUNT||v===T_WATER||v===T_PLAIN||v===T_SAND||v===T_FOREST)t[ny*MAP_W+nx]=T_ROAD;}}}
-function carvePath(t,x1,y1,x2,y2,w,terr){w=w||0;const steps=Math.ceil(dist(x1,y1,x2,y2)*2);for(let i=0;i<=steps;i++){const p=i/steps;const cx=Math.round(lerp(x1,x2,p)),cy=Math.round(lerp(y1,y2,p));for(let dy=-w;dy<=w;dy++)for(let dx=-w;dx<=w;dx++){const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=MAP_W||ny>=MAP_H)continue;t[ny*MAP_W+nx]=terr;}}}
+const MAP_REVISION = 2;
 
-/* ============ 地图生成器 ============ */
-function genIsland(){
-  MAP_W=80;MAP_H=56;
-  const t=new Uint8Array(MAP_W*MAP_H);
-  const cx0=MAP_W*.5, cy0=MAP_H*.44;
-  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    const dx=(x-cx0)/(MAP_W*.36),dy=(y-cy0)/(MAP_H*.38);
-    let d=Math.sqrt(dx*dx+dy*dy)+(fbm(x*.08,y*.08,7,4)-.5)*.92;
-    let v;if(d<.68)v=T_PLAIN;else if(d<.90)v=T_SAND;else v=T_WATER;
-    if(v===T_PLAIN){
-      const f=fbm(x*.145+77,y*.145+77,41,3);
-      const mdx=(x-MAP_W*.5)/(MAP_W*.22), mdy=(y-MAP_H*.42)/(MAP_H*.26);
-      const mdist=Math.sqrt(mdx*mdx+mdy*mdy);
-      if(mdist<1.0 && fbm(x*.14,y*.14,23,3)>.42)v=T_MOUNT;
-      else if(f>.575)v=T_FOREST;
-    }
-    t[y*MAP_W+x]=v;
+function makeBattlefield(width, height, terrainAtCell) {
+  const terrain = new Uint8Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) terrain[y * width + x] = terrainAtCell(x, y);
   }
-  carvePath(t,MAP_W*.5,MAP_H*.28,MAP_W*.5,MAP_H*.55,0,T_PLAIN);
-  carvePath(t,MAP_W*.38,MAP_H*.42,MAP_W*.62,MAP_H*.42,0,T_PLAIN);
-  carvePath(t,MAP_W*.5,MAP_H*.35,MAP_W*.66,MAP_H*.5,0,T_PLAIN);
-  /* 恢复：hq + 4 支部 + 1 据点 */
-  const posts=[
-    {x:40,y:11,type:'hq',name:'守军大本营'},
-    {x:13,y:24,type:'branch',name:'西港支部'},
-    {x:67,y:24,type:'branch',name:'东岭支部'},
-    {x:18,y:44,type:'branch',name:'南滩支部'},
-    {x:62,y:44,type:'branch',name:'椰林支部'},
-    {x:40,y:34,type:'point',name:'中部哨站'},
-  ];
-  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
-  const spawns=[placeOnLand(t,16,52),placeOnLand(t,64,52)];
-  spawns.forEach(s=>flatten(t,s.x,s.y,2));
-  const spawn=spawns[0];
-  for(let i=1;i<posts.length;i++)carveRoad(t,posts[0].x,posts[0].y,posts[i].x,posts[i].y,0);
-  spawns.forEach(s=>carveRoad(t,posts[0].x,posts[0].y,s.x,s.y,0));
-  const turrets=[{x:40,y:7,type:'fort'},{x:34,y:15,type:'mg'},{x:46,y:15,type:'mg'},{x:13,y:20,type:'at'},{x:67,y:20,type:'at'},{x:18,y:40,type:'mg'},{x:62,y:40,type:'mg'},{x:32,y:26,type:'bunker'},{x:48,y:26,type:'bunker'},{x:28,y:32,type:'watchtower'},{x:52,y:32,type:'watchtower'},{x:8,y:32,type:'watchtower'},{x:72,y:32,type:'watchtower'},{x:20,y:18,type:'watchtower'},{x:60,y:18,type:'watchtower'}];
-  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
-  return {terrain:t,posts,spawn,spawns,turrets,mapW:MAP_W,mapH:MAP_H,eventType:'volcano'};
+  return { mapW: width, mapH: height, terrain };
 }
-function genValley(random){
-  MAP_W=72;MAP_H=56;
-  const t=new Uint8Array(MAP_W*MAP_H);
-  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    const cx=MAP_W*.5;
-    let halfW=14+Math.sin(y*.16)*3.2+(fbm(x*.07,y*.07,5,3)-.5)*7;
-    if(y>MAP_H*.75) halfW+=8;
-    const dd=Math.abs(x-cx);let v;
-    if(dd<halfW-3.5)v=T_PLAIN;else if(dd<halfW)v=T_SAND;else v=T_MOUNT;
-    if(v===T_PLAIN){const f=fbm(x*.13+31,y*.13+31,61,3);if(f>.615)v=T_FOREST;}
-    t[y*MAP_W+x]=v;
-  }
-  for(let i=0;i<8;i++){
-    const y=8+i*6+lerp(-1,1,random());
-    carvePath(t,MAP_W*.5,y,MAP_W*.15,y+lerp(-8,8,random()),0,T_PLAIN);
-    carvePath(t,MAP_W*.5,y+3,MAP_W*.85,y+lerp(-8,8,random()),0,T_PLAIN);
-  }
-  /* 山地图：支部保持削减后的 2 个 */
-  const posts=[
-    {x:36,y:9,type:'hq',name:'守军大本营'},
-    {x:22,y:24,type:'branch',name:'西谷口支部'},
-    {x:50,y:24,type:'branch',name:'东谷口支部'},
-  ];
-  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
-  const spawns=[placeOnLand(t,22,52),placeOnLand(t,36,52),placeOnLand(t,50,52)];
-  spawns.forEach(s=>flatten(t,s.x,s.y,2));
-  const spawn=spawns[1];
-  carveRoad(t,posts[0].x,posts[0].y,posts[1].x,posts[1].y,1);
-  carveRoad(t,posts[0].x,posts[0].y,posts[2].x,posts[2].y,1);
-  carveRoad(t,36,9,spawn.x,spawn.y,1);
-  const turrets=[{x:36,y:5,type:'fort'},{x:30,y:13,type:'mg'},{x:42,y:13,type:'mg'},{x:22,y:18,type:'at'},{x:50,y:18,type:'at'},{x:22,y:36,type:'mg'},{x:50,y:36,type:'mg'},{x:30,y:26,type:'bunker'},{x:42,y:26,type:'bunker'},{x:34,y:32,type:'watchtower'},{x:38,y:45,type:'watchtower'},{x:26,y:30,type:'watchtower'},{x:46,y:30,type:'watchtower'}];
-  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
-  return {terrain:t,posts,spawn,spawns,turrets,mapW:MAP_W,mapH:MAP_H,eventType:'wildfire'};
-}
-function genPlain(){
-  MAP_W=104;MAP_H=72;
-  const t=new Uint8Array(MAP_W*MAP_H);
-  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    const f=fbm(x*.06+5,y*.06+5,91,5);
-    const f2=fbm(x*.18+55,y*.18+55,37,3);
-    const m=fbm(x*.09+17,y*.09+17,101,3);
-    let v=T_PLAIN;
-    if(f>.38 || (f>.30 && f2>.44)) v=T_FOREST;
-    if(m>.85 && f<.55)v=T_MOUNT;
-    t[y*MAP_W+x]=v;
-  }
-  const riverY=[12,26,40,55];
-  riverY.forEach((ry,i)=>{
-    for(let x=2;x<MAP_W-2;x++){
-      const wy=Math.round(ry+Math.sin(x*.09+i*1.7)*2.5+Math.sin(x*.29+i)*1.2);
-      for(let d=-1;d<=1;d++){const ny=wy+d;if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_WATER;}
+
+function paintDisc(map, cx, cy, radius, paint) {
+  for (let y = Math.max(0, Math.ceil(cy - radius)); y <= Math.min(map.mapH - 1, cy + radius); y++) {
+    for (let x = Math.max(0, Math.ceil(cx - radius)); x <= Math.min(map.mapW - 1, cx + radius); x++) {
+      if (dist2(x, y, cx, cy) > radius ** 2) continue;
+      const i = y * map.mapW + x;
+      map.terrain[i] = paint(map.terrain[i], x, y);
     }
-  });
-  const hqX=52,hqY=14;
-  for(let x=30;x<74;x++){
-    const wy=hqY+7+Math.sin(x*.15)*1.5;
-    for(let d=-1;d<=1;d++){const ny=Math.round(wy)+d;if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_WATER;}
   }
-  [20,52,84].forEach(bx=>{
-    for(let x=bx-1;x<=bx+1;x++){
-      for(let y=0;y<MAP_H;y++){
-        if(t[y*MAP_W+x]===T_WATER)t[y*MAP_W+x]=T_BRIDGE;
+}
+
+function layRoute(map, waypoints, width = 1, terrain = T_ROAD) {
+  for (let i = 1; i < waypoints.length; i++) {
+    const [x1, y1] = waypoints[i - 1];
+    const [x2, y2] = waypoints[i];
+    const samples = Math.max(1, Math.ceil(dist(x1, y1, x2, y2) * 2));
+    for (let j = 0; j <= samples; j++) {
+      const x = lerp(x1, x2, j / samples);
+      const y = lerp(y1, y2, j / samples);
+      paintDisc(map, x, y, width, tile => isWaterway(tile) ? tile : terrain);
+    }
+  }
+}
+
+function layRiver(map, centerline, halfWidth) {
+  const channel = Array.from({ length: map.mapW }, (_, x) => ({
+    y: Math.round(centerline(x)), halfWidth: halfWidth(x),
+  }));
+  for (const [x, band] of channel.entries()) {
+    for (let dy = -band.halfWidth - 1; dy <= band.halfWidth + 1; dy++) {
+      const y = band.y + dy;
+      if (y < 0 || y >= map.mapH) continue;
+      map.terrain[y * map.mapW + x] = Math.abs(dy) <= band.halfWidth ? T_WATER : T_SAND;
+    }
+  }
+  return channel;
+}
+
+function addCrossings(map, river, crossings) {
+  for (const { x, name, type, width = 1 } of crossings) {
+    for (let column = x - width; column <= x + width; column++) {
+      const { y, halfWidth } = river[column];
+      for (let dy = -halfWidth - 1; dy <= halfWidth + 1; dy++) {
+        map.terrain[(y + dy) * map.mapW + column] = Math.abs(dy) <= halfWidth ? type : T_ROAD;
       }
     }
+    map.landmarks.push({ x, y: river[x].y, name, kind: type === T_BRIDGE ? 'bridge' : 'ford' });
+  }
+}
+
+function addCover(map, x, y, radius, terrain, seed) {
+  paintDisc(map, x, y, radius, (tile, col, row) => {
+    if (tile !== T_PLAIN && tile !== T_SAND) return tile;
+    return dist2(x, y, col, row) < (radius - 1.5) ** 2 || hash2(col, row, seed) > 0.36 ? terrain : tile;
   });
-  /* 恢复：hq + 4 支部 + 1 据点 */
-  const posts=[
-    {x:hqX,y:hqY,type:'hq',name:'守军大本营'},
-    {x:16,y:20,type:'branch',name:'林场支部'},
-    {x:88,y:26,type:'branch',name:'铁路支部'},
-    {x:24,y:54,type:'branch',name:'南村支部'},
-    {x:80,y:58,type:'branch',name:'石桥支部'},
-    {x:64,y:44,type:'point',name:'中央哨站'},
-  ];
-  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
-  const spawns=[placeOnLand(t,38,64),placeOnLand(t,52,64),placeOnLand(t,66,64)];
-  spawns.forEach(s=>flatten(t,s.x,s.y,2));
-  const spawn=spawns[1];
-  for(let i=1;i<posts.length;i++)carveRoad(t,posts[0].x,posts[0].y,posts[i].x,posts[i].y,0);
-  carveRoad(t,posts[0].x,posts[0].y,spawn.x,spawn.y,0);
-  const turrets=[{x:52,y:8,type:'fort'},{x:40,y:18,type:'mg'},{x:64,y:18,type:'mg'},{x:16,y:22,type:'at'},{x:88,y:22,type:'at'},{x:24,y:50,type:'mg'},{x:80,y:50,type:'mg'},{x:36,y:32,type:'bunker'},{x:68,y:32,type:'bunker'},{x:8,y:44,type:'watchtower'},{x:96,y:44,type:'watchtower'},{x:52,y:48,type:'watchtower'},{x:30,y:14,type:'watchtower'},{x:74,y:14,type:'watchtower'}];
-  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
-  return {terrain:t,posts,spawn,spawns,turrets,mapW:MAP_W,mapH:MAP_H,eventType:'wildfire'};
 }
-function genCity(random){
-  MAP_W=112;MAP_H=84;
-  const t=new Uint8Array(MAP_W*MAP_H).fill(T_PLAIN);
-  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    if(x<1||y<1||x>MAP_W-2||y>MAP_H-2)t[y*MAP_W+x]=T_MOUNT;
+
+function prepareSites(map, layouts) {
+  const posts = layouts.posts.map(([x, y, type, name]) => ({ x, y, type, name }));
+  const spawns = layouts.spawns.map(([x, y]) => ({ x, y }));
+  const turrets = layouts.turrets.map(([x, y, type]) => ({ x, y, type }));
+  for (const site of [...posts, ...spawns]) {
+    paintDisc(map, site.x, site.y, 3.35, tile =>
+      tile === T_MOUNT || tile === T_BUILDING || tile === T_FOREST ? T_PLAIN : tile);
   }
-  function cityBlock(cx,cy,w,h,density,roadSpacing){
-    for(let y=cy-h;y<cy+h;y++)for(let x=cx-w;x<cx+w;x++){
-      if(x<2||y<2||x>MAP_W-3||y>MAP_H-3)continue;
-      const isRoad=((x-cx)%roadSpacing===0)||((y-cy)%roadSpacing===0);
-      const isAvenue=((x-cx)%(roadSpacing*2)===0)||((y-cy)%(roadSpacing*2)===0);
-      if(isRoad||isAvenue)t[y*MAP_W+x]=T_ROAD;
-      else if(random()<density)t[y*MAP_W+x]=T_BUILDING;
-    }
+  for (const turret of turrets) {
+    paintDisc(map, turret.x, turret.y, 1, tile =>
+      tile === T_MOUNT || tile === T_BUILDING || tile === T_FOREST ? T_PLAIN : tile);
   }
-  cityBlock(28,58,14,11,0.88,4);
-  cityBlock(56,42,16,13,0.92,5);
-  cityBlock(86,22,15,10,0.68,7);
-  for(let y=40;y<64;y++)for(let x=36;x<56;x++){
-    if((x-46)*(x-46)+(y-52)*(y-52)<80) t[y*MAP_W+x]=T_ROAD;
-  }
-  for(let y=2;y<MAP_H-2;y++)for(let x=2;x<MAP_W-2;x++){
-    const idx=y*MAP_W+x;
-    if(t[idx]!==T_PLAIN)continue;
-    const dc=Math.min(dist(x,y,28,58),dist(x,y,56,42),dist(x,y,86,22));
-    if(dc<30) continue;
-    if(random()<0.05){
-      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-        const nx=x+dx,ny=y+dy;
-        if(nx<2||ny<2||nx>=MAP_W-2||ny>=MAP_H-2)continue;
-        if(t[ny*MAP_W+nx]===T_PLAIN && random()<0.7)t[ny*MAP_W+nx]=T_FOREST;
-      }
-    }
-  }
-  for(let y=2;y<MAP_H-2;y++)for(let x=2;x<MAP_W-2;x++){
-    const idx=y*MAP_W+x;
-    if(t[idx]!==T_PLAIN)continue;
-    const dc=Math.min(dist(x,y,28,58),dist(x,y,56,42),dist(x,y,86,22));
-    if(dc<30 && random()<0.08) t[idx]=T_FOREST;
-  }
-  carveRoad(t,28,58,56,42,1);
-  carveRoad(t,56,42,86,22,1);
-  carveRoad(t,28,58,86,22,1);
-  /* 恢复：hq + 4 支部 + 1 据点 */
-  const posts=[
-    {x:56,y:42,type:'hq',name:'市中央指挥部'},
-    {x:28,y:58,type:'branch',name:'老城支部'},
-    {x:86,y:22,type:'branch',name:'工业区支部'},
-    {x:22,y:22,type:'branch',name:'西北郊支部'},
-    {x:90,y:62,type:'branch',name:'东南郊支部'},
-    {x:56,y:64,type:'point',name:'南广场哨站'},
-  ];
-  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
-  const spawns=[placeOnLand(t,44,76),placeOnLand(t,56,76),placeOnLand(t,68,76)];
-  spawns.forEach(s=>flatten(t,s.x,s.y,2));
-  const spawn=spawns[1];
-  const turrets=[{x:56,y:30,type:'fort'},{x:46,y:42,type:'mg'},{x:66,y:42,type:'mg'},{x:28,y:52,type:'at'},{x:86,y:16,type:'at'},{x:28,y:64,type:'mg'},{x:86,y:28,type:'mg'},{x:40,y:50,type:'bunker'},{x:70,y:34,type:'bunker'},{x:14,y:36,type:'watchtower'},{x:100,y:48,type:'watchtower'},{x:56,y:58,type:'watchtower'},{x:38,y:18,type:'watchtower'},{x:80,y:52,type:'watchtower'}];
-  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
-  /* === 城市初始大弹坑（广场区域，遗迹） === */
-  for(let y=44;y<=60;y++){
-    for(let x=38;x<=54;x++){
-      if(x<1||y<1||x>MAP_W-2||y>MAP_H-2)continue;
-      const dd=dist(x,y,46,52);
-      if(dd<5.5) t[y*MAP_W+x]=T_CRATER;
-      else if(dd<7.0 && (t[y*MAP_W+x]===T_BUILDING||t[y*MAP_W+x]===T_FOREST)) t[y*MAP_W+x]=T_RUBBLE;
-    }
-  }
-  /* === 工业区油罐（可视化实体） === */
-  const oilTanks=[];
-  [[82,17],[89,25],[78,28]].forEach(q=>{
-    const p=placeOnLand(t,q[0],q[1]);
-    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-      const nx=p.x+dx,ny=p.y+dy;
-      if(nx<1||ny<1||nx>=MAP_W-1||ny>=MAP_H-1)continue;
-      const v=t[ny*MAP_W+nx];
-      if(v===T_BUILDING||v===T_FOREST)t[ny*MAP_W+nx]=T_PLAIN;
-    }
-    oilTanks.push({x:p.x*CELL+CELL/2,y:p.y*CELL+CELL/2,r:22,alive:true});
+  return { ...map, posts, spawns, spawn: spawns[layouts.primarySpawn ?? 0], turrets };
+}
+
+function genIsland(seed) {
+  const map = makeBattlefield(80, 56, (x, y) => {
+    const coast = Math.hypot((x - 40) / 35.5, (y - 27) / 25.8) + (fbm(x * .11, y * .11, seed + 7, 4) - .46) * .32;
+    const islets = Math.min(Math.hypot((x - 6) / 4, (y - 38) / 6), Math.hypot((x - 73) / 4.5, (y - 11) / 5));
+    if (coast > 1.04 && islets > 1) return T_WATER;
+    if (coast > .91) return T_SAND;
+    if (Math.hypot((x - 41) / 13, (y - 22) / 10) < 1.03 && fbm(x * .16, y * .16, seed + 23, 3) > .36) return T_MOUNT;
+    return fbm(x * .13, y * .13, seed + 37, 3) > .53 ? T_FOREST : T_PLAIN;
   });
-  return {terrain:t,posts,spawn,spawns,turrets,mapW:MAP_W,mapH:MAP_H,eventType:'oilfire',oilTanks};
-}
-function genRiver(){
-  MAP_W=84;MAP_H=58;
-  const t=new Uint8Array(MAP_W*MAP_H);
-  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    let v=T_PLAIN;
-    const f=fbm(x*.12+5,y*.12+5,141,3);if(f>.61)v=T_FOREST;
-    const m=fbm(x*.085+99,y*.085+99,73,3);if(m>.79)v=T_MOUNT;
-    t[y*MAP_W+x]=v;
-  }
-  const riverY=[];
-  for(let x=0;x<MAP_W;x++){
-    const ry=Math.round(26+Math.sin(x*0.16)*3.0+Math.sin(x*0.42)*1.3);
-    riverY.push(ry);
-    for(let d=-2;d<=2;d++){const ny=ry+d;if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_WATER;}
-  }
-  const bridges=[14,42,70];
-  bridges.forEach(bx=>{for(let x=bx-1;x<=bx+1;x++)for(let d=-3;d<=3;d++){const ny=riverY[clamp(x,0,MAP_W-1)]+d;if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_BRIDGE;}});
-  for(let x=0;x<MAP_W;x++){
-    const ry=riverY[x];
-    [ry-3,ry+3].forEach(ny=>{if(ny>=0&&ny<MAP_H){const v=t[ny*MAP_W+x];if(v===T_PLAIN||v===T_FOREST)t[ny*MAP_W+x]=T_SAND;}});
-  }
-  /* 恢复：hq + 4 支部 + 1 据点 */
-  const posts=[
-    {x:42,y:11,type:'hq',name:'守军大本营'},
-    {x:14,y:22,type:'branch',name:'西桥头支部'},
-    {x:70,y:22,type:'branch',name:'东桥头支部'},
-    {x:20,y:46,type:'branch',name:'南岸支部'},
-    {x:64,y:46,type:'branch',name:'河口支部'},
-    {x:42,y:40,type:'point',name:'中流哨站'},
+  map.landmarks = [
+    { x: 41, y: 22, name: '火山口', kind: 'ridge' },
+    { x: 33, y: 23, name: '西侧鞍道', kind: 'pass' },
+    { x: 50, y: 23, name: '东侧鞍道', kind: 'pass' },
   ];
-  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
-  const spawns=[placeOnLand(t,30,52),placeOnLand(t,54,52)];
-  spawns.forEach(s=>flatten(t,s.x,s.y,2));
-  const spawn=spawns[0];
-  bridges.forEach(bx=>carveRoad(t,bx,3,bx,MAP_H-4,0));
-  const turrets=[{x:42,y:6,type:'fort'},{x:28,y:16,type:'mg'},{x:56,y:16,type:'mg'},{x:14,y:18,type:'at'},{x:70,y:18,type:'at'},{x:20,y:42,type:'mg'},{x:64,y:42,type:'mg'},{x:32,y:20,type:'bunker'},{x:52,y:20,type:'bunker'},{x:10,y:44,type:'watchtower'},{x:74,y:44,type:'watchtower'},{x:42,y:34,type:'watchtower'}];
-  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
-  return {terrain:t,posts,spawn,spawns,turrets,mapW:MAP_W,mapH:MAP_H,eventType:'wildfire'};
-}
-function genTutorial(){
-  MAP_W=72;MAP_H=50;
-  const t=new Uint8Array(MAP_W*MAP_H);
-  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    let v=T_PLAIN;
-    if(x<22 && y<16 && fbm(x*.14,y*.14,3,3)>.55) v=T_FOREST;
-    if(x>56 && y>8 && y<34 && fbm(x*.12+11,y*.12+11,9,3)>.68) v=T_MOUNT;
-    t[y*MAP_W+x]=v;
-  }
-  const posts=[{x:14,y:34,type:'hq',name:'我方指挥部',owner:'atk'},{x:36,y:25,type:'branch',name:'中立支部',owner:'neutral'},{x:58,y:25,type:'branch',name:'敌方支部'},{x:58,y:11,type:'hq',name:'敌方指挥部'}];
-  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
-  const spawns=[placeOnLand(t,10,42),placeOnLand(t,14,34),placeOnLand(t,18,42)];
-  spawns.forEach(s=>flatten(t,s.x,s.y,2));
-  const spawn=spawns[1];
-  carveRoad(t,posts[0].x,posts[0].y,posts[1].x,posts[1].y,0);
-  carveRoad(t,posts[1].x,posts[1].y,posts[3].x,posts[3].y,0);
-  return {terrain:t,posts,spawn,spawns,turrets:[],mapW:MAP_W,mapH:MAP_H,eventType:null};
-}
-function genGrand(){
-  MAP_W=128;MAP_H=80;
-  const t=new Uint8Array(MAP_W*MAP_H);
-  for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-    let v=T_PLAIN;
-    const f=fbm(x*.075+7,y*.075+7,201,4);
-    const m=fbm(x*.06+63,y*.06+63,101,4);
-    if(m>.76)v=T_MOUNT;else if(f>.55)v=T_FOREST;
-    const riverY=Math.round(40+Math.sin(x*.09)*5+Math.sin(x*.21)*2);
-    if(Math.abs(y-riverY)<2)v=T_WATER;
-    if(Math.abs(y-riverY)===2 && v===T_PLAIN)v=T_SAND;
-    t[y*MAP_W+x]=v;
-  }
-  [20,44,64,84,108].forEach(bx=>{for(let x=bx-1;x<=bx+1;x++){if(x<0||x>=MAP_W)continue;const ry=Math.round(40+Math.sin(x*.09)*5+Math.sin(x*.21)*2);for(let d=-3;d<=3;d++){const ny=ry+d;if(ny>=0&&ny<MAP_H)t[ny*MAP_W+x]=T_BRIDGE;}}});
-  /* 恢复 10 据点：2 hq + 4 支部 + 4 据点 */
-  const posts=[
-    {x:64,y:14,type:'hq',name:'北军指挥部'},
-    {x:30,y:20,type:'branch',name:'西北支部'},
-    {x:98,y:20,type:'branch',name:'东北支部'},
-    {x:20,y:40,type:'point',name:'西岸据点'},
-    {x:108,y:40,type:'point',name:'东岸据点'},
-    {x:30,y:60,type:'point',name:'西南据点'},
-    {x:98,y:60,type:'point',name:'东南据点'},
-    {x:64,y:66,type:'hq',name:'南军指挥部'},
-    {x:20,y:66,type:'point',name:'西南渡口'},
-    {x:108,y:66,type:'point',name:'东南渡口'},
+  layRoute(map, [[22, 48], [25, 40], [17, 35], [15, 29], [21, 19], [29, 13], [40, 10]]);
+  layRoute(map, [[58, 48], [56, 41], [64, 34], [65, 27], [60, 19], [51, 13], [40, 10]]);
+  layRoute(map, [[25, 40], [31, 35], [41, 33], [51, 37], [56, 41]]);
+  layRoute(map, [[41, 33], [34, 29], [33, 22], [35, 16], [40, 10]], 1.05);
+  layRoute(map, [[41, 33], [48, 28], [50, 22], [48, 16], [40, 10]], 1.05);
+  paintDisc(map, 41, 22, 2.3, () => T_CRATER);
+
+  map.eventSites = [
+    { x: 36, y: 22, name: '西侧鞍道', radius: 5.8 },
+    { x: 47, y: 22, name: '东侧鞍道', radius: 5.8 },
   ];
-  posts.forEach(p=>{const q=placeOnLand(t,p.x,p.y);p.x=q.x;p.y=q.y;flatten(t,p.x,p.y,2);});
-  const spawns=[{x:10,y:10},{x:118,y:10},{x:10,y:70},{x:118,y:70}].map(s=>{const q=placeOnLand(t,s.x,s.y);flatten(t,q.x,q.y,2);return q;});
-  carveRoad(t,spawns[0].x,spawns[0].y,posts[0].x,posts[0].y,1);
-  carveRoad(t,spawns[1].x,spawns[1].y,posts[0].x,posts[0].y,1);
-  carveRoad(t,spawns[2].x,spawns[2].y,posts[7].x,posts[7].y,1);
-  carveRoad(t,spawns[3].x,spawns[3].y,posts[7].x,posts[7].y,1);
-  carveRoad(t,posts[0].x,posts[0].y,posts[3].x,posts[3].y,0);
-  carveRoad(t,posts[0].x,posts[0].y,posts[4].x,posts[4].y,0);
-  carveRoad(t,posts[7].x,posts[7].y,posts[3].x,posts[3].y,0);
-  carveRoad(t,posts[7].x,posts[7].y,posts[4].x,posts[4].y,0);
-  const turrets=[{x:64,y:7,type:'fort'},{x:50,y:14,type:'mg'},{x:78,y:14,type:'mg'},{x:20,y:32,type:'at'},{x:108,y:32,type:'at'},{x:30,y:56,type:'mg'},{x:98,y:56,type:'mg'},{x:64,y:73,type:'fort'},{x:50,y:66,type:'mg'},{x:78,y:66,type:'mg'},{x:40,y:26,type:'bunker'},{x:88,y:26,type:'bunker'},{x:40,y:54,type:'bunker'},{x:88,y:54,type:'bunker'},{x:14,y:20,type:'watchtower'},{x:114,y:20,type:'watchtower'},{x:14,y:60,type:'watchtower'},{x:114,y:60,type:'watchtower'},{x:20,y:14,type:'watchtower'},{x:108,y:14,type:'watchtower'},{x:20,y:74,type:'watchtower'},{x:108,y:74,type:'watchtower'}];
-  turrets.forEach(q=>{const p=placeOnLand(t,q.x,q.y);q.x=p.x;q.y=p.y;});
-  return {terrain:t,posts,spawn:spawns[0],spawns,turrets,mapW:MAP_W,mapH:MAP_H,eventType:'volcano',isGrand:true};
+  return prepareSites(map, {
+    posts: [[40, 10, 'hq', '守军大本营'], [15, 29, 'branch', '西港支部'], [65, 27, 'branch', '东岭支部'],
+      [25, 40, 'branch', '南滩支部'], [56, 41, 'branch', '椰林支部'], [41, 33, 'point', '鞍道哨站']],
+    spawns: [[22, 48], [58, 48]],
+    turrets: [[40, 6, 'fort'], [33, 13, 'mg'], [47, 13, 'mg'], [16, 24, 'at'], [64, 22, 'at'],
+      [24, 37, 'mg'], [57, 38, 'mg'], [38, 29, 'bunker'], [45, 30, 'watchtower'], [21, 18, 'watchtower'], [60, 17, 'watchtower']],
+  });
 }
-const MAPS=[
-  {id:'island',n:'翡翠群岛',desc:'中央山脉，山中有小道。',gen:genIsland,tag:'海岛',maxPlayers:2,small:true},
-  {id:'valley',n:'赤石山谷',desc:'两侧绝壁，山外平原进攻山口。',gen:genValley,tag:'山谷',maxPlayers:2,small:true},
-  {id:'plain', n:'黑森林平原',desc:'60%密林+横贯河流。',gen:genPlain,tag:'平原+森林',maxPlayers:2,small:true},
-  {id:'city',  n:'断壁残城',desc:'多中心城区+广场+大道，工业区有油罐。',gen:genCity,tag:'城市',maxPlayers:2,small:true},
-  {id:'river', n:'怒涛渡口',desc:'横贯东西的大河。',gen:genRiver,tag:'河流',maxPlayers:2,small:true},
-  {id:'grand', n:'大陆战场',desc:'开阔大陆，3个分散部署点。',gen:genGrand,tag:'大战场',maxPlayers:4,small:false},
-  {id:'tutorial',n:'新兵训练',desc:'教学关卡。',gen:genTutorial,tag:'教程',tutorial:true,maxPlayers:1,small:true},
+
+function genValley(seed) {
+  const map = makeBattlefield(72, 56, (x, y) => {
+    const center = 36 + 2.25 * Math.sin(y * .16);
+    const floor = 13 + Math.max(0, y - 36) * .39 + fbm(x * .09, y * .09, seed + 19, 3) * 5;
+    const offset = Math.abs(x - center);
+    if (offset > floor || Math.hypot((x - 36) / 5, (y - 28) / 8) < 1) return T_MOUNT;
+    if (offset > floor - 2.4) return T_SAND;
+    return fbm(x * .12, y * .12, seed + 61, 3) > .55 ? T_FOREST : T_PLAIN;
+  });
+  map.landmarks = [
+    { x: 22, y: 30, name: '西侧隘口', kind: 'pass' },
+    { x: 49, y: 30, name: '东侧隘口', kind: 'pass' },
+    { x: 36, y: 27, name: '红石断崖', kind: 'ridge' },
+  ];
+  layRoute(map, [[19, 50], [22, 43], [24, 36], [22, 30], [21, 24], [26, 15], [36, 9]], 1.05);
+  layRoute(map, [[53, 50], [51, 43], [48, 36], [49, 29], [51, 24], [46, 16], [36, 9]], 1.05);
+  layRoute(map, [[36, 50], [36, 39], [24, 36]], 1.4);
+  layRoute(map, [[36, 39], [48, 36]], 1.3);
+  layRoute(map, [[26, 15], [35, 17], [46, 16]], 1.14, T_SAND);
+  addCover(map, 28, 40, 3, T_RUBBLE, seed + 9);
+  addCover(map, 44, 40, 3, T_RUBBLE, seed + 10);
+  map.eventSites = [
+    { x: 22, y: 30, name: '西侧隘口', radius: 5.2 },
+    { x: 49, y: 30, name: '东侧隘口', radius: 5.2 },
+  ];
+  return prepareSites(map, {
+    posts: [[36, 9, 'hq', '守军大本营'], [21, 24, 'branch', '西谷口支部'], [51, 24, 'branch', '东谷口支部']],
+    spawns: [[19, 50], [36, 50], [53, 50]], primarySpawn: 1,
+    turrets: [[36, 5, 'fort'], [29, 12, 'mg'], [43, 13, 'mg'], [21, 20, 'at'], [50, 20, 'at'],
+      [26, 31, 'bunker'], [46, 32, 'bunker'], [27, 40, 'watchtower'], [44, 40, 'watchtower']],
+  });
+}
+
+function genPlain(seed) {
+  const map = makeBattlefield(104, 72, (x, y) => {
+    const wood = fbm(x * .075 + 5, y * .075, seed + 91, 4);
+    const fields = (x > 44 && x < 62) || Math.hypot((x - 37) / 12, (y - 15) / 8) < 1;
+    return wood > (fields ? .67 : .44) ? T_FOREST : T_PLAIN;
+  });
+  map.landmarks = [
+    { x: 33, y: 26, name: '西林带', kind: 'ridge' },
+    { x: 70, y: 48, name: '南林带', kind: 'ridge' },
+    { x: 53, y: 27, name: '中央农道', kind: 'pass' },
+  ];
+  const river = layRiver(map, x => 34 + 3.6 * Math.sin(x * .105) + 1.3 * Math.sin(x * .23), () => 1);
+  addCrossings(map, river, [
+    { x: 21, name: '西林浅滩', type: T_FORD },
+    { x: 53, name: '中央板桥', type: T_BRIDGE },
+    { x: 82, name: '石桥', type: T_BRIDGE },
+  ]);
+  layRoute(map, [[38, 64], [26, 53], [21, 42], [21, 30], [16, 22], [29, 14], [53, 11]]);
+  layRoute(map, [[53, 65], [54, 45], [53, 36], [53, 25], [53, 11]], 1.3);
+  layRoute(map, [[69, 64], [80, 53], [82, 44], [82, 34], [86, 23], [73, 15], [53, 11]]);
+  layRoute(map, [[26, 53], [42, 49], [54, 45], [69, 49], [80, 53]], 1.2);
+  layRoute(map, [[16, 22], [33, 21], [53, 24], [70, 26], [86, 23]]);
+  addCover(map, 33, 26, 5.2, T_FOREST, seed + 15);
+  addCover(map, 70, 48, 5.6, T_FOREST, seed + 23);
+  map.eventSites = [
+    { x: 33, y: 26, name: '西林带', radius: 6.8 },
+    { x: 70, y: 48, name: '南林带', radius: 6.8 },
+  ];
+  return prepareSites(map, {
+    posts: [[53, 11, 'hq', '守军大本营'], [16, 22, 'branch', '林场支部'], [86, 23, 'branch', '铁路支部'],
+      [26, 53, 'branch', '南村支部'], [80, 53, 'branch', '石桥支部'], [54, 45, 'point', '中央哨站']],
+    spawns: [[38, 64], [53, 65], [69, 64]], primarySpawn: 1,
+    turrets: [[53, 6, 'fort'], [45, 14, 'mg'], [61, 14, 'mg'], [18, 21, 'at'], [84, 24, 'at'],
+      [26, 49, 'mg'], [80, 49, 'mg'], [49, river[49].y - 4, 'bunker'], [56, 38, 'watchtower'], [34, 44, 'watchtower'], [73, river[73].y + 4, 'watchtower']],
+  });
+}
+
+function buildDistrict(map, x1, y1, x2, y2, spacing, density, seed) {
+  for (let y = y1; y <= y2; y++) {
+    for (let x = x1; x <= x2; x++) {
+      const street = (x - x1) % spacing === 0 || (y - y1) % spacing === 0;
+      const lot = hash2(x, y, seed);
+      map.terrain[y * map.mapW + x] = street ? T_ROAD :
+        lot < density ? T_BUILDING : lot < density + .08 ? T_RUBBLE : T_PLAIN;
+    }
+  }
+}
+
+function genCity(seed) {
+  const map = makeBattlefield(112, 84, (x, y) =>
+    fbm(x * .09, y * .09, seed + 44, 4) > .64 ? T_FOREST : T_PLAIN);
+  buildDistrict(map, 12, 37, 43, 63, 4, .84, seed + 101);
+  buildDistrict(map, 40, 15, 72, 46, 6, .78, seed + 103);
+  buildDistrict(map, 73, 16, 103, 43, 7, .76, seed + 107);
+  buildDistrict(map, 80, 51, 100, 67, 5, .65, seed + 109);
+  buildDistrict(map, 13, 15, 30, 29, 5, .71, seed + 113);
+  map.landmarks = [
+    { x: 44, y: 47, name: '广场弹坑', kind: 'ridge' },
+    { x: 56, y: 49, name: '南北大道', kind: 'pass' },
+    { x: 88, y: 34, name: '储油区', kind: 'depot' },
+  ];
+  layRoute(map, [[55, 76], [55, 61], [56, 52], [56, 25], [56, 10]], 1.8);
+  layRoute(map, [[38, 75], [33, 66], [27, 53], [20, 44], [23, 23], [40, 23], [56, 25]], 1.18);
+  layRoute(map, [[73, 75], [85, 66], [88, 57], [95, 46], [95, 34], [87, 26], [68, 25], [56, 25]], 1.4);
+  layRoute(map, [[27, 53], [36, 55], [55, 61], [69, 61], [88, 57]], 1.25);
+  layRoute(map, [[20, 44], [35, 40], [56, 39], [69, 49], [95, 46]], 1.1);
+  paintDisc(map, 44, 47, 6, tile => tile === T_BUILDING || tile === T_FOREST ? T_RUBBLE : tile);
+  paintDisc(map, 44, 47, 4.4, () => T_CRATER);
+  map.oilTanks = [[86, 33], [89, 34], [87, 37]].map(([x, y]) => {
+    paintDisc(map, x, y, 1.8, tile => tile === T_BUILDING ? T_PLAIN : tile);
+    return { x: (x + .5) * CELL, y: (y + .5) * CELL, r: 22, alive: true };
+  });
+
+  map.eventSites = [{ x: 88, y: 35, name: '储油区', radius: 5.9 }];
+  return prepareSites(map, {
+    posts: [[56, 25, 'hq', '市中央指挥部'], [27, 53, 'branch', '老城支部'], [87, 26, 'branch', '工业区支部'],
+      [23, 23, 'branch', '西北郊支部'], [88, 57, 'branch', '东南郊支部'], [55, 61, 'point', '南广场哨站']],
+    spawns: [[38, 75], [55, 76], [73, 75]], primarySpawn: 1,
+    turrets: [[56, 17, 'fort'], [50, 26, 'mg'], [62, 26, 'mg'], [25, 47, 'at'], [87, 21, 'at'],
+      [25, 58, 'mg'], [90, 54, 'mg'], [37, 40, 'bunker'], [69, 37, 'bunker'], [55, 56, 'watchtower'],
+      [18, 31, 'watchtower'], [97, 47, 'watchtower']],
+  });
+}
+
+function genRiver(seed) {
+  const map = makeBattlefield(84, 58, (x, y) =>
+    fbm(x * .11, y * .11, seed + 141, 4) > .56 ? T_FOREST : T_PLAIN);
+  map.landmarks = [];
+  const river = layRiver(map, x => 28 + 3.7 * Math.sin(x * .15) + 1.25 * Math.sin(x * .3), x => x > 27 && x < 57 ? 3 : 2);
+  addCrossings(map, river, [
+    { x: 14, name: '西堤桥', type: T_BRIDGE },
+    { x: 42, name: '中央铁桥', type: T_BRIDGE },
+    { x: 65, name: '东石桥', type: T_BRIDGE },
+    { x: 76, name: '下游浅滩', type: T_FORD },
+  ]);
+  layRoute(map, [[26, 52], [18, 44], [14, 37], [14, 26], [14, 21], [26, 16], [42, 10]], 1.2);
+  layRoute(map, [[26, 52], [42, 44], [58, 52]], 1.2);
+  layRoute(map, [[42, 44], [42, 38], [42, 26], [42, 10]], 1.3);
+  layRoute(map, [[58, 52], [64, 45], [65, 35], [65, 25], [66, 20], [55, 15], [42, 10]], 1.1);
+  layRoute(map, [[64, 45], [76, 41], [76, 25], [66, 20]], 1.08, T_SAND);
+  layRoute(map, [[18, 44], [30, 40], [42, 38], [55, 40], [64, 45]]);
+  addCover(map, 25, 36, 3.7, T_RUBBLE, seed + 4);
+  addCover(map, 54, 35, 4, T_FOREST, seed + 3);
+  map.eventSites = [
+    { x: 17, y: river[17].y + 5, name: '西堤低地', radius: 7.1 },
+    { x: 73, y: river[73].y + 5, name: '下游漫滩', radius: 7.3 },
+  ];
+  return prepareSites(map, {
+    posts: [[42, 10, 'hq', '守军大本营'], [14, 21, 'branch', '西桥头支部'], [66, 20, 'branch', '东桥头支部'],
+      [18, 44, 'branch', '南岸支部'], [64, 45, 'branch', '河口支部'], [42, 38, 'point', '中流哨站']],
+    spawns: [[26, 52], [58, 52]],
+    turrets: [[42, 6, 'fort'], [30, 15, 'mg'], [54, 15, 'mg'], [15, 19, 'at'], [65, 17, 'at'],
+      [18, 40, 'mg'], [64, 41, 'mg'], [39, river[39].y - river[39].halfWidth - 2, 'bunker'], [44, 36, 'watchtower'], [10, 39, 'watchtower'], [73, 38, 'watchtower']],
+  });
+}
+
+function genGrand(seed) {
+  const map = makeBattlefield(128, 80, (x, y) => {
+    const ridge = fbm(x * .07 + 10, y * .07, seed + 33, 4);
+    if (ridge > .64 && (x < 52 || x > 93)) return T_MOUNT;
+    return fbm(x * .09, y * .09, seed + 67, 4) > (x > 76 ? .47 : .56) ? T_FOREST : T_PLAIN;
+  });
+  map.landmarks = [
+    { x: 38, y: 32, name: '西翼高地', kind: 'ridge' },
+    { x: 90, y: 49, name: '东岸林场', kind: 'ridge' },
+  ];
+  const river = layRiver(map, x => 39 + 3.1 * Math.sin(x * .084) + 1.4 * Math.sin(x * .18), () => 2);
+  addCrossings(map, river, [
+    { x: 19, name: '西翼桥', type: T_BRIDGE },
+    { x: 43, name: '高地浅滩', type: T_FORD },
+    { x: 64, name: '中央干线桥', type: T_BRIDGE, width: 2 },
+    { x: 85, name: '林场浅滩', type: T_FORD },
+    { x: 108, name: '东翼桥', type: T_BRIDGE },
+  ]);
+  layRoute(map, [[23, 71], [25, 57], [19, 47], [19, 33], [30, 22], [46, 16], [64, 12]], 1.3);
+  layRoute(map, [[64, 73], [64, 61], [64, 48], [64, 33], [64, 12]], 1.4);
+  layRoute(map, [[104, 71], [102, 57], [108, 47], [108, 33], [96, 22], [81, 15], [64, 12]], 1.3);
+  layRoute(map, [[25, 57], [43, 48], [43, 35], [54, 30], [64, 30]], 1.12);
+  layRoute(map, [[102, 57], [85, 49], [85, 36], [76, 30], [64, 30]], 1.12);
+  layRoute(map, [[25, 57], [43, 58], [64, 61], [83, 59], [102, 57]], 1.18);
+  layRoute(map, [[30, 22], [44, 26], [64, 27], [83, 26], [96, 22]], 1.1);
+  map.eventSites = [
+    { x: 22, y: 42, to: [106, 38], name: '横贯河谷', radius: 7.3 },
+    { x: 106, y: 39, to: [22, 43], name: '横贯河谷', radius: 7.3 },
+  ];
+  return prepareSites(map, {
+    posts: [[64, 12, 'hq', '北军大本营'], [30, 22, 'branch', '西北支部'], [96, 22, 'branch', '东北支部'],
+      [19, 34, 'point', '西桥岗哨'], [108, 33, 'point', '东桥岗哨'], [25, 57, 'point', '西南据点'],
+      [102, 57, 'point', '东南据点'], [64, 61, 'branch', '南方指挥支部'], [64, 49, 'point', '中央河港']],
+    spawns: [[23, 71], [64, 73], [104, 71]], primarySpawn: 1,
+    turrets: [[64, 7, 'fort'], [55, 14, 'mg'], [73, 14, 'mg'], [28, 19, 'at'], [98, 19, 'at'],
+      [19, 33, 'mg'], [108, 32, 'mg'], [31, 54, 'mg'], [96, 53, 'mg'], [59, 56, 'bunker'],
+      [67, 58, 'bunker'], [42, 32, 'watchtower'], [85, 31, 'watchtower'], [64, 35, 'watchtower'],
+      [39, 55, 'watchtower'], [88, 54, 'watchtower']],
+  });
+}
+
+const MAPS = [
+  { id: 'island', n: '翡翠群岛', tag: '海岛', gen: genIsland, event: 'volcano',
+    palette: { [T_WATER]: ['#173d48', '#2c6469'], [T_SAND]: ['#a49465', '#ccbc88'] },
+    desc: '两翼登陆，沿岸绕行或争夺火山鞍道。', routes: '西港环岸、东岭环岸、火山双鞍道' },
+  { id: 'valley', n: '赤石山谷', tag: '山谷', gen: genValley, event: 'rockfall',
+    palette: { [T_MOUNT]: ['#594d44', '#865f50'], [T_SAND]: ['#87694f', '#a68863'] },
+    desc: '两条谷道绕过断崖，南侧岔路可互相支援。', routes: '西侧隘口、东侧隘口、谷底横路' },
+  { id: 'plain', n: '黑森林平原', tag: '林地', gen: genPlain, event: 'wildfire',
+    palette: { [T_FOREST]: ['#243b32', '#364e3c'], [T_PLAIN]: ['#596247', '#7c8057'] },
+    desc: '农道推进较快，两翼林带可遮蔽侦察与迂回。', routes: '中央板桥、西林浅滩、东侧石桥' },
+  { id: 'city', n: '断壁残城', tag: '城市', gen: genCity, event: 'oilfire',
+    palette: { [T_BUILDING]: ['#4b544d', '#6a6b61'], [T_ROAD]: ['#68665d', '#8c8474'] },
+    desc: '南北大道贯穿街区，巷道可以绕开广场弹坑。', routes: '南北大道、老城巷道、工业区外环' },
+  { id: 'river', n: '怒涛渡口', tag: '河流', gen: genRiver, event: 'flood',
+    palette: { [T_WATER]: ['#17394a', '#2e596a'], [T_FORD]: ['#4d787e', '#89a59b'] },
+    desc: '三座桥与一处浅滩连接两岸，南岸可横向调动。', routes: '西堤桥、中央铁桥、东石桥、下游浅滩' },
+  { id: 'grand', n: '大陆战场', tag: '大战场', gen: genGrand, event: 'storm',
+    palette: { [T_PLAIN]: ['#575b42', '#878054'], [T_FOREST]: ['#273c35', '#405641'] },
+    desc: '三个登陆场通往五处渡河点，中央干线连接南北。', routes: '西翼桥、中央干线桥、东翼桥、两处浅滩' },
+  { id: 'tutorial', n: '新兵训练', tag: '教程', tutorial: true, routes: '登陆场至中立支部' },
 ];
 
-function generateMap(mapDef, seed) {
+function isWaterway(terrain) {
+  return terrain === T_WATER || terrain === T_BRIDGE || terrain === T_FORD;
+}
+
+function generateMap(mapDef, seed, revision = MAP_REVISION) {
+  if (revision === MAP_REVISION && !mapDef.tutorial) return mapDef.gen(seed);
   const width = MAP_W;
   const height = MAP_H;
   let state = seed >>> 0;
@@ -329,7 +341,7 @@ function generateMap(mapDef, seed) {
     return state / 4294967296;
   };
   try {
-    return mapDef.gen(random);
+    return LEGACY_MAP_GENERATORS[mapDef.id](random);
   } finally {
     MAP_W = width;
     MAP_H = height;

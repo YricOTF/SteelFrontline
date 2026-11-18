@@ -4,7 +4,11 @@
 function makeGame(cfg){
   const mapDef=MAPS.find(m=>m.id===cfg.mapId)||MAPS[0];
   const seed = Number.isInteger(cfg.seed) ? cfg.seed >>> 0 : Math.floor(Math.random() * 4294967296);
-  const gen = generateMap(mapDef, seed);
+  const mapRevision = cfg.mapRevision === 1 || mapDef.tutorial ? 1 : MAP_REVISION;
+  const gen = generateMap(mapDef, seed, mapRevision);
+  const tileCenter = point => ({ x: (point.x + 0.5) * CELL, y: (point.y + 0.5) * CELL });
+  const attackSpawns = gen.spawns.map(tileCenter);
+  const spawnPoint = mapRevision === 1 ? { x: gen.spawn.x * CELL, y: gen.spawn.y * CELL } : tileCenter(gen.spawn);
   MAP_W = gen.mapW;
   MAP_H = gen.mapH;
 
@@ -17,7 +21,8 @@ function makeGame(cfg){
   const seasonDef=SEASONS[season];
 
   const g={
-    cfg: { ...cfg, seed, weather: weatherKey, duration }, mapDef,
+    cfg: { ...cfg, mapId: mapDef.id, mapRevision, seed, weather: weatherKey, duration }, mapDef,
+    landmarks: (gen.landmarks || []).map(mark => ({ ...mark, ...tileCenter(mark) })),
     terrain: gen.terrain, terrainCanvas: null, terrainRevision: 0,
     frontline, weather: WEATHER[weatherKey], duration,
     supplies: { atk: [], def: [] }, showSupply: false, smokes: [],
@@ -34,9 +39,8 @@ function makeGame(cfg){
     recon:[],cd:{atk:{},def:{}},
     state:'playing',result:null,
     ai:{timer:1.2,wave:0},
-    spawnPoint:{x:gen.spawn.x*CELL,y:gen.spawn.y*CELL},
-    spawns:(gen.spawns||[gen.spawn]).map(s=>({x:s.x*CELL+CELL/2,y:s.y*CELL+CELL/2})),
-    atkSpawnPoints:(gen.spawns||[gen.spawn]).map(s=>({x:s.x*CELL+CELL/2,y:s.y*CELL+CELL/2})),
+    spawnPoint, atkSpawnPoints: attackSpawns,
+    forbiddenCenters: mapRevision === 1 ? [spawnPoint] : attackSpawns,
     mode:null,pendingDeploy:null,pendingSkill:null,
     shake:0,squads:{},hotSquad:0,radialTargets:null,
     planMode:null,planPts:[],planPhase:null,planStartLine:null,
@@ -49,7 +53,7 @@ function makeGame(cfg){
     _emergency:{atk:0,def:0},
     _marchUnits:new Map(),
     _oilTanks:(gen.oilTanks||[]).map(t=>({x:t.x,y:t.y,r:t.r,alive:true})),
-    _events:{fired:{volcano:false,wildfire:false,oilfire:false},burnZones:[],volcanoZone:null,oilBoom:null},
+    battlefieldEvent: null, eventArea: null, legacyFire: [],
     _lastTerrainTry:-99,
   };
   g.env.cpMul=seasonMul(seasonDef.cpMul);
@@ -100,7 +104,7 @@ function makeGame(cfg){
   spawnUnit(g,'atk','arm',g.spawnPoint.x+rnd(-50,50),g.spawnPoint.y+rnd(-40,40));
   spawnUnit(g,'atk','eng',g.spawnPoint.x+rnd(-60,60),g.spawnPoint.y+rnd(-40,40));
   g.cp.atk=30;g.cp.def=38;
-  g._eventType=gen.eventType;
+  g.battlefieldEvent = prepareBattlefieldEvent(g, gen);
   buildTerrainCanvas(g);
   recomputeVis(g,'atk');recomputeVis(g,'def');
   updateDeployPoints(g);
@@ -119,7 +123,7 @@ function updateEnv(g,dt){
   g.env.visMul=seasonMul(seasonDef.visMul)*(0.75+0.25*dayAmount)*g.weather.visibility;
 }
 
-/* 防压家圈以攻方出生点为圆心。 */
+/* 登陆场周围保留进攻方的初始部署空间。 */
 function computeForbiddenRadius(g){
   g.forbiddenRadius = DEF_FORBIDDEN_RADIUS;
 }
@@ -150,9 +154,15 @@ function statMulOf(g,side){
 }
 function spawnUnit(g,side,type,x,y){
   const d=UNITS[type];
-  if(side==='def'&&g.spawnPoint){
-    const sp=g.spawnPoint;const d2=dist2(x,y,sp.x,sp.y);const R=g.forbiddenRadius||DEF_FORBIDDEN_RADIUS;
-    if(d2<R*R){const dx=x-sp.x,dy=y-sp.y;const len=Math.sqrt(d2)||1;x=sp.x+dx/len*(R+40);y=sp.y+dy/len*(R+40);}
+  if (side === 'def') {
+    const radius = g.forbiddenRadius || DEF_FORBIDDEN_RADIUS;
+    for (const center of g.forbiddenCenters) {
+      const d2 = dist2(x, y, center.x, center.y);
+      if (d2 >= radius ** 2) continue;
+      const angle = d2 ? Math.atan2(y - center.y, x - center.x) : -Math.PI / 2;
+      x = center.x + Math.cos(angle) * (radius + 40);
+      y = center.y + Math.sin(angle) * (radius + 40);
+    }
   }
   if(!canWalk(g,x,y,type)){
     let best=null,bestD=Infinity;
@@ -161,7 +171,7 @@ function spawnUnit(g,side,type,x,y){
         if(Math.abs(dx)!==r&&Math.abs(dy)!==r)continue;
         const nx=x+dx*CELL*0.5,ny=y+dy*CELL*0.5;
         if(nx<0||ny<0||nx>=MAP_W*CELL||ny>=MAP_H*CELL)continue;
-        if(canWalk(g,nx,ny,type)){const dd=dist2(x,y,nx,ny);if(dd<bestD){bestD=dd;best={x:nx,y:ny};}}
+        if(canWalk(g,nx,ny,type)&&(side!=='def'||!isDefForbiddenArea(g,nx,ny))){const dd=dist2(x,y,nx,ny);if(dd<bestD){bestD=dd;best={x:nx,y:ny};}}
       }
     }
     if(best){x=best.x;y=best.y;}
@@ -181,10 +191,11 @@ function canWalk(g, wx, wy, type) {
 function speedAt(g,wx,wy,unitType){
   const tv=terrainAt(g,wx,wy);
   if(tv===T_MOUNT) return 0.15;
-  if(tv===T_WATER||tv===T_BRIDGE){
-    if(unitType==='inf'||unitType==='scout')return 0.6;
-    if(unitType==='arm'||unitType==='art')return 0.2;
-    return 1.0;
+  if (tv === T_BRIDGE && g.cfg.mapRevision === MAP_REVISION) return TERRAIN[T_BRIDGE].spd;
+  if (tv === T_BRIDGE || tv === T_FORD) {
+    if (unitType === 'arm' || unitType === 'art') return tv === T_FORD ? 0.31 : 0.2;
+    if (unitType === 'eng') return tv === T_FORD ? 0.69 : 1;
+    return 0.6;
   }
   return TERRAIN[tv].spd;
 }
@@ -198,6 +209,7 @@ function unitSpeedInTerrain(g,u){
   base*=g.env.spdMul||1;
   const terrain = terrainAt(g, u.x, u.y);
   if (terrain !== T_ROAD && terrain !== T_BRIDGE) base *= g.weather.offRoadSpeed;
+  base *= battlefieldSpeed(g, u.x, u.y, terrain);
   if (g.frontline) {
     base *= (0.8 + 0.2 * Math.min(1, u.supply / 0.35)) * (1 - 0.28 * u.suppression);
   }
@@ -221,6 +233,7 @@ function inAtkSafeZone(g,wx,wy){
 function recomputeVis(g,side){
   const v=new Uint8Array(MAP_W*MAP_H);
   const mark = (px, py, radius, scout = false, airborne = false) => {
+    if (!airborne) radius *= battlefieldVisibility(g, px, py);
     const cx = Math.floor(px / CELL);
     const cy = Math.floor(py / CELL);
     const cells = Math.ceil(radius / CELL);
@@ -297,7 +310,10 @@ function recomputeVis(g,side){
   }
 }
 function visible(g,side,wx,wy){const arr=g.vis[side];if(!arr)return true;const cx=Math.floor(wx/CELL),cy=Math.floor(wy/CELL);if(cx<0||cy<0||cx>=MAP_W||cy>=MAP_H)return false;return arr[cy*MAP_W+cx]===1;}
-function isDefForbiddenArea(g,x,y){const sp=g.spawnPoint;const R=g.forbiddenRadius||DEF_FORBIDDEN_RADIUS;return dist2(x,y,sp.x,sp.y)<R*R;}
+function isDefForbiddenArea(g, x, y) {
+  const radius = g.forbiddenRadius || DEF_FORBIDDEN_RADIUS;
+  return g.forbiddenCenters.some(center => dist2(x, y, center.x, center.y) < radius ** 2);
+}
 function effectiveRange(g,u,d){
   let r=d.range;
   const tv=terrainAt(g,u.x,u.y);
@@ -319,6 +335,7 @@ function step(dt){
   if(Net.role==='client')return;
   g.time+=dt;
   updateEnv(g,dt);
+  updateBattlefieldEvent(g, dt);
   updatePlanBonus(g,dt);
   for (const side of ['atk', 'def']) {
     for (const key in g.cd[side]) g.cd[side][key] = Math.max(0, g.cd[side][key] - dt);
@@ -327,10 +344,6 @@ function step(dt){
   for (const [id, until] of g._marchUnits) {
     if (until <= g.time) g._marchUnits.delete(id);
   }
-  if (g._events.oilBoom) {
-    g._events.oilBoom.life -= dt;
-    if (g._events.oilBoom.life <= 0) g._events.oilBoom = null;
-  }
   updateCP(g,dt);
   updateDeploy(g,dt);
   for(const u of g.units){if(u.alive)updateUnit(g,u,dt);}
@@ -338,7 +351,6 @@ function step(dt){
   updateProjectiles(g,dt);
   updatePosts(g,dt);
   updateStrikes(g,dt);
-  updateEvents(g,dt);
   for(let i=g.recon.length-1;i>=0;i--)if(g.recon[i].until<g.time)g.recon.splice(i,1);
   for(let i=g.effects.length-1;i>=0;i--){g.effects[i].life-=dt;if(g.effects[i].life<=0)g.effects.splice(i,1);}
   for(let i=g.units.length-1;i>=0;i--)if(!g.units[i].alive)g.units.splice(i,1);
@@ -576,17 +588,25 @@ function updateUnit(g,u,dt){
       if(u.order&&u.order.type==='move'){u.order=null;u.path=null;}
     }
   }
+  if (u.aimTarget && target?.id !== u.aimTarget) {
+    u.aimTarget = 0;
+    u.aimTimer = 0;
+  }
   const armed = u._engaged;
   if(target&&u.cd<=0&&armed){
     const dd=dist(u.x,u.y,target.x,target.y);
     const minRange = d.keepRange ? range*0.55 : 0;
     if(dd<=range && dd>=minRange){
       if(d.aim&&d.aim>0){
+        u.facing = Math.atan2(target.y - u.y, target.x - u.x);
         if(u.aimTarget!==target.id){u.aimTarget=target.id;u.aimTimer=d.aim;}
         else if(u.aimTimer<=0){u.cd=d.cd;u.aimTarget=0;u.facing=Math.atan2(target.y-u.y,target.x-u.x);fire(g,u,target);}
       } else {
         u.cd=d.cd;u.facing=Math.atan2(target.y-u.y,target.x-u.x);fire(g,u,target);
       }
+    } else if (u.aimTarget) {
+      u.aimTarget = 0;
+      u.aimTimer = 0;
     }
   }
   if(d.trench&&u.order&&u.order.type==='trench'){
@@ -701,6 +721,7 @@ function updateProjectiles(g,dt){
     if(p.t>=p.flight){
       if(inAtkSafeZone(g,p.tx,p.ty)){g.projectiles.splice(i,1);continue;}
       const R=(p.splash||26);
+      checkOilTankImpact(g, p.tx, p.ty, R);
       const cx0=Math.floor((p.tx-R)/CELL),cx1=Math.floor((p.tx+R)/CELL);
       const cy0=Math.floor((p.ty-R)/CELL),cy1=Math.floor((p.ty+R)/CELL);
       let destroyed=false;
@@ -831,125 +852,7 @@ function updateProjectiles(g,dt){
   }
 }
 
-/* ============ 地图大事件 ============ */
-function updateEvents(g,dt){
-  const ev=g._events;
-  const T=g.time;
-
-  if(g._eventType==='volcano' && !ev.fired.volcano && T>420 && Math.random()<0.0008){
-    ev.fired.volcano=true;
-    const branchPosts=g.posts.filter(p=>p.type==='branch'||p.type==='point');
-    if(branchPosts.length>0){
-      const target=branchPosts[Math.floor(Math.random()*branchPosts.length)];
-      const cx=target.x,cy=target.y;
-      const R=260;
-      ev.volcanoZone={x:cx,y:cy,r:R,life:1e9,max:1e9};
-      for (const u of g.units) if (dist2(u.x, u.y, cx, cy) < R ** 2) applyDamage(g, u, u.hp);
-      target._disabled=true;target.owner='def';target.cap=POST_TYPES[target.type].cap;
-      toast(g,'⚠ 火山喷发！'+target.name+' 失效',g.playerSide==='atk'?'good':'bad');
-      addEffect(g,{type:'boom',x:cx,y:cy,r:R,life:2,max:2});
-      ev.burnZones.push({x:cx,y:cy,r:R*0.6,born:T,life:1e9,max:1e9,dps:22});
-      Snd.boom(g, cx, cy, true);
-      if(CFG.shake&&!g.mp)g.shake=1;
-      recomputeVis(g,'atk');recomputeVis(g,'def');updateDeployPoints(g);
-    }
-  }
-
-  if(g._eventType==='wildfire' && !ev.fired.wildfire && T>540 && Math.random()<0.0006){
-    ev.fired.wildfire=true;
-    const forests=[];
-    for(let y=0;y<MAP_H;y++)for(let x=0;x<MAP_W;x++){
-      if(g.terrain[y*MAP_W+x]===T_FOREST)forests.push({x:x*CELL+CELL/2,y:y*CELL+CELL/2});
-    }
-    if(forests.length>0){
-      const start=forests[Math.floor(Math.random()*forests.length)];
-      forests.sort((a,b)=>dist2(a.x,a.y,start.x,start.y)-dist2(b.x,b.y,start.x,start.y));
-      const zones=Math.min(20,Math.max(6,Math.floor(forests.length/35)));
-      for(let i=0;i<zones;i++){
-        const f=forests[Math.floor(i*forests.length/zones)];
-        ev.burnZones.push({x:f.x,y:f.y,r:120,born:T,life:1e9,max:1e9,dps:14});
-      }
-      toast(g,'⚠ 森林山火蔓延！',g.playerSide==='atk'?'bad':'bad');
-      Snd.boom(g, start.x, start.y, true);
-    }
-  }
-
-  if(g._eventType==='oilfire' && !ev.fired.oilfire){
-    const tanks=g._oilTanks||[];
-    for(const tk of tanks){
-      if(!tk.alive)continue;
-      for(const p of g.projectiles){
-        if(p.t>=p.flight-0.1 && dist(p.tx,p.ty,tk.x,tk.y)<tk.r+80){
-          triggerOilBoom(g,tk);
-          break;
-        }
-      }
-      if(ev.fired.oilfire)break;
-    }
-  }
-
-  for(const u of g.units){
-    if(!u.alive)continue;
-    let burning=false;
-    let dps=0;
-    for(const bz of ev.burnZones){
-      if(dist(u.x,u.y,bz.x,bz.y)<bz.r){burning=true;dps=Math.max(dps,bz.dps||14);}
-    }
-    if(burning){
-      applyDamage(g, u, dps * dt);
-      if(Math.random()<0.12)addEffect(g,{type:'boom',x:u.x+rnd(-8,8),y:u.y+rnd(-8,8),r:9,life:.32,max:.32});
-    }
-  }
-}
-
-/* --- 油罐爆炸（含初始大坑补充） --- */
-function triggerOilBoom(g,tk){
-  const ev=g._events;
-  if(ev.fired.oilfire)return;
-  ev.fired.oilfire=true;
-  const cx=tk.x, cy=tk.y;
-  const R=300;
-  for(const t2 of (g._oilTanks||[])){
-    if(dist(t2.x,t2.y,cx,cy)<420) t2.alive=false;
-  }
-  ev.oilBoom={x:cx,y:cy,life:2.4,max:2.4};
-  const cx0=Math.floor((cx-R*0.7)/CELL), cx1=Math.floor((cx+R*0.7)/CELL);
-  const cy0=Math.floor((cy-R*0.7)/CELL), cy1=Math.floor((cy+R*0.7)/CELL);
-  for(let y=cy0;y<=cy1;y++)for(let x=cx0;x<=cx1;x++){
-    if(x<0||y<0||x>=MAP_W||y>=MAP_H)continue;
-    const gx=x*CELL+CELL/2, gy=y*CELL+CELL/2;
-    const dd=dist(gx,gy,cx,cy);
-    if(dd<R*0.5){
-      g.terrain[y*MAP_W+x]=T_CRATER;
-    }else if(dd<R*0.7){
-      const v=g.terrain[y*MAP_W+x];
-      if(v===T_BUILDING) g.terrain[y*MAP_W+x]=T_RUBBLE;
-      else if(v===T_FOREST) g.terrain[y*MAP_W+x]=T_RUBBLE;
-    }
-  }
-  invalidateTerrain(g);
-  for(const u of g.units){
-    if(!u.alive)continue;
-    const dd=dist(u.x,u.y,cx,cy);
-    if (dd < R) applyDamage(g, u, u.hp);
-    else if (dd < R * 1.6) applyDamage(g, u, 220);
-  }
-  ev.burnZones.push({x:cx,y:cy,r:R*0.62,born:g.time,life:1e9,max:1e9,dps:26,oil:true});
-  ev.burnZones.push({x:cx-160,y:cy+90,r:110,born:g.time,life:1e9,max:1e9,dps:18,oil:true});
-  ev.burnZones.push({x:cx+150,y:cy-70,r:120,born:g.time,life:1e9,max:1e9,dps:18,oil:true});
-  ev.burnZones.push({x:cx+60,y:cy+150,r:95,born:g.time,life:1e9,max:1e9,dps:18,oil:true});
-  addEffect(g,{type:'boom',x:cx,y:cy,r:R,life:1.2,max:1.2});
-  addEffect(g,{type:'ring',x:cx,y:cy,r:R,life:1.0,max:1.0,col:'#ffb45a'});
-  Snd.boom(g, cx, cy, true);
-  if(CFG.shake&&!g.mp)g.shake=1;
-  toast(g,'💥 工业区油罐连锁爆炸！',g.playerSide==='atk'?'bad':'bad');
-  recomputeVis(g,'atk');recomputeVis(g,'def');
-  updateDeployPoints(g);
-}
-
-/* ============================================================
-   部署 —— 槽位只在“部署中”占用
-   ============================================================ */
+/* ============ 部署 ============ */
 function usedSlots(g,side){
   /* 关键改动：只统计“正在部署中”的单位槽位
      部署完成后立即释放，允许流水线持续补充 */

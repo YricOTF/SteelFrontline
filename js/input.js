@@ -163,7 +163,8 @@ function updateHover(mx,my){
     const isEnemy=u.side!==G.playerSide;
     const forestFlag = inForest(G,u.x,u.y) ? ' <span style="color:#8adf8a">[林中]</span>' : (inMountain(G,u.x,u.y)?' <span style="color:#c0b090">[山中]</span>':'');
     const marchFlag = (G._marchUnits&&G._marchUnits.has(u.id)) ? ' <span style="color:#ffb84d">[急行军]</span>' : '';
-    const engFlag = u._engaged ? ' <span style="color:#ff9b7d">[交战中]</span>' : (u._combatTime>0?' <span style="color:#ffce6b">[索敌 '+Math.round(u._combatTime/OBSERVE_TIME*100)+'%]</span>':'');
+    const engagement = !isEnemy ? unitCombatStatus(u) : '';
+    const engFlag = engagement ? ' <span class="combat-cue">[' + engagement + ']</span>' : '';
     html='<div class="ht-name '+(isEnemy?'enemy':'')+'">'+d.n+(isEnemy?' [敌]':'')+forestFlag+marchFlag+engFlag+'</div>'+
       '<div class="ht-row"><span class="ht-label">生命</span><span class="ht-val">'+Math.ceil(u.hp)+'/'+u.maxHp+'</span></div>'+
       '<div class="ht-row"><span class="ht-label">射程</span><span class="ht-val">'+Math.round(effectiveRange(G,u,d))+'</span></div>'+
